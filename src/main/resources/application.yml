@@ -1,0 +1,33 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
+    username: root
+    password: '#252012'
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: isDelete
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+
+knife4j:
+  enable: true
+  openapi:
+    title: Serein博客
+    description: "博客API接口测试"
+    version: v4.0
+    group:
+      test:
+        api-rule-resources:
+          - com.serein.controller
+custom:
+  salt: 'serein'
