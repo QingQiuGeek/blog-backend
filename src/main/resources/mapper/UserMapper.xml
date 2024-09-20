@@ -7,9 +7,11 @@
     <resultMap id="BaseResultMap" type="com.serein.domain.entity.User">
             <id property="userId" column="userId" jdbcType="BIGINT"/>
             <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
+            <result property="userName" column="userName" jdbcType="VARCHAR"/>
             <result property="sex" column="sex" jdbcType="TINYINT"/>
             <result property="profiles" column="profiles" jdbcType="VARCHAR"/>
-            <result property="userName" column="userName" jdbcType="VARCHAR"/>
+            <result property="interestTag" column="interestTag" jdbcType="VARCHAR"/>
+            <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
             <result property="mail" column="mail" jdbcType="VARCHAR"/>
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
@@ -24,11 +26,11 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        userId,avatarUrl,sex,
-        profiles,userName,password,
-        mail,phone,role,
-        accessKey,secretKey,level,
-        createTime,updateTime,status,
-        isDelete
+        userId,avatarUrl,userName,
+        sex,profiles,interestTag,
+        userAccount,password,mail,
+        phone,role,accessKey,
+        secretKey,level,createTime,
+        updateTime,status,isDelete
     </sql>
 </mapper>

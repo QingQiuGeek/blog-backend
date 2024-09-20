@@ -9,6 +9,12 @@ package com.serein.constants;
 
 public interface ErrorCode {
 
+    int ADD_ERROR=40600;
+
+    int UPDATE_ERROR=40500;
+
+    int RELEASED_ERROR=40400;
+
     //未定义异常码
     int UNEXPECTED_ERROR=1000;
 

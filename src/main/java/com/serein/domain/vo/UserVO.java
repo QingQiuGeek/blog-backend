@@ -2,6 +2,8 @@ package com.serein.domain.vo;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 
 /**
  * @Author:懒大王Smile
@@ -11,7 +13,12 @@ import lombok.Data;
  */
 
 @Data
-public class UserVO  {
+public class UserVO  implements Serializable {
+
+    /**
+     * 用户id
+     */
+    private Long userId;
 
     /**
      * 头像URL
@@ -29,7 +36,7 @@ public class UserVO  {
     private String profiles;
 
     /**
-     * 用户名,可用于登录
+     * 用户名
      */
     private String userName;
 
@@ -47,4 +54,7 @@ public class UserVO  {
      * 预留字段,用户等级
      */
     private Integer level;
+
+    private static final long serialVersionUID = 1L;
+
 }

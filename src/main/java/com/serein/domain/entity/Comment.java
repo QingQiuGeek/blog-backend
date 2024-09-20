@@ -52,7 +52,7 @@ public class Comment implements Serializable {
     /**
      * 0逻辑删除
      */
-    @TableLogic
+//    @TableLogic
     private Integer isDelete;
 
     @TableField(exist = false)

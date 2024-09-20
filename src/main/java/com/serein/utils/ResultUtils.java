@@ -1,5 +1,7 @@
 package com.serein.utils;
 
+import com.serein.domain.CustomPage;
+import io.swagger.models.auth.In;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +16,7 @@ public  class ResultUtils {
     private Object data;
     private Long total;
 
-    public ResultUtils(int code, String message, Object data, Long total) {
+    public ResultUtils(int code, String message, Long total, Object data) {
         this.code=code;
         this.message = message;
         this.data = data;
@@ -28,17 +30,21 @@ public  class ResultUtils {
      * @return
      */
     public static ResultUtils ok(String message,Object data){
-        return new ResultUtils(200, message, data, null);
+        return new ResultUtils(200, message, null, data);
     }
     public static ResultUtils ok(String message,List<?> data, Long total){
-        return new ResultUtils(200, message, data, total);
+        return new ResultUtils(200, message, total, data);
+    }
+    public static ResultUtils ok(String message, CustomPage data, Long total){
+        return new ResultUtils(200, message, total, data);
     }
     public static ResultUtils ok(String message){
         return new ResultUtils(200, message, null,null);
     }
 
+
     /**
-     * 失败则返回自定义状态码
+     * 失败则返回自定义状态码或者抛自定义异常
      * @param errorMsg
      * @param ErrorCode
      * @return

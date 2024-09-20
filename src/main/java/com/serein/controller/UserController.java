@@ -1,8 +1,9 @@
 package com.serein.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.serein.domain.dto.LoginUserDTO;
-import com.serein.domain.entity.User;
+
+import com.serein.domain.Request.LoginRequest;
+import com.serein.domain.Request.RegisterRequest;
+import com.serein.domain.dto.UserDTO;
 import com.serein.service.UserService;
 import com.serein.utils.ResultUtils;
 import io.swagger.annotations.Api;
@@ -11,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
+
 
 /**
  * @Author:懒大王Smile
@@ -20,7 +21,7 @@ import java.util.List;
  * @Description:
  */
 
-@Api(value = "用户模块")
+@Api(tags = "用户模块")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -30,28 +31,26 @@ public class UserController {
 
     /**
      *
-     * @param loginUserDto
+     * @param loginRequest
      * @param httpServletRequest
      * @return
      */
     @ApiOperation(value = "登录")
-    @PostMapping("login")
-    public ResultUtils Login(@RequestBody LoginUserDTO loginUserDto, HttpServletRequest httpServletRequest){
-        //todo 先使用session登录，后改成redis
-        return userService.login(loginUserDto,httpServletRequest);
+    @PostMapping("/login")
+    public ResultUtils Login(@RequestBody LoginRequest loginRequest, HttpServletRequest httpServletRequest){
+        return userService.login(loginRequest,httpServletRequest);
     }
 
     /**
      *
-     * @param loginUserDTO
+     * @param registerRequest
      * @param httpServletRequest
-     * @return
      */
     @ApiOperation(value = "注册")
-    @PostMapping("register")
-    public ResultUtils Register(@RequestBody LoginUserDTO loginUserDTO, HttpServletRequest httpServletRequest){
-        //todo 前期使用 用户名密码即可注册，用户名不可重复
-        return userService.register(loginUserDTO,httpServletRequest);
+    @PostMapping("/register")
+    public ResultUtils Register(@RequestBody RegisterRequest registerRequest, HttpServletRequest httpServletRequest){
+        //todo 前期使用 userAccount和密码即可注册，userAccount不可重复
+        return userService.register(registerRequest,httpServletRequest);
     }
 
     /**
@@ -60,7 +59,7 @@ public class UserController {
      * @return
      */
     @ApiOperation(value = "退出登录")
-    @PostMapping("logout")
+    @PostMapping("/logout")
     public ResultUtils Logout(HttpServletRequest httpServletRequest){
         return userService.logout(httpServletRequest);
     }
@@ -71,22 +70,32 @@ public class UserController {
      * @return
      */
     @ApiOperation(value = "根据用户名查询用户")
-    @GetMapping("{userName}")
-    public ResultUtils GetByUserName(@RequestParam String userName){
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userName",userName);
-        return ResultUtils.ok("根据用户名查询用户成功",userService.list(queryWrapper));
+    @GetMapping("/{userName}")
+    public ResultUtils GetByUserName(@PathVariable String userName){
+        return userService.getByUserName(userName);
     }
 
-    @ApiOperation(value = "根据id查询用户列表")
-    @GetMapping("getByIdList")
-    public ResultUtils GetByUserName(@RequestBody List<Long> idList){
-        return ResultUtils.ok("根据id列表查询用户成功",userService.listByIds(idList));
+
+    /**
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取登录用户")
+    @GetMapping("/getLoginUser")
+    public ResultUtils GetLoginUSer(){
+        return ResultUtils.ok("获取登陆用户成功",userService.getLoginUser());
     }
 
-//    @ApiOperation(value = "获取登录用户")
-//    @GetMapping("/getLoginUser")
-//    public ResultUtils GetLoginUSer(){
-//
-//    }
+    /**
+     * //todo 普通用户修改用户，不能修改用户status，admin可以
+     * 前端普通用户信息不显示role、status，不传该字段
+     * @param updateUserDTO
+     * @return
+     */
+    @ApiOperation(value = "修改用户")
+    @GetMapping("/updateUser")
+    public ResultUtils UpdateUser(@RequestBody UserDTO updateUserDTO){
+        return userService.updateUser(updateUserDTO);
+    }
+
 }

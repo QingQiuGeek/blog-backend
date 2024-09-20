@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.io.Serializable;
 import java.util.Date;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户表
@@ -14,8 +16,11 @@ import lombok.Data;
  */
 @TableName(value ="user")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class User implements Serializable {
+
     /**
      * 用户ID
      */
@@ -38,7 +43,18 @@ public class User implements Serializable {
     private String profiles;
 
     /**
-     * 用户名,可用于登录
+     * 预留字段，兴趣标签
+     */
+    private String interestTag;
+
+    /**
+     * 账户,可用于登录
+     */
+    private String userAccount;
+
+
+    /**
+     * 用户名
      */
     private String userName;
 

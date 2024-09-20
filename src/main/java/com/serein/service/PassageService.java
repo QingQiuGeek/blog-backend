@@ -1,6 +1,8 @@
 package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.domain.dto.AddPassageDTO;
+import com.serein.domain.dto.PassageDTO;
 import com.serein.domain.entity.Passage;
 import com.serein.utils.ResultUtils;
 
@@ -11,5 +13,15 @@ import com.serein.utils.ResultUtils;
 */
 public interface PassageService extends IService<Passage> {
 
-    ResultUtils getNewPassageList();
+    ResultUtils getNewPassageList(Long current);
+
+    ResultUtils searchPassageByText(String searchText);
+
+    ResultUtils getPassageByUserId(Long userId);
+
+    ResultUtils addPassage(AddPassageDTO AddpassageDTO);
+
+    ResultUtils updatePassage(PassageDTO passageDTO);
+
+    ResultUtils getPassageByPassageId(Long passageId);
 }

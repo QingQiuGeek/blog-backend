@@ -9,6 +9,14 @@ package com.serein.constants;
 
 public interface ErrorInfo {
 
+    String ADD_ERROR="添加失败";
+
+    String UPDATE_ERROR="更新失败";
+
+    String RELEASED_ERROR="发布失败";
+
+    String DELETE_ERROR="删除失败";
+
     String SYS_ERROR="系统错误";
 
     String LOGIN_INFO_ERROR="用户名或密码错误";
@@ -19,7 +27,12 @@ public interface ErrorInfo {
 
     String USERNAME_ERROR="用户名错误";
 
-    String NO_USER_ERROR="查无此用户";
+
+    String NO_DB_DATA="数据库无该数据";
+
+    String DB_FAIL="数据库查询失败";
+
+    String NO_AUTH_ERROR="无权限";
 
     String PARAMS_ERROR="请求参数错误";
 

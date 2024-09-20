@@ -7,13 +7,13 @@ import java.lang.annotation.Target;
 
 /**
  * @Author:懒大王Smile
- * @Date: 2024/9/13
- * @Time: 0:20
+ * @Date: 2024/9/14
+ * @Time: 17:31
  * @Description:
  */
 
 @Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface AuthCheck {
-    String mustRole();
+public @interface LoginCheck {
+    String authorization();
 }

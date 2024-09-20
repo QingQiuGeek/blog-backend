@@ -1,13 +1,13 @@
-package com.serein.domain.dto;
+package com.serein.domain.Request;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
 
 
 @Data
-public class LoginUserDTO implements Serializable {
+public class RegisterRequest implements Serializable {
 
     /**
      * 用户id
@@ -23,6 +23,12 @@ public class LoginUserDTO implements Serializable {
      * 密码,可用于登录
      */
     private String password;
+
+    /**
+     * 重复输入密码
+     */
+    private String Repassword;
+
 
     /**
      * 用户名

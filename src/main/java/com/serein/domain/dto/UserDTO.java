@@ -1,18 +1,26 @@
 package com.serein.domain.dto;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * @Author:懒大王Smile
+ * @Date: 2024/9/19
+ * @Time: 20:03
+ * @Description:
+ */
 
 @Data
-public class LoginUserDTO implements Serializable {
+public class UserDTO implements Serializable {
+
 
     /**
      * 用户id
      */
     private Long userId;
+
 
     /**
      * 账户,可用于登录
@@ -40,6 +48,13 @@ public class LoginUserDTO implements Serializable {
      */
     private String mail;
 
+    /**
+     * 用户状态(0禁用,1正常)
+     */
+    private Integer status;
+
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
 }

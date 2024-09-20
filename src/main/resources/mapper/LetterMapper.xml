@@ -10,10 +10,11 @@
             <result property="toUserId" column="toUserId" jdbcType="BIGINT"/>
             <result property="letterTime" column="letterTime" jdbcType="TIMESTAMP"/>
             <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,userId,toUserId,
-        letterTime,content
+        letterTime,content,isDelete
     </sql>
 </mapper>

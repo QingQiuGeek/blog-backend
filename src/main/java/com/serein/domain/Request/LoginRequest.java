@@ -1,13 +1,13 @@
-package com.serein.domain.dto;
+package com.serein.domain.Request;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
 
 
 @Data
-public class LoginUserDTO implements Serializable {
+public class LoginRequest implements Serializable {
 
     /**
      * 用户id
