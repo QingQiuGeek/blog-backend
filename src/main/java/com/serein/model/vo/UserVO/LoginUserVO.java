@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Author:懒大王Smile
@@ -48,10 +49,7 @@ public class LoginUserVO {
     /**
      * 预留字段，兴趣标签
      */
-    private String interestTag;
-
-
-
+    private List<String> interestTag;
 
     /**
      * 用户名

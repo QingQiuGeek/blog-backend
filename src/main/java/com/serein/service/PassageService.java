@@ -32,7 +32,6 @@ public interface PassageService extends IService<Passage> {
 
     Boolean collectPassage(Long passageId);
 
-    PassageVO getPassageDetails(Long pid);
 
     List<PassageVO> getTopCollects();
 

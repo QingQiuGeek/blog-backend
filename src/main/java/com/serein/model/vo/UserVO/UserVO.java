@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -41,6 +42,11 @@ public class UserVO  implements Serializable {
      * 用户简介
      */
     private String profiles;
+
+    /**
+     * 预留字段，兴趣标签
+     */
+    private List<String> interestTag;
 
     /**
      * 用户名

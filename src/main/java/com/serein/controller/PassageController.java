@@ -125,9 +125,8 @@ public class PassageController {
    * */
     @GetMapping("/passageDetails/{pid}")
     public BaseResponse<PassageVO> getPassageDetails(@PathVariable Long pid) {
-        PassageVO passageDetails = passageService.getPassageDetails(pid);
+        PassageVO passageDetails = passageService.getPassageByPassageId(pid);
         return ResultUtils.success(passageDetails);
-
     }
 
     /**

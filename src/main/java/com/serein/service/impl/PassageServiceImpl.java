@@ -91,8 +91,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
                     BeanUtil.copyProperties(passage, passageVO);
                     if (!StringUtils.isBlank(passage.getPTags())){
                         //把数据库中string类型的json转换成list<String>
-                        JSONArray objects = JSONUtil.parseArray(passage.getPTags());
-                        List<String> pTagList = JSONUtil.toList(objects, String.class);
+                        List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
                         passageVO.setPTags(pTagList);
                         //判断当前用户是否点赞、收藏
                         isThumbCollect(passageVO);
@@ -107,6 +106,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     //判断当前用户是否点赞或收藏该文章
     private void isThumbCollect(PassageVO passageVO){
         LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            return ;
+        }
         Long userId = loginUserVO.getUserId();
         String passageId = passageVO.getPassageId().toString();
         String keyThumb =Common.PASSAGE_THUMB_KEY+passageId;
@@ -232,8 +234,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         PassageVO passageVO = new PassageVO();
         BeanUtil.copyProperties(passage,passageVO);
         if (!StringUtils.isBlank(passage.getPTags())){
-            JSONArray objects = JSONUtil.parseArray(passage.getPTags());
-            List<String> list = JSONUtil.toList(objects, String.class);
+            List<String> list = JSONUtil.toList(passage.getPTags(), String.class);
             passageVO.setPTags(list);
         }
         return passageVO;
@@ -311,14 +312,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         return true;
     }
 
-    @Override
-    public PassageVO getPassageDetails(Long pid) {
-        Passage passage = query().eq("passageId", pid).one();
-        PassageVO passageVO = new PassageVO();
-        BeanUtil.copyProperties(passage,passageVO);
-        isThumbCollect(passageVO);
-        return passageVO;
-    }
+
 
     @Override
     public List<PassageVO> getTopCollects() {

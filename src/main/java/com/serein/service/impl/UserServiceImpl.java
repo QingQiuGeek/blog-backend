@@ -4,12 +4,14 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.Common;
+import com.serein.constants.UserRole;
 import com.serein.mapper.*;
 import com.serein.model.Request.LoginRequest;
 import com.serein.model.Request.RegisterRequest;
@@ -18,6 +20,7 @@ import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.*;
 import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.exception.BusinessException;
@@ -186,14 +189,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public UserVO getUserInfo(Long uid) {
-        UserVO userVO = new UserVO();
         User byId = this.getById(uid);
         if (byId!=null){
+            UserVO userVO = new UserVO();
             BeanUtil.copyProperties(byId,userVO);
+            String interestTag = byId.getInterestTag();
+            if (StringUtils.isNotBlank(interestTag)){
+                userVO.setInterestTag(JSONUtil.toList(interestTag,String.class));
+            }
             List<UserVO> userVOS = new ArrayList<>();
             userVOS.add(userVO);
             isFollow(userVOS);
             return userVO;
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean setAdmin(Long userId) {
+        User byId = getById(userId);
+        String role = byId.getRole();
+        UpdateWrapper<User> userUpdateWrapper = new UpdateWrapper<>();
+        if (role.equals(UserRole.ADMIN_ROLE)){
+            userUpdateWrapper.eq("userId",userId).set("role", UserRole.DEFAULT_ROLE);
+        }else {
+            userUpdateWrapper.eq("userId",userId).set("role",UserRole.ADMIN_ROLE);
+        }
+        boolean b = this.update(userUpdateWrapper);
+        if (b){
+            return true;
         }
         return null;
     }
@@ -376,14 +400,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     @Override
-    public List<UserVO> getUserList(Long current) {
+    public List<AdminUserVO> getUserList(Long current) {
         Page<User> page =query()
                 .page(new Page<>(current, Common.PAGE_SIZE));
         List<User> userList = page.getRecords();
         if (userList.isEmpty()){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"查询用户列表失败");
         }
-        return getUserVOListByUserList(userList);
+        return getAdminUserVOListByUserList(userList);
     }
 
     @Override
@@ -397,6 +421,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return getUserVOListByUserList(userList);
     }
 
+
+    public List<AdminUserVO> getAdminUserVOListByUserList(List<User> userList){
+        return userList.stream().map(user -> {
+            AdminUserVO adminUserVO = new AdminUserVO();
+            BeanUtils.copyProperties(user, adminUserVO);
+            if (StringUtils.isNotBlank(user.getInterestTag())){
+                List<String> list = JSONUtil.toList(user.getInterestTag(), String.class);
+                adminUserVO.setInterestTag(list);
+            }
+            return adminUserVO;
+        }).collect(Collectors.toList());
+    }
+
     /**
      * 把userList转成userVOList
      * @param userList
@@ -406,25 +443,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return userList.stream().map(user -> {
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(user, userVO);
+            if (StringUtils.isNotBlank(user.getInterestTag())){
+                List<String> list = JSONUtil.toList(user.getInterestTag(), String.class);
+                userVO.setInterestTag(list);
+            }
             return userVO;
         }).collect(Collectors.toList());
     }
 
     @Override
-    public List<UserVO> getByIdList(List<Long> idList) {
+    public List<AdminUserVO> getByIdList(List<Long> idList) {
 
         List<User> userList = this.listByIds(idList);
         if (userList.isEmpty()){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,ErrorInfo.NO_DB_DATA);
         }
-        return getUserVOListByUserList(userList);
+        return getAdminUserVOListByUserList(userList);
     }
 
 
     @Override
     public Boolean disableUser(Long userId) {
+        User byId = getById(userId);
+        Integer status = byId.getStatus();
         UpdateWrapper<User> userUpdateWrapper = new UpdateWrapper<>();
-        userUpdateWrapper.eq("userId",userId).set("status",0);
+        if (status==0){
+            userUpdateWrapper.eq("userId",userId).set("status",1);
+        }else {
+            userUpdateWrapper.eq("userId",userId).set("status",0);
+        }
         boolean b = this.update(userUpdateWrapper);
         if (b){
             return true;

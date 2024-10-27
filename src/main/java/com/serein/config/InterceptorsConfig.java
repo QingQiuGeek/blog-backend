@@ -44,9 +44,13 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
                         "/user/login",
                         "/user/register",
                         "/passage/topCollects",
+                        "/passage/indexPassageList/{current}",
+                        "/passage/search/text",
+                        "/passage/passageDetails/{pid}",
+                        "/user/find/{userName}",
+                        "/webjars/**",
                         "/doc.html/**",
-                        "/swagger-resources/**",
-                        "/webjars/**"
+                        "/swagger-resources/**"
                 );
     }
 

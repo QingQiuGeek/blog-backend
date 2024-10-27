@@ -1,5 +1,6 @@
 package com.serein.aop;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.serein.annotation.AuthCheck;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
@@ -14,6 +15,10 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author:懒大王Smile
@@ -36,6 +41,7 @@ public class RoleValidateAOP {
          * 如果mustRole为空说明访问该方法不需要权限，直接放行，如果为空，则检查用户的权限
          * 2.获取当前登录用户的权限与mustRole比对
          */
+//
 
         //访问该方法所需权限
         String mustRole = authCheck.mustRole();
@@ -53,16 +59,14 @@ public class RoleValidateAOP {
 
         //todo 被封号的直接拒绝
         //获取登录用户的role
-        String loginUserRole = loginUserVO.getRole().toString();
+        String loginUserRole = loginUserVO.getRole();
         UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByRole(loginUserRole);
-        if (UserRoleEnum.ADMIN.equals(userRoleEnum)){
+        if (UserRoleEnum.ADMIN.equals(mustUserRoleEnum)){
             //若该方法需要admin权限而用户没有，拒绝
             if (!UserRoleEnum.ADMIN.equals(userRoleEnum)){
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR,ErrorInfo.NO_AUTH_ERROR);
             }
         }
-
-
         return joinPoint.proceed();
     }
 }

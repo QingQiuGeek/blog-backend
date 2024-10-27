@@ -7,6 +7,7 @@ import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.User;
 import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserVO;
 
@@ -30,11 +31,11 @@ public interface UserService extends IService<User> {
 
     LoginUserVO getLoginUser();
 
-    List<UserVO> getUserList(Long current);
+    List<AdminUserVO> getUserList(Long current);
 
     List<UserVO> getUserListByName(String userName);
 
-    List<UserVO>getByIdList(List<Long> idList);
+    List<AdminUserVO>getByIdList(List<Long> idList);
 
     Boolean disableUser(Long userId);
 
@@ -53,4 +54,6 @@ public interface UserService extends IService<User> {
     List<UserVO> myFollowers();
 
     UserVO getUserInfo(Long uid);
+
+    Boolean setAdmin(Long userId);
 }
