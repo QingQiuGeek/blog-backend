@@ -1,7 +1,9 @@
 package com.serein.Interceptor;
 
-import com.serein.domain.UserHolder;
-import org.apache.commons.lang3.StringUtils;
+import com.serein.constants.ErrorCode;
+import com.serein.constants.ErrorInfo;
+import com.serein.exception.BusinessException;
+import com.serein.model.UserHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -17,12 +19,17 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
+
+    /*
+    * authorization为空和redis的token失效的都放行到登录拦截器
+    * */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (UserHolder.getUser()==null){
             response.setStatus(401);
             response.setHeader("登录拦截器：","该请求被拦截，请登录！");
-            return false;
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
+//            return false;
         }
         return true;
     }

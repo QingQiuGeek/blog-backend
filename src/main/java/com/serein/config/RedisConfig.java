@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Configuration
 public class RedisConfig {
 
-    //todo redis序列化
+    //todo 优化：redis序列化
     @Bean
     public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory){
         RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();

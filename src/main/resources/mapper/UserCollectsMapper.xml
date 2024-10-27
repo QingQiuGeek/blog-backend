@@ -4,13 +4,15 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.serein.mapper.UserCollectsMapper">
 
-    <resultMap id="BaseResultMap" type="com.serein.domain.entity.UserCollects">
-            <id property="userId" column="userId" jdbcType="BIGINT"/>
+    <resultMap id="BaseResultMap" type="com.serein.model.entity.UserCollects">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="userId" jdbcType="BIGINT"/>
             <result property="passageId" column="passageId" jdbcType="BIGINT"/>
-            <result property="collectStatus" column="collectStatus" jdbcType="TINYINT"/>
+            <result property="collectTime" column="collectTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        userId,passageId,collectStatus
+        id,userId,passageId,
+        collectTime
     </sql>
 </mapper>

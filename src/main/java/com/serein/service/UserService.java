@@ -1,12 +1,14 @@
 package com.serein.service;
 
-import com.serein.domain.Request.LoginRequest;
-import com.serein.domain.Request.RegisterRequest;
-import com.serein.domain.dto.LoginUserDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.domain.dto.UserDTO;
-import com.serein.domain.entity.User;
-import com.serein.utils.ResultUtils;
+import com.serein.model.Request.LoginRequest;
+import com.serein.model.Request.RegisterRequest;
+import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.dto.userDTO.AddUserDTO;
+import com.serein.model.entity.User;
+import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.UserVO.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -20,24 +22,35 @@ public interface UserService extends IService<User> {
 
 
 
+    LoginUserVO login(LoginRequest loginRequest);
 
-    ResultUtils login(LoginRequest loginRequest, HttpServletRequest httpServletRequest);
+    LoginUserVO register(RegisterRequest registerRequest);
 
-    ResultUtils register(RegisterRequest registerRequest, HttpServletRequest httpServletRequest);
+    Boolean logout(HttpServletRequest httpServletRequest);
 
-    ResultUtils logout(HttpServletRequest httpServletRequest);
+    LoginUserVO getLoginUser();
 
-    LoginUserDTO getLoginUser();
+    List<UserVO> getUserList(Long current);
 
-    ResultUtils getUserList(Long current);
+    List<UserVO> getUserListByName(String userName);
 
-    ResultUtils getByUserName(String userName);
+    List<UserVO>getByIdList(List<Long> idList);
 
-    ResultUtils getByIdList(List<Integer> idList);
+    Boolean disableUser(Long userId);
 
-    ResultUtils disableUser(Long userId);
+    Boolean updateUser(UpdateUserDTO updateUserDTO);
 
-    ResultUtils updateUser(UserDTO updateUserDTO);
+    Long addUser(AddUserDTO addUserDTO);
 
-    ResultUtils addUser(UserDTO addUserDTO);
+    List<PassageVO> myCollectPassage();
+
+    List<PassageVO> myThumbPassage();
+
+    Boolean follow(Long userId);
+
+    List<UserVO> myFollow();
+
+    List<UserVO> myFollowers();
+
+    UserVO getUserInfo(Long uid);
 }

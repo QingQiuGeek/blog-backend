@@ -27,7 +27,7 @@
                   <option name="fileName" value="${domain.fileName}ServiceImpl" />
                   <option name="fileNameWithSuffix" value="${domain.fileName}ServiceImpl.java" />
                   <option name="modulePath" value="$PROJECT_DIR$" />
-                  <option name="packageName" value="${domain.basePackage}.service.impl" />
+                  <option name="packageName" value="com.serein.service.impl" />
                 </ModuleInfoGo>
                 <ModuleInfoGo>
                   <option name="basePath" value="${domain.basePath}" />
@@ -37,7 +37,7 @@
                   <option name="fileName" value="${domain.fileName}Mapper" />
                   <option name="fileNameWithSuffix" value="${domain.fileName}Mapper.java" />
                   <option name="modulePath" value="$PROJECT_DIR$" />
-                  <option name="packageName" value="${domain.basePackage}.mapper" />
+                  <option name="packageName" value="com.serein.mapper" />
                 </ModuleInfoGo>
                 <ModuleInfoGo>
                   <option name="basePath" value="${domain.basePath}" />
@@ -47,7 +47,7 @@
                   <option name="fileName" value="${domain.fileName}Service" />
                   <option name="fileNameWithSuffix" value="${domain.fileName}Service.java" />
                   <option name="modulePath" value="$PROJECT_DIR$" />
-                  <option name="packageName" value="${domain.basePackage}.service" />
+                  <option name="packageName" value="com.serein.service" />
                 </ModuleInfoGo>
                 <ModuleInfoGo>
                   <option name="basePath" value="src/main/resources" />
@@ -62,46 +62,22 @@
               </list>
             </option>
             <option name="needsComment" value="true" />
-            <option name="needsModel" value="false" />
+            <option name="needsModel" value="true" />
             <option name="relativePackage" value="domain" />
             <option name="superClass" value="" />
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="Category" />
-                  <option name="tableName" value="category" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="CategoryTag" />
-                  <option name="tableName" value="category_tag" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="Comment" />
-                  <option name="tableName" value="comment" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="Letter" />
-                  <option name="tableName" value="letter" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="Passage" />
-                  <option name="tableName" value="passage" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="Tag" />
-                  <option name="tableName" value="tag" />
-                </TableUIInfo>
-                <TableUIInfo>
-                  <option name="className" value="User" />
-                  <option name="tableName" value="user" />
-                </TableUIInfo>
-                <TableUIInfo>
                   <option name="className" value="UserCollects" />
                   <option name="tableName" value="user_collects" />
                 </TableUIInfo>
                 <TableUIInfo>
-                  <option name="className" value="Userfollow" />
-                  <option name="tableName" value="userfollow" />
+                  <option name="className" value="UserFollow" />
+                  <option name="tableName" value="user_follow" />
+                </TableUIInfo>
+                <TableUIInfo>
+                  <option name="className" value="UserThumbs" />
+                  <option name="tableName" value="user_thumbs" />
                 </TableUIInfo>
               </list>
             </option>

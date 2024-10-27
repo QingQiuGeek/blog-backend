@@ -1,10 +1,13 @@
 package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.domain.dto.AddPassageDTO;
-import com.serein.domain.dto.PassageDTO;
-import com.serein.domain.entity.Passage;
-import com.serein.utils.ResultUtils;
+import com.serein.model.dto.passageDTO.AddAndUpdatePassageDTO;
+import com.serein.model.dto.passageDTO.SearchPassageDTO;
+import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.utils.BaseResponse;
+
+import java.util.List;
 
 /**
 * @author 懒大王Smile
@@ -13,15 +16,27 @@ import com.serein.utils.ResultUtils;
 */
 public interface PassageService extends IService<Passage> {
 
-    ResultUtils getNewPassageList(Long current);
+    List<PassageVO> getIndexPassageList(int current);
 
-    ResultUtils searchPassageByText(String searchText);
+    List<PassageVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
 
-    ResultUtils getPassageByUserId(Long userId);
+    List<PassageVO> getPassageByUserId(Long userId);
 
-    ResultUtils addPassage(AddPassageDTO AddpassageDTO);
+    Long addPassage(AddAndUpdatePassageDTO addPassageDTO);
 
-    ResultUtils updatePassage(PassageDTO passageDTO);
+    Boolean updatePassage(AddAndUpdatePassageDTO updatePassageDTO);
 
-    ResultUtils getPassageByPassageId(Long passageId);
+    PassageVO getPassageByPassageId(Long passageId);
+
+    Boolean thumbPassage(Long passageId);
+
+    Boolean collectPassage(Long passageId);
+
+    PassageVO getPassageDetails(Long pid);
+
+    List<PassageVO> getTopCollects();
+
+    BaseResponse<Integer> getCollectNums();
+
+    List<PassageVO> myPassages();
 }

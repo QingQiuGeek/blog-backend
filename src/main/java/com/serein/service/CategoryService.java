@@ -1,7 +1,8 @@
 package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.domain.entity.Category;
+import com.serein.model.entity.Category;
+import org.springframework.stereotype.Service;
 
 /**
 * @author 懒大王Smile

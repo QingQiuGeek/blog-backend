@@ -15,5 +15,16 @@ import java.lang.annotation.Target;
 @Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface AuthCheck {
-    String mustRole();
+
+    /**
+     * 必须有的角色
+     * @return
+     */
+    String mustRole() default "";
+
+    /**
+     * 有任何一个角色即可
+     * @return
+     */
+    String[] anyRole() default "";
 }

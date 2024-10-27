@@ -1,17 +1,21 @@
 package com.serein.controller;
 
 
-import com.serein.domain.Request.LoginRequest;
-import com.serein.domain.Request.RegisterRequest;
-import com.serein.domain.dto.UserDTO;
+import com.serein.model.Request.LoginRequest;
+import com.serein.model.Request.RegisterRequest;
+import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
+import com.serein.service.impl.UserServiceImpl;
+import com.serein.utils.BaseResponse;
 import com.serein.utils.ResultUtils;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 
 /**
@@ -21,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
  * @Description:
  */
 
-@Api(tags = "用户模块")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -30,72 +33,120 @@ public class UserController {
     UserService userService;
 
     /**
-     *
+     *用户登录
      * @param loginRequest
-     * @param httpServletRequest
      * @return
      */
-    @ApiOperation(value = "登录")
     @PostMapping("/login")
-    public ResultUtils Login(@RequestBody LoginRequest loginRequest, HttpServletRequest httpServletRequest){
-        return userService.login(loginRequest,httpServletRequest);
+    public BaseResponse<LoginUserVO> login(@RequestBody LoginRequest loginRequest){
+        LoginUserVO loginUserVO = userService.login(loginRequest);
+        return ResultUtils.success(loginUserVO);
     }
 
     /**
-     *
+     *用户注册
      * @param registerRequest
-     * @param httpServletRequest
      */
-    @ApiOperation(value = "注册")
     @PostMapping("/register")
-    public ResultUtils Register(@RequestBody RegisterRequest registerRequest, HttpServletRequest httpServletRequest){
-        //todo 前期使用 userAccount和密码即可注册，userAccount不可重复
-        return userService.register(registerRequest,httpServletRequest);
+    public BaseResponse<LoginUserVO> register(@RequestBody RegisterRequest registerRequest){
+        LoginUserVO loginUserVO = userService.register(registerRequest);
+        return ResultUtils.success(loginUserVO);
     }
 
     /**
-     *
-     * @param httpServletRequest
+     *退出登录
      * @return
      */
-    @ApiOperation(value = "退出登录")
     @PostMapping("/logout")
-    public ResultUtils Logout(HttpServletRequest httpServletRequest){
+    public Boolean logout(HttpServletRequest httpServletRequest){
         return userService.logout(httpServletRequest);
     }
 
     /**
-     *
+     * 根据用户名查询用户列表
+     * 用户名可以重复
      * @param userName
      * @return
      */
-    @ApiOperation(value = "根据用户名查询用户")
-    @GetMapping("/{userName}")
-    public ResultUtils GetByUserName(@PathVariable String userName){
-        return userService.getByUserName(userName);
+    @GetMapping("/find/{userName}")
+    public BaseResponse<List<UserVO>> getUserListByName(@PathVariable String userName){
+        List<UserVO> userVOList = userService.getUserListByName(userName);
+        return ResultUtils.success(userVOList);
     }
 
 
     /**
-     *
+     * 获取当前登录用户
      * @return
      */
-    @ApiOperation(value = "获取登录用户")
     @GetMapping("/getLoginUser")
-    public ResultUtils GetLoginUSer(){
-        return ResultUtils.ok("获取登陆用户成功",userService.getLoginUser());
+    public BaseResponse<LoginUserVO> getLoginUser(){
+        LoginUserVO loginUserVO = userService.getLoginUser();
+        return ResultUtils.success(loginUserVO);
     }
 
     /**
-     * //todo 普通用户修改用户，不能修改用户status，admin可以
-     * 前端普通用户信息不显示role、status，不传该字段
+     * 用户可以更新自己的个人信息
      * @param updateUserDTO
      * @return
      */
-    @ApiOperation(value = "修改用户")
-    @GetMapping("/updateUser")
-    public ResultUtils UpdateUser(@RequestBody UserDTO updateUserDTO){
+    @PostMapping("/updateUser")
+    public Boolean updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         return userService.updateUser(updateUserDTO);
+    }
+
+    /*
+    * 关注用户
+    * */
+    @PutMapping("/follow/{userId}")
+    public Boolean follow(@PathVariable Long userId){
+        return userService.follow(userId);
+    }
+
+    /*
+    * 我关注的用户
+    * list.size是数量
+    * */
+    @GetMapping("/myFollow")
+    public BaseResponse<List<UserVO>> myFollow(){
+        List<UserVO> userVOS = userService.myFollow();
+        return ResultUtils.success(userVOS);
+    }
+
+    /**
+     * 根据uid获取用户的信息，一般用于拆查询用户主页或者文章作者信息
+     * @return
+     */
+    @GetMapping("/getUserInfo/{uid}")
+    public BaseResponse<UserVO> getUserInfo(@PathVariable Long uid){
+        UserVO userInfo = userService.getUserInfo(uid);
+        return ResultUtils.success(userInfo);
+    }
+
+    /*
+    * 我的粉丝，list.size是粉丝数量
+    * */
+    @GetMapping("/myFollowers")
+    public BaseResponse<List<UserVO>> myFollowers(){
+        List<UserVO> userVOS = userService.myFollowers();
+        return ResultUtils.success(userVOS);
+    }
+
+    /*
+    * 我的收藏博客列表
+    * */
+    @GetMapping("/myCollect")
+    public BaseResponse<List<PassageVO>> myCollectPassage(){
+        List<PassageVO> passageVOList = userService.myCollectPassage();
+        return ResultUtils.success(passageVOList);
+    }
+    /*
+    * 我的点赞博客列表
+    * */
+    @GetMapping("/myThumb")
+    public BaseResponse<List<PassageVO>> myThumbPassage(){
+        List<PassageVO> passageVOList = userService.myThumbPassage();
+        return ResultUtils.success(passageVOList);
     }
 
 }

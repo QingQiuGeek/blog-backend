@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
@@ -7,25 +7,13 @@ spring:
     username: root
     password: '#252012'
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    连接池配置
-    hikari:
-      connection-timeout: 10000
-      validation-timeout: 3000
-      idle-timeout: 60000
-      login-timeout: 5
-      max-lifetime: 60000
-      maximum-pool-size: 10
-      minimum-idle: 5
-      read-only: false
-
-  devtools:
-      restart:
-        # 开启热部署（更改文件后，自动重启）
-        enabled: true
-        ## 设置哪些资源变动后不触发热部署，会覆盖默认的exclude内容（资源不会触发重启，但会触发实时重新加载）
-        # exclude: WEB-INF/**,static/**
-        ## 监控额外的路径（优先于exclude）
-        # additional-paths: src/main/java
+#    type: com.zaxxer.hikari.HikariDataSource
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      min-idle: 3
+      max-active: 6
+      max-wait: 60000
+      initial-size: 3
   redis:
     host: 192.168.2.129
     port: 6379
@@ -39,10 +27,12 @@ spring:
         max-active: 5
         max-idle: 5
         min-idle: 0
-  cache:
+#  cache:
 #    使用redis缓存
-    type: redis
+#    type: redis
 
+  elasticsearch:
+    uris: 'localhost:9200'
 
 mybatis-plus:
   configuration:
@@ -54,18 +44,35 @@ mybatis-plus:
       logic-delete-value: 0
       logic-not-delete-value: 1
 
+logging:
+  level:
+    com:
+      serein:
+        mapper: debug
+        service: info
+        controller: info
+
 knife4j:
   enable: true
   openapi:
-    title: Serein博客API接口测试
-    description: "Swagger API接口测试"
+    title: 'Serein博客API接口测试'
     version: v1.0
+    description: '无问青秋博客'
     group:
-      swagger-api:
+      default:
+        api-rule: package
         api-rule-resources:
           - com.serein.controller
+
 
 #自定义变量
 custom:
   salt: 'serein'
-  token: 'SEREINSMILE'
+#  添加用户的初始密码
+  originPassword: '123456'
+
+#jwt配置
+#jwt:
+#  token:
+#    tokenExpiration: 10 #有效时间,单位分钟
+#    tokenSignKey: 'SEREINSMILE'  #当前程序签名秘钥 自定义

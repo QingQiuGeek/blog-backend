@@ -1,0 +1,55 @@
+//PUT passage_v1
+{
+  "aliases": {
+    "passage": {}
+  },
+  "mappings": {
+    "properties": {
+      "passageId": {
+        "type": "keyword"
+      },
+      "authorId": {
+        "type": "keyword"
+      },
+      "authorName": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "summary": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "pTags": {
+        "type": "keyword"
+      }
+    }
+  }
+}

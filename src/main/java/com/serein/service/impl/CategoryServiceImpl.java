@@ -1,7 +1,7 @@
 package com.serein.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.serein.domain.entity.Category;
+import com.serein.model.entity.Category;
 import com.serein.service.CategoryService;
 import com.serein.mapper.CategoryMapper;
 import org.springframework.stereotype.Service;

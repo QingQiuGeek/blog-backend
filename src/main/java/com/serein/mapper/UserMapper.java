@@ -1,7 +1,7 @@
 package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.serein.domain.entity.User;
+import com.serein.model.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

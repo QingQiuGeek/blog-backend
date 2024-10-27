@@ -19,7 +19,11 @@ public interface ErrorInfo {
 
     String SYS_ERROR="系统错误";
 
-    String LOGIN_INFO_ERROR="用户名或密码错误";
+    String LOGIN_INFO_ERROR="邮箱或密码错误";
+
+
+    String MAIL_EXISTED_ERROR="该邮箱已被注册";
+
 
     String NOT_LOGIN_ERROR="未登录";
 

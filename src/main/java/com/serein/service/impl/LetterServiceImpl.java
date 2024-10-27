@@ -1,7 +1,7 @@
 package com.serein.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.serein.domain.entity.Letter;
+import com.serein.model.entity.Letter;
 import com.serein.service.LetterService;
 import com.serein.mapper.LetterMapper;
 import org.springframework.stereotype.Service;

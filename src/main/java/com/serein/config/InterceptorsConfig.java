@@ -43,6 +43,7 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
                 .excludePathPatterns(
                         "/user/login",
                         "/user/register",
+                        "/passage/topCollects",
                         "/doc.html/**",
                         "/swagger-resources/**",
                         "/webjars/**"

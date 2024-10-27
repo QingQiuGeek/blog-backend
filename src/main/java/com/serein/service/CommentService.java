@@ -1,7 +1,7 @@
 package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.domain.entity.Comment;
+import com.serein.model.entity.Comment;
 
 /**
 * @author 懒大王Smile

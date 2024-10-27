@@ -1,8 +1,11 @@
 package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.serein.domain.entity.Passage;
+import com.serein.model.entity.Passage;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.Date;
+import java.util.List;
 
 /**
 * @author 懒大王Smile
@@ -13,6 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface PassageMapper extends BaseMapper<Passage> {
 
+    List<Passage> listPassageWithNODelete(Date minutesAgoDate);
 }
 
 

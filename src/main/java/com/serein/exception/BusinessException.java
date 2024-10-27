@@ -1,5 +1,6 @@
 package com.serein.exception;
 
+import com.serein.constants.ErrorCode;
 import lombok.Getter;
 
 /**
@@ -12,10 +13,10 @@ import lombok.Getter;
 @Getter
 public class BusinessException extends RuntimeException{
 
-    int ErrorCode;
-    public BusinessException(int ErrorCode,String message) {
+    ErrorCode errorCode;
+    public BusinessException(ErrorCode errorCode,String message) {
         super(message);
-        this.ErrorCode=ErrorCode;
+        this.errorCode=errorCode;
     }
 
 }

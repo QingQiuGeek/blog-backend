@@ -1,7 +1,7 @@
 package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.serein.domain.entity.Comment;
+import com.serein.model.entity.Comment;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

@@ -4,16 +4,17 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.serein.mapper.CategoryMapper">
 
-    <resultMap id="BaseResultMap" type="com.serein.domain.entity.Category">
+    <resultMap id="BaseResultMap" type="com.serein.model.entity.Category">
             <id property="categoryId" column="categoryId" jdbcType="BIGINT"/>
             <result property="categoryName" column="categoryName" jdbcType="VARCHAR"/>
+            <result property="cTags" column="cTags" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        categoryId,categoryName,createTime,
-        updateTime,isDelete
+        categoryId,categoryName,cTags,
+        createTime,updateTime,isDelete
     </sql>
 </mapper>

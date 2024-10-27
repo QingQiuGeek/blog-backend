@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.serein.mapper.PassageMapper">
 
-    <resultMap id="BaseResultMap" type="com.serein.domain.entity.Passage">
+    <resultMap id="BaseResultMap" type="com.serein.model.entity.Passage">
             <id property="passageId" column="passageId" jdbcType="BIGINT"/>
             <result property="authorId" column="authorId" jdbcType="BIGINT"/>
             <result property="authorName" column="authorName" jdbcType="VARCHAR"/>
@@ -13,6 +13,7 @@
             <result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
             <result property="summary" column="summary" jdbcType="VARCHAR"/>
             <result property="categoryId" column="categoryId" jdbcType="TINYINT"/>
+            <result property="pTags" column="pTags" jdbcType="VARCHAR"/>
             <result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
             <result property="commentNum" column="commentNum" jdbcType="INTEGER"/>
             <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
@@ -27,9 +28,13 @@
     <sql id="Base_Column_List">
         passageId,authorId,authorName,
         title,content,thumbnail,
-        summary,categoryId,viewNum,
-        commentNum,thumbNum,collectNum,
-        createTime,updateTime,accessTime,
-        status,isDelete
+        summary,categoryId,pTags,
+        viewNum,commentNum,thumbNum,
+        collectNum,createTime,updateTime,
+        accessTime,status,isDelete
     </sql>
+    <!--把未删除且审核通过的文章查询出来同步到 es  -->
+    <select id="listPassageWithNODelete" resultType="com.serein.model.entity.Passage">
+        select * from blog.passage where updateTime>=#{minutesAgoDate} and isDelete=1 and status=2
+    </select>
 </mapper>

@@ -1,57 +1,42 @@
 package com.serein.utils;
 
-import com.serein.domain.CustomPage;
-import io.swagger.models.auth.In;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.serein.constants.ErrorCode;
 
-import java.util.List;
-
-@Data
-@NoArgsConstructor
-public  class ResultUtils {
-
-    private int code;
-    private String message;
-    private Object data;
-    private Long total;
-
-    public ResultUtils(int code, String message, Long total, Object data) {
-        this.code=code;
-        this.message = message;
-        this.data = data;
-        this.total = total;
-    }
+/**
+ * 返回工具类
+ *
+ * @author 懒大王Smile
+ */
+public class ResultUtils {
 
     /**
-     * 成功一律返回200
-     * @param message
+     * 成功
+     *
      * @param data
+     * @param <T>
      * @return
      */
-    public static ResultUtils ok(String message,Object data){
-        return new ResultUtils(200, message, null, data);
+    public static <T> BaseResponse<T> success(T data) {
+        return new BaseResponse<>(200, data, "ok");
     }
-    public static ResultUtils ok(String message,List<?> data, Long total){
-        return new ResultUtils(200, message, total, data);
-    }
-    public static ResultUtils ok(String message, CustomPage data, Long total){
-        return new ResultUtils(200, message, total, data);
-    }
-    public static ResultUtils ok(String message){
-        return new ResultUtils(200, message, null,null);
-    }
-
 
     /**
-     * 失败则返回自定义状态码或者抛自定义异常
-     * @param errorMsg
-     * @param ErrorCode
+     * 失败
+     *
+     * @param errorCode
      * @return
      */
-    public static ResultUtils fail(int ErrorCode,String errorMsg){
-        return new ResultUtils(ErrorCode, errorMsg, null, null);
+    public static BaseResponse error(ErrorCode errorCode) {
+        return new BaseResponse<>(errorCode);
     }
 
-
+    /**
+     * 失败
+     *
+     * @param errorCode
+     * @return
+     */
+    public static BaseResponse error(ErrorCode errorCode, String message) {
+        return new BaseResponse(errorCode.getCode(), null, message);
+    }
 }

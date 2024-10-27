@@ -1,7 +1,7 @@
 package com.serein.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.serein.domain.entity.Comment;
+import com.serein.model.entity.Comment;
 import com.serein.service.CommentService;
 import com.serein.mapper.CommentMapper;
 import org.springframework.stereotype.Service;

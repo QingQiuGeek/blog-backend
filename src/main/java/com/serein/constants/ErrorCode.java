@@ -1,33 +1,42 @@
 package com.serein.constants;
 
 /**
- * @Author:懒大王Smile
- * @Date: 2024/9/13
- * @Time: 13:09
- * @Description:
+ * 自定义错误码
+ *
+ * @author 懒大王Smile
  */
+public enum ErrorCode {
 
-public interface ErrorCode {
+    SUCCESS(0, "ok"),
+    PARAMS_ERROR(40000, "请求参数错误"),
+    NOT_LOGIN_ERROR(40100, "未登录"),
+    NO_AUTH_ERROR(40101, "无权限"),
+    NOT_FOUND_ERROR(40400, "数据不存在"),
+    FORBIDDEN_ERROR(40300, "禁止访问"),
+    SYSTEM_ERROR(50000, "系统内部异常"),
+    OPERATION_ERROR(50001, "操作失败"),
+    UNEXPECT_ERROR(50002,"未知异常");
+    /**
+     * 状态码
+     */
+    private final int code;
 
-    int ADD_ERROR=40600;
+    /**
+     * 信息
+     */
+    private final String message;
 
-    int UPDATE_ERROR=40500;
+    ErrorCode(int code, String message) {
+        this.code = code;
+        this.message = message;
+    }
 
-    int RELEASED_ERROR=40400;
+    public int getCode() {
+        return code;
+    }
 
-    //未定义异常码
-    int UNEXPECTED_ERROR=1000;
-
-    //请求参数错误码
-    int PARAMS_ERROR=4000;
-
-    //未登录错误码
-    int NOT_LOGIN_ERROR=40100;
-
-    //无权限错误码
-    int NO_AUTH=40200;
-
-    //数据库查找失败
-    int NO_DATA=40300;
+    public String getMessage() {
+        return message;
+    }
 
 }
