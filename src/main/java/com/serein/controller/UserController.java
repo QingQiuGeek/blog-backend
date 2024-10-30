@@ -39,6 +39,7 @@ public class UserController {
      */
     @PostMapping("/login")
     public BaseResponse<LoginUserVO> login(@RequestBody LoginRequest loginRequest){
+//        int a=1/0;
         LoginUserVO loginUserVO = userService.login(loginRequest);
         return ResultUtils.success(loginUserVO);
     }

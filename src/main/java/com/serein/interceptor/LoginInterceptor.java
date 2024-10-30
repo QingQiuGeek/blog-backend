@@ -1,4 +1,4 @@
-package com.serein.Interceptor;
+package com.serein.interceptor;
 
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;

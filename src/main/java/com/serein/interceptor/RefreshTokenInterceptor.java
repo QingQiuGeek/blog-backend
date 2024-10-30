@@ -1,7 +1,6 @@
-package com.serein.Interceptor;
+package com.serein.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.serein.constants.Common;
 import com.serein.model.UserHolder;
 import com.serein.model.vo.UserVO.LoginUserVO;

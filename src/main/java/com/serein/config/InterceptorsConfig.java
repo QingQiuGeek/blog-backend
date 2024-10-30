@@ -1,7 +1,7 @@
 package com.serein.config;
 
-import com.serein.Interceptor.LoginInterceptor;
-import com.serein.Interceptor.RefreshTokenInterceptor;
+import com.serein.interceptor.LoginInterceptor;
+import com.serein.interceptor.RefreshTokenInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
