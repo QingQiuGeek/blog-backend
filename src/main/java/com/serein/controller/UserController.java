@@ -59,8 +59,9 @@ public class UserController {
      * @return
      */
     @PostMapping("/logout")
-    public Boolean logout(HttpServletRequest httpServletRequest){
-        return userService.logout(httpServletRequest);
+    public BaseResponse<Boolean> logout(HttpServletRequest httpServletRequest){
+        Boolean logout = userService.logout(httpServletRequest);
+        return ResultUtils.success(logout);
     }
 
     /**
@@ -92,16 +93,18 @@ public class UserController {
      * @return
      */
     @PostMapping("/updateUser")
-    public Boolean updateUser(@RequestBody UpdateUserDTO updateUserDTO){
-        return userService.updateUser(updateUserDTO);
+    public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
+        Boolean aBoolean = userService.updateUser(updateUserDTO);
+        return  ResultUtils.success(aBoolean);
     }
 
     /*
     * 关注用户
     * */
     @PutMapping("/follow/{userId}")
-    public Boolean follow(@PathVariable Long userId){
-        return userService.follow(userId);
+    public BaseResponse<Boolean> follow(@PathVariable Long userId){
+        Boolean follow = userService.follow(userId);
+        return ResultUtils.success(follow);
     }
 
     /*

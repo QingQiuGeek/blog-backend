@@ -10,6 +10,7 @@ import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.PassageService;
 import com.serein.utils.BaseResponse;
 import com.serein.utils.ResultUtils;
+import net.bytebuddy.asm.Advice;
 import org.elasticsearch.action.search.SearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.instrument.classloading.ReflectiveLoadTimeWeaver;
@@ -63,16 +64,18 @@ public class PassageController {
     * 点赞文章
     * */
     @PutMapping("/thumb/{passageId}")
-    public Boolean thumbPassage(@PathVariable Long passageId){
-       return passageService.thumbPassage(passageId);
+    public BaseResponse<Boolean> thumbPassage(@PathVariable Long passageId){
+        Boolean aBoolean = passageService.thumbPassage(passageId);
+        return  ResultUtils.success(aBoolean);
     }
 
     /*
     * 收藏文章
     * */
     @PutMapping("/collect/{passageId}")
-    public Boolean collectPassage(@PathVariable Long passageId){
-        return passageService.collectPassage(passageId);
+    public BaseResponse<Boolean> collectPassage(@PathVariable Long passageId){
+        Boolean aBoolean = passageService.collectPassage(passageId);
+        return  ResultUtils.success(aBoolean);
     }
 
     /**
@@ -147,10 +150,10 @@ public class PassageController {
      * @return
      */
     @DeleteMapping("/delete/{passageId}")
-    public Boolean deleteByPassageId(@PathVariable Long passageId){
+    public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId){
         boolean b = passageService.removeById(passageId);
         if (b){
-            return true;
+            return ResultUtils.success(b);
         }
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
@@ -163,8 +166,9 @@ public class PassageController {
      * @return
      */
     @PostMapping("/update")
-    public Boolean updateByPassageId(@RequestBody AddAndUpdatePassageDTO updatePassageDTO){
-        return passageService.updatePassage(updatePassageDTO);
+    public BaseResponse<Boolean> updateByPassageId(@RequestBody AddAndUpdatePassageDTO updatePassageDTO){
+        Boolean aBoolean = passageService.updatePassage(updatePassageDTO);
+        return  ResultUtils.success(aBoolean);
     }
 
 }

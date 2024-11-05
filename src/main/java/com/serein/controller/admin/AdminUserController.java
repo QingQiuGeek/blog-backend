@@ -34,8 +34,9 @@ public class AdminUserController {
 
     @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
     @GetMapping("/disable/{userId}")
-    public Boolean disableUser(@PathVariable Long userId){
-        return userService.disableUser(userId);
+    public BaseResponse<Boolean> disableUser(@PathVariable Long userId){
+        Boolean aBoolean = userService.disableUser(userId);
+        return ResultUtils.success(aBoolean);
     }
 
     /**
@@ -45,8 +46,9 @@ public class AdminUserController {
      */
     @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
     @GetMapping("/setAdmin/{userId}")
-    public Boolean setAdmin(@PathVariable Long userId){
-        return userService.setAdmin(userId);
+    public BaseResponse<Boolean> setAdmin(@PathVariable Long userId){
+        Boolean aBoolean = userService.setAdmin(userId);
+        return  ResultUtils.success(aBoolean);
     }
 
 
@@ -67,9 +69,10 @@ public class AdminUserController {
      */
     @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
     @DeleteMapping("/delete/{userId}")
-    public Boolean deleteUserById(@PathVariable Long userId){
+    public BaseResponse<Boolean> deleteUserById(@PathVariable Long userId){
+
         if (userService.removeById(userId)){
-            return true;
+            return ResultUtils.success(true);
         }
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DB_FAIL);
     }

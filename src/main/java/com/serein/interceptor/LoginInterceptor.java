@@ -25,11 +25,12 @@ public class LoginInterceptor implements HandlerInterceptor {
     * */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
         if (UserHolder.getUser()==null){
             response.setStatus(401);
-            response.setHeader("登录拦截器：","该请求被拦截，请登录！");
+
+           //response.setHeader("登录拦截器：","该请求被拦截，请登录！");
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
-//            return false;
         }
         return true;
     }

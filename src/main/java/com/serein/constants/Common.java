@@ -23,6 +23,8 @@ public interface Common {
 
     String USER_FOLLOW_KEY="Blog:user:follow:";
 
+    String USER_SIGNIN_KEY="Blog:user:signin :";
+
      //单位min
     Long LOGIN_TOKEN_TTL=100L;
 
