@@ -23,8 +23,8 @@ public class FilterConfig {
 
         //放行哪些原始域
         //带上这个会报错
-        //   config.addAllowedOrigin("*");
-        // When allowCredentials is true, allowedOrigins cannot contain the special value "*" since that cannot be set on the "Access-Control-Allow-Origin" response header. To allow credentials to a set of origins, list them explicitly or consider using "allowedOriginPatterns" instead.
+//           config.addAllowedOrigin("localhost:8000");
+//         When allowCredentials is true, allowedOrigins cannot contain the special value "*" since that cannot be set on the "Access-Control-Allow-Origin" response header. To allow credentials to a set of origins, list them explicitly or consider using "allowedOriginPatterns" instead.
 
         config.addAllowedOriginPattern("*");
         //是否发送 Cookie

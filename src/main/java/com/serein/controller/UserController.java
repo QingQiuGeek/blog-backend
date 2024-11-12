@@ -2,6 +2,7 @@ package com.serein.controller;
 
 
 import com.serein.model.Request.LoginRequest;
+import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.vo.PassageVO.PassageVO;
@@ -107,18 +108,8 @@ public class UserController {
         return ResultUtils.success(follow);
     }
 
-    /*
-    * 我关注的用户
-    * list.size是数量
-    * */
-    @GetMapping("/myFollow")
-    public BaseResponse<List<UserVO>> myFollow(){
-        List<UserVO> userVOS = userService.myFollow();
-        return ResultUtils.success(userVOS);
-    }
-
     /**
-     * 根据uid获取用户的信息，一般用于拆查询用户主页或者文章作者信息
+     * 根据uid获取用户的信息，一般用于查询用户主页或者文章作者信息
      * @return
      */
     @GetMapping("/getUserInfo/{uid}")
@@ -137,6 +128,21 @@ public class UserController {
     }
 
     /*
+     * 我关注的用户
+     * list.size是数量
+     * */
+    @GetMapping("/myFollow")
+    public BaseResponse<List<UserVO>> myFollow(){
+        List<UserVO> userVOS = userService.myFollow();
+        return ResultUtils.success(userVOS);
+    }
+
+    @PostMapping("/sendRegisterCode")
+    public void sendRegisterCode(@RequestBody RegisterCodeRequest registerCodeRequest){
+        userService.sendRegisterCode(registerCodeRequest);
+    }
+
+    /*
     * 我的收藏博客列表
     * */
     @GetMapping("/myCollect")
@@ -150,6 +156,15 @@ public class UserController {
     @GetMapping("/myThumb")
     public BaseResponse<List<PassageVO>> myThumbPassage(){
         List<PassageVO> passageVOList = userService.myThumbPassage();
+        return ResultUtils.success(passageVOList);
+    }
+
+    /*
+     * 我的文章列表
+     * */
+    @GetMapping("/myPassages")
+    public BaseResponse<List<PassageVO>> myPassages(){
+        List<PassageVO> passageVOList = userService.myPassage();
         return ResultUtils.success(passageVOList);
     }
 

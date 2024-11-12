@@ -2,6 +2,7 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.serein.model.Request.LoginRequest;
+import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
@@ -47,9 +48,13 @@ public interface UserService extends IService<User> {
 
     List<PassageVO> myThumbPassage();
 
+    List<PassageVO> myPassage();
+
     Boolean follow(Long userId);
 
     List<UserVO> myFollow();
+
+   void  sendRegisterCode(RegisterCodeRequest registerCodeRequest);
 
     List<UserVO> myFollowers();
 

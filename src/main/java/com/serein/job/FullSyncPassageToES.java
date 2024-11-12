@@ -1,6 +1,7 @@
 package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
+//import com.serein.esdao.PassageESDao;
 import com.serein.esdao.PassageESDao;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;

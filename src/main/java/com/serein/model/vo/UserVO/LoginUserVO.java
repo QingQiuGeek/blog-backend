@@ -34,7 +34,10 @@ public class LoginUserVO {
      */
     private String avatarUrl;
 
-
+    /**
+     * ip地址
+     */
+    private String ipAddress;
 
     /**
      * 性别(0女,1男,2未知)

@@ -59,6 +59,11 @@ public class UserVO  implements Serializable {
     private String mail;
 
     /**
+     * ip地址
+     */
+    private String ipAddress;
+
+    /**
      * 电话,预留字段
      */
     private String phone;

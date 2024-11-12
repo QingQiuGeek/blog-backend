@@ -127,8 +127,8 @@ public class PassageController {
    * 获取文章详情
    * */
     @GetMapping("/passageDetails/{pid}")
-    public BaseResponse<PassageVO> getPassageDetails(@PathVariable Long pid) {
-        PassageVO passageDetails = passageService.getPassageByPassageId(pid);
+    public BaseResponse<PassageVO> getPassageDetails(@PathVariable String pid) {
+        PassageVO passageDetails = passageService.getPassageByPassageId(Long.valueOf(pid));
         return ResultUtils.success(passageDetails);
     }
 

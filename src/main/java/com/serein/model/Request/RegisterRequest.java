@@ -38,6 +38,11 @@ public class RegisterRequest implements Serializable {
      */
     private String mail;
 
+    /**
+     * 验证码
+     */
+    private String code;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

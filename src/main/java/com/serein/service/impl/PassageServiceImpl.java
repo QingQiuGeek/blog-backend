@@ -135,11 +135,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             boolQueryBuilder.minimumShouldMatch(1);
         }
         if (CollUtil.isNotEmpty(pTags)){
-            /*
-            * term：tags查询使用精确匹配，而上面的title、content、summary是analyzed搜索分析
+
+            /** term：tags查询使用精确匹配，而上面的title、content、summary是analyzed搜索分析
                 用于精确匹配，适合未分析（not analyzed）字段或关键词字段。
-                直接查找与查询完全匹配的值，不会对输入进行分析。
-            */
+                直接查找与查询完全匹配的值，不会对输入进行分析。*/
+
             BoolQueryBuilder tagBoolQueryBuilder = QueryBuilders.boolQuery();
             for (String pTag : pTags) {
                 tagBoolQueryBuilder.should(QueryBuilders.termQuery("pTags", pTag));
@@ -276,6 +276,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         return true;
     }
 
+    /**
+     *
+     * @param passageId
+     * @return
+     * @Description: 以passageId作为key，收藏该文章的userId为value存入redis
+     */
     @Override
     public Boolean collectPassage(Long passageId) {
         Long userId = UserHolder.getUser().getUserId();
@@ -288,10 +294,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         if (score==null){
             // todo 事务一致性
             boolean b = update().setSql("collectNum=collectNum+1").eq("passageId", passageId).update();
-            //插入用户收藏表
+            //先插入mysql用户收藏表
             UserCollects userCollects= UserCollects.builder().userId(userId).passageId(passageId).build();
             int insert = userCollectsMapper.insert(userCollects);
             if (b&&insert==1){
+                //写入redis
                 stringRedisTemplate.opsForZSet().add(key,userId.toString(),System.currentTimeMillis());
             }else {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
@@ -313,11 +320,13 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
 
 
-
+    /**
+     *
+     * @return
+     * @Description: 从 Redis 查询收藏量前 7 的博客
+     */
     @Override
     public List<PassageVO> getTopCollects() {
-
-        // 从 Redis 查询收藏量前 7 的博客
 
         // 获取所有相关的 passageId 键
         Set<String> keys = stringRedisTemplate.keys(Common.PASSAGE_COLLECT_KEY+"*");

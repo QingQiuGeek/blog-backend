@@ -50,6 +50,10 @@ public class AdminUserVO {
      */
     private String userAccount;
 
+    /**
+     * ip地址
+     */
+    private String ipAddress;
 
     /**
      * 用户名

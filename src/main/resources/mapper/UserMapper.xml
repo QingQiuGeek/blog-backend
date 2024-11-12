@@ -16,6 +16,7 @@
             <result property="mail" column="mail" jdbcType="VARCHAR"/>
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="role" column="role" jdbcType="VARCHAR"/>
+            <result property="ipAddress" column="ipAddress" jdbcType="VARCHAR"/>
             <result property="accessKey" column="accessKey" jdbcType="VARCHAR"/>
             <result property="secretKey" column="secretKey" jdbcType="VARCHAR"/>
             <result property="level" column="level" jdbcType="TINYINT"/>
@@ -29,7 +30,7 @@
         userId,avatarUrl,userName,
         sex,profiles,interestTag,
         userAccount,password,mail,
-        phone,role,accessKey,
+        phone,role,ipAddress,accessKey,
         secretKey,level,createTime,
         updateTime,status,isDelete
     </sql>

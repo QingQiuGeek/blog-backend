@@ -43,6 +43,9 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
                 .excludePathPatterns(
                         "/user/login",
                         "/user/register",
+                        "/user/getUserInfo/{uid}",
+                        "/user/sendRegisterCode",
+                        "/passage/search/uid/{uid}",
                         "/passage/topCollects",
                         "/passage/indexPassageList/{current}",
                         "/passage/search/text",

@@ -1,6 +1,7 @@
 package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
+//import com.serein.esdao.PassageESDao;
 import com.serein.esdao.PassageESDao;
 import com.serein.mapper.PassageMapper;
 import com.serein.model.dto.passageDTO.PassageESDTO;
@@ -36,7 +37,6 @@ public class IncSyncPassageToES {
 
     //单位分钟
     private static  final int RATE_MINUTES =5;
-
 
     @Scheduled(fixedRate = RATE_MINUTES * 60* 1000)
     public void run() {

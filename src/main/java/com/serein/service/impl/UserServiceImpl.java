@@ -14,6 +14,7 @@ import com.serein.constants.Common;
 import com.serein.constants.UserRole;
 import com.serein.mapper.*;
 import com.serein.model.Request.LoginRequest;
+import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
@@ -26,8 +27,10 @@ import com.serein.model.vo.UserVO.UserVO;
 import com.serein.exception.BusinessException;
 import com.serein.service.UserService;
 import com.serein.constants.ErrorCode;
+import com.serein.utils.BaseResponse;
 import com.serein.utils.JwtHelper;
 
+import com.serein.utils.MailUtils;
 import com.serein.utils.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,17 +38,19 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.serein.constants.Common.EMAIL_REGEX;
+import static com.serein.constants.Common.*;
 
 /**
 * @author 懒大王Smile
@@ -64,6 +69,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Value("${custom.originPassword}")
     String originPassword;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     @Autowired
     StringRedisTemplate stringRedisTemplate;
     @Autowired
@@ -81,29 +89,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Autowired
     PassageServiceImpl passageService;
 
+
+
     @Autowired
     UserFollowMapper userFollowMapper;
+
+    @Resource
+    protected JavaMailSenderImpl mailSender;
+    protected MailUtils mailUtils;
+
+    @Autowired
+    PassageMapper passageMapper;
 
 
     /**
      * 关注或取关
      * @param userId
      * @return
+     * @Description: 用户的关注信息存在redis中，登录用户的Id为key，被关注的用户Id为value
      */
     @Override
     public Boolean follow(Long userId) {
-        Long loginUserId = UserHolder.getUser().getUserId();
+        //todo 也可以存在mysql
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if(loginUserVO==null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+        }
+        Long loginUserId =loginUserVO.getUserId();
         String key = Common.USER_FOLLOW_KEY + userId;
+        //使用 stringRedisTemplate.opsForZSet().score(key, loginUserId.toString()) 查询当前登录用户是否已经关注了目标用户。
+        // 如果返回值为 null，表示用户未关注目标用户；如果返回一个非 null 的分数，表示已经关注。
         Double score = stringRedisTemplate.opsForZSet().score(key, loginUserId.toString());
         if (score==null){
+            //如果用户未关注目标用户，执行关注操作:
             UserFollow userFollow = UserFollow.builder().userId(loginUserId).toUserId(userId).build();
+            //先更新数据库 user-follow表
             int insert = userFollowMapper.insert(userFollow);
             if (insert==1){
+                //再更新redis
                 stringRedisTemplate.opsForZSet().add(key, loginUserId.toString(), System.currentTimeMillis());
             }else {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
             }
         }else {
+            //如果用户已经关注目标用户，执行取消关注操作:
             QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("userId",loginUserId).eq("toUserId",userId);
             int delete = userFollowMapper.delete(queryWrapper);
@@ -119,11 +148,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 我关注的用户列表
      * @return
+     * @Description: 关注列表存在mysql，可以从redis查，也可以从mysql查
      */
     @Override
     public List<UserVO> myFollow() {
-        Long userId = UserHolder.getUser().getUserId();
+//        LoginUserVO loginUserVO = UserHolder.getUser();
+//        if (loginUserVO==null){
+//            //未登录直接返回空列表
+//            return Collections.emptyList();
+//        }
+//        Long userId = loginUserVO.getUserId();
+        Long userId = checkIsLogin();
         QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
+        //从数据库查，可以改成从redis查
         queryWrapper.eq("userId",userId);
         List<UserFollow> userFollows = userFollowMapper.selectList(queryWrapper);
         if (CollUtil.isNotEmpty(userFollows)){
@@ -138,33 +175,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return Collections.emptyList();
     }
 
+
+
     //判断我是否关注了这些用户
-    private void isFollow(List<UserVO> userVOList){
-        Long userId = UserHolder.getUser().getUserId();
+    private void isFollow(Long loginUserId,List<UserVO> userVOList){
         for (UserVO userVO : userVOList) {
             String key = Common.USER_FOLLOW_KEY + userVO.getUserId().toString();
-            Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+            Double score = stringRedisTemplate.opsForZSet().score(key, loginUserId.toString());
             userVO.setIsFollow(score != null);
         }
     }
-
+    
+    private Long checkIsLogin(){
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录返回报错，前端显示空数据并提示用户登录
+            throw  new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+        }
+        Long userId = loginUserVO.getUserId();
+        return userId;
+    }
 
     /**
-     * 我的粉丝列表，要判断是否关注了我的粉丝
+     * 我的粉丝列表，要判断是否关注了某些粉丝
      * @return
+     * @Description: 以登录用户的 userId为key查redis，也可以查mysql
      */
     @Override
     public List<UserVO> myFollowers() {
-        //redis
-        Long userId = UserHolder.getUser().getUserId();
+//        //redis
+//        LoginUserVO loginUserVO = UserHolder.getUser();
+//        if (loginUserVO==null){
+//            throw  new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+//        }
+//        Long userId = loginUserVO.getUserId();
+        Long userId = checkIsLogin();
         String key = Common.USER_FOLLOW_KEY + userId.toString();
+        // 从 Redis 获取当前用户（userId）的所有粉丝 IDs，返回的是一个 Set<String>，其中每个元素是一个粉丝的 ID。
         Set<String> myFollowerIds = stringRedisTemplate.opsForZSet().range(key, 0, -1);
         if (CollUtil.isNotEmpty(myFollowerIds)){
+            //拿到idList
             List<Long> list = myFollowerIds.stream().map(followerId -> Long.valueOf(followerId)).collect(Collectors.toList());
             List<User> userList = this.listByIds(list);
             List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
-            //判断我是否关注了粉丝
-            isFollow(userVOListByUserList);
+                //判断我是否关注了粉丝
+            isFollow(userId,userVOListByUserList);
             return userVOListByUserList;
         }
         //mysql
@@ -200,7 +255,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }
             List<UserVO> userVOS = new ArrayList<>();
             userVOS.add(userVO);
-            isFollow(userVOS);
+            LoginUserVO loginUserVO = UserHolder.getUser();
+            if(loginUserVO!=null)
+            {isFollow(loginUserVO.getUserId(),userVOS);}
             return userVO;
         }
         return null;
@@ -226,7 +283,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<PassageVO> myCollectPassage() {
-        Long userId = UserHolder.getUser().getUserId();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录直接返回空列表
+            return Collections.emptyList();
+        }
+        Long userId = loginUserVO.getUserId();
         QueryWrapper<UserCollects> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId",userId);
         List<UserCollects> userCollects = userCollectsMapper.selectList(queryWrapper);
@@ -242,18 +304,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<PassageVO> myThumbPassage() {
-        Long userId = UserHolder.getUser().getUserId();
+//        LoginUserVO loginUserVO = UserHolder.getUser();
+//        if(loginUserVO==null){
+//           return Collections.emptyList();
+//        }
+//        Long userId = loginUserVO.getUserId();
+        Long userId = checkIsLogin();
         QueryWrapper<UserThumbs> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId",userId);
         List<UserThumbs> userThumbs = userThumbsMapper.selectList(queryWrapper);
         ArrayList<Long> passageIdList = new ArrayList<>();
-        if (CollUtil.isNotEmpty(userThumbs)){
-            userThumbs.forEach(userThumbs1 ->
-                    passageIdList.add(userThumbs1.getPassageId())
-            );
+        if (CollUtil.isEmpty(userThumbs)){
+            return  Collections.emptyList();
         }
+        userThumbs.forEach(userThumbs1 ->
+                passageIdList.add(userThumbs1.getPassageId())
+        );
         List<Passage> passageList = passageService.listByIds(passageIdList);
         return passageService.getPassageVOList(passageList);
+    }
+
+    @Override
+    public List<PassageVO> myPassage() {
+//        LoginUserVO loginUserVO = UserHolder.getUser();
+//        if(loginUserVO==null){
+//            return Collections.emptyList();
+//        }
+//        Long userId = loginUserVO.getUserId();
+        Long userId = checkIsLogin();
+        QueryWrapper<Passage> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId",userId);
+        List<Passage> passages = passageMapper.selectList(queryWrapper);
+        if(CollUtil.isEmpty(passages)){
+            return Collections.emptyList();
+        }
+        return passageService.getPassageVOList(passages);
     }
 
 
@@ -286,8 +371,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         LoginUserVO loginUserVO = new LoginUserVO();
+
         BeanUtil.copyProperties(queryUser,loginUserVO);
-        saveUserAndToken(loginUserVO);
+
+        saveUserAndToken(queryUser,loginUserVO);
         log.info("loginUserVO："+loginUserVO);
         log.info("登录线程："+Thread.currentThread().getId());
         return loginUserVO;
@@ -297,9 +384,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 根据uid生成并记录token到redis
      * @param loginUserVO
      */
-    private void saveUserAndToken(LoginUserVO loginUserVO) {
+    private void saveUserAndToken(User user,LoginUserVO loginUserVO) {
         //登录态保存到本地线程
         //UserHolder.saveUser(loginUserVO);
+
+        if (!StringUtils.isBlank(user.getInterestTag())){
+            //把数据库中string类型的json转换成list<String>
+            List<String> pTagList = JSONUtil.toList(user.getInterestTag(), String.class);
+            loginUserVO.setInterestTag(pTagList);
+        }
 
         String token = UUID.randomUUID(true).toString(false);
         //以LOGIN_TOKEN_KEY+userid为key，loginUserVO为值序列化存到redis
@@ -314,6 +407,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //设置token有效期10min，用户进行操作时会刷新redis的token有效期
     }
 
+    private void sendCodeForRegister( String email) {
+        log.info("尝试发送邮箱验证码给用户：" + email + "进行注册操作");
+        log.info("开始发送邮件.../n" + "获取的到邮件发送对象为:" + mailSender);
+        mailUtils = new MailUtils(mailSender, fromEmail);
+        String code = mailUtils.sendCode(email);
+        //验证码存入redis，有效期1min,用注册的邮箱区分验证码
+        stringRedisTemplate.opsForValue().set(USER_REGISTER_CODE_KEY+email,code,REGISTER_CODE_TTL,TimeUnit.MINUTES);
+        log.info("发送邮箱验证码给用户：" + email + "成功 : "+code);
+    }
+
+    /**
+     * @param registerCodeRequest
+     */
+    @Override
+    public void sendRegisterCode(RegisterCodeRequest registerCodeRequest) {
+        String mail = registerCodeRequest.getMail();
+        //检查该邮箱是否已注册
+        checkMailIsRegistered(mail);
+        //发送验证码
+        sendCodeForRegister(mail);
+    }
+
     /**
      *
      * @param registerRequest
@@ -326,25 +441,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String password = registerRequest.getPassword();
         String rePassword = registerRequest.getRePassword();
         String userName = registerRequest.getUserName();
+        String registerCode = registerRequest.getCode();
 
-        //用户名长度不能<2,密码长度不能<6
-        if (StringUtils.isAnyBlank(mail,password,rePassword,userName)){
+        //检查注册参数是否为空
+        if (StringUtils.isAnyBlank(mail,password,rePassword,userName,registerCode)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,ErrorInfo.LOGIN_INFO_ERROR);
         }
-        if (!password.equals(rePassword)|| userName.length()<2||password.length()<6|| checkMail(mail)){
+        //用户名长度不能<2，密码长度不能<6
+        if (!password.equals(rePassword)|| checkMail(mail)|| userName.length()>2||password.length()<6){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,ErrorInfo.LOGIN_INFO_ERROR);
         }
 
-        //检查该邮箱是否已注册
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("mail",mail);
-        if (userMapper.exists(queryWrapper)) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.MAIL_EXISTED_ERROR);
+        //检查邮箱是否被注册
+        checkMailIsRegistered(mail);
+        //从redis获取验证码
+        String rightCode = stringRedisTemplate.opsForValue().get(USER_REGISTER_CODE_KEY + mail);
+        //检查验证码是否存在
+        if (StringUtils.isBlank(rightCode)){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"验证码已过期或不存在");
         }
-
-        //4.密码盐值，加密，写入数据库，注册成功
+        //核验验证码是否正确
+        if (!rightCode.equals(registerCode)){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"验证码错误");
+        }
+        //4.密码盐值加密，写入数据库，注册成功
         String bcrypt =DigestUtils.md5DigestAsHex((SALT+password).getBytes());
-
         User user =User.builder().userName(userName).password(bcrypt).mail(mail).build();
         int insert = userMapper.insert(user);
         if (insert<=0){
@@ -355,8 +476,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtil.copyProperties(user,loginUserVO);
         log.info("注册成功："+loginUserVO);
-        saveUserAndToken(loginUserVO);
+        saveUserAndToken(user,loginUserVO);
         return loginUserVO;
+    }
+
+    private void checkMailIsRegistered(String mail) {
+        //发送验证码时已检查该邮箱是否注册，这里再检查一次
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("mail", mail);
+        if (userMapper.exists(queryWrapper)) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.MAIL_EXISTED_ERROR);
+        }
     }
 
     //邮箱格式校验

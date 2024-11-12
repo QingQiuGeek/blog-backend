@@ -79,6 +79,11 @@ public class User implements Serializable {
     private String role;
 
     /**
+     * ip地址
+     */
+    private String ipAddress;
+
+    /**
      * 预留字段
      */
     private String accessKey;
