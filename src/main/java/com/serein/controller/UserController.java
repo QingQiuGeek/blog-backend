@@ -138,8 +138,9 @@ public class UserController {
     }
 
     @PostMapping("/sendRegisterCode")
-    public void sendRegisterCode(@RequestBody RegisterCodeRequest registerCodeRequest){
+    public BaseResponse<Boolean> sendRegisterCode(@RequestBody RegisterCodeRequest registerCodeRequest){
         userService.sendRegisterCode(registerCodeRequest);
+        return ResultUtils.success(true);
     }
 
     /*

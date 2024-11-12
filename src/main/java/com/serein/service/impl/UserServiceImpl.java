@@ -409,7 +409,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     private void sendCodeForRegister( String email) {
         log.info("尝试发送邮箱验证码给用户：" + email + "进行注册操作");
-        log.info("开始发送邮件.../n" + "获取的到邮件发送对象为:" + mailSender);
+        log.info("开始发送邮件..." + "获取的到邮件发送对象为:" + mailSender);
         mailUtils = new MailUtils(mailSender, fromEmail);
         String code = mailUtils.sendCode(email);
         //验证码存入redis，有效期1min,用注册的邮箱区分验证码
