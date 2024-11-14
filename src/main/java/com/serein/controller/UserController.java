@@ -128,6 +128,17 @@ public class UserController {
     }
 
     /*
+     * 根据userId查询粉丝数量，展示在文章详情页的作者介绍上
+     * */
+//    @GetMapping("/followerNum/{uid}")
+//    public BaseResponse<Integer> getFollowerNum(@PathVariable Long uid){
+//        int followerNum=userService.getFollowerNum(uid);
+//        return ResultUtils.success(followerNum);
+//    }
+
+
+
+    /*
      * 我关注的用户
      * list.size是数量
      * */
@@ -161,7 +172,7 @@ public class UserController {
     }
 
     /*
-     * 我的文章列表
+     * 我的文章，list.size即为我的文章数量
      * */
     @GetMapping("/myPassages")
     public BaseResponse<List<PassageVO>> myPassages(){

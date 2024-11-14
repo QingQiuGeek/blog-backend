@@ -3,6 +3,7 @@ package com.serein.mapper;
 import com.serein.model.entity.UserFollow;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
 * @author 懒大王Smile
@@ -13,6 +14,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserFollowMapper extends BaseMapper<UserFollow> {
 
+    int getFollowerNum(Long uid);
 }
 
 

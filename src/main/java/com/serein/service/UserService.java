@@ -61,4 +61,6 @@ public interface UserService extends IService<User> {
     UserVO getUserInfo(Long uid);
 
     Boolean setAdmin(Long userId);
+
+    int getFollowerNum(Long uid);
 }

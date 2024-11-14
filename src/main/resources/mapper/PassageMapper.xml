@@ -8,6 +8,7 @@
             <id property="passageId" column="passageId" jdbcType="BIGINT"/>
             <result property="authorId" column="authorId" jdbcType="BIGINT"/>
             <result property="authorName" column="authorName" jdbcType="VARCHAR"/>
+            <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
             <result property="content" column="content" jdbcType="VARCHAR"/>
             <result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
@@ -26,13 +27,16 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        passageId,authorId,authorName,
+        passageId,authorId,authorName,avatarUrl,
         title,content,thumbnail,
         summary,categoryId,pTags,
         viewNum,commentNum,thumbNum,
         collectNum,createTime,updateTime,
         accessTime,status,isDelete
     </sql>
+    <update id="updateViewNum">
+        update blog.passage set viewNum=viewNum+1 where passageId=#{passageId};
+    </update>
     <!--把未删除且审核通过的文章查询出来同步到 es  -->
     <select id="listPassageWithNODelete" resultType="com.serein.model.entity.Passage">
         select * from blog.passage where updateTime>=#{minutesAgoDate} and isDelete=1 and status=2

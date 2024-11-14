@@ -2,8 +2,6 @@ package com.serein.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,9 +12,7 @@ import com.serein.constants.ErrorInfo;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.UserHolder;
-import com.serein.model.dto.passageDTO.AddAndUpdatePassageDTO;
-import com.serein.model.dto.passageDTO.PassageESDTO;
-import com.serein.model.dto.passageDTO.SearchPassageDTO;
+import com.serein.model.dto.passageDTO.*;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
@@ -39,7 +35,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,8 +69,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     @Override
     public List<PassageVO> getIndexPassageList(int current) {
 
+        //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
         Page<Passage> passagePage = new Page<>(current, Common.PAGE_SIZE);
-        Page<Passage> pageDesc = page(passagePage, new QueryWrapper<Passage>().eq("status",2).orderByDesc("accessTime"));
+        Page<Passage> pageDesc = page(passagePage, new QueryWrapper<Passage>().eq("status",2).orderByDesc("accessTime").
+                select("passageId","title","viewNum","authorId","authorName","avatarUrl","thumbnail","summary","pTags","commentNum","collectNum","thumbNum","accessTime"));
         List<Passage> passageList = pageDesc.getRecords();
         if (passageList.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取文章列表失败");
@@ -188,7 +185,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
 
     @Override
-    public Long addPassage(AddAndUpdatePassageDTO addPassageDTO) {
+    public Long addPassage(AddPassageDTO addPassageDTO) {
         Passage passage = getPassage(addPassageDTO);
         //status 0草稿  1待审核 2已发布
         //前期默认已发布
@@ -202,8 +199,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
     @Transactional
     @Override
-    public Boolean updatePassage(AddAndUpdatePassageDTO updatePassageDTO) {
+    public Boolean updatePassage(UpdatePassageDTO updatePassageDTO) {
         Passage passage = getPassage(updatePassageDTO);
+
         //更新文章时，审核通过时间在数据库中自动更新
         boolean b = this.updateById(passage);
         if (b){
@@ -212,16 +210,21 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
     }
 
-    public Passage getPassage(AddAndUpdatePassageDTO passageDTO) {
+    public Passage getPassage(PassageDTO passageDTO) {
         Passage passage = new Passage();
         //把list<String>标签转换成json
         BeanUtil.copyProperties(passageDTO,passage);
+        if (passageDTO.getClass()==UpdatePassageDTO.class){
+            passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
+        }
         List<String> tags = passageDTO.getPTags();
         if (tags != null) {
             passage.setPTags(JSONUtil.toJsonStr(tags));
         }
         passage.setAuthorId(UserHolder.getUser().getUserId());
         passage.setAuthorName(UserHolder.getUser().getUserName());
+        String authorAvatar=passageMapper.getAuthorAvatar(passage.getAuthorId());
+        passage.setAvatarUrl(authorAvatar);
         return passage;
     }
 
@@ -231,12 +234,17 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         if (passage==null){
             return null;
         }
+        passageMapper.updateViewNum(passageId);
         PassageVO passageVO = new PassageVO();
         BeanUtil.copyProperties(passage,passageVO);
         if (!StringUtils.isBlank(passage.getPTags())){
             List<String> list = JSONUtil.toList(passage.getPTags(), String.class);
             passageVO.setPTags(list);
         }
+        //todo 完善点赞收藏逻辑
+
+
+
         return passageVO;
     }
 
@@ -376,14 +384,14 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         return ResultUtils.success(0);
     }
 
+
+
     @Override
-    public List<PassageVO> myPassages() {
-        Long userId = UserHolder.getUser().getUserId();
-        QueryWrapper<Passage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("authorId",userId);
-        List<Passage> passageList = list(queryWrapper);
-        return getPassageVOList(passageList);
+    public PassageVO getPassageContentByPassageId(Long pid) {
+        return passageMapper.getPassageContentByPid(pid);
+
     }
+
 
 }
 

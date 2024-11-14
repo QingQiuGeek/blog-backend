@@ -49,6 +49,11 @@ public class UserVO  implements Serializable {
     private List<String> interestTag;
 
     /**
+     * 粉丝数量
+     */
+    private Integer followerNum;
+
+    /**
      * 用户名
      */
     private String userName;

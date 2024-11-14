@@ -15,4 +15,11 @@
         id,userId,toUserId,
         followTime
     </sql>
+
+    <!-- 根据用户id获取粉丝数 -->
+    <select id="getFollowerNum" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT userId)
+        FROM blog.user_follow
+        WHERE toUserId = #{uid}
+    </select>
 </mapper>

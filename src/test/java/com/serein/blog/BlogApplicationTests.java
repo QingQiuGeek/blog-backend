@@ -6,6 +6,9 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.constants.Common;
+import com.serein.model.dto.passageDTO.AddPassageDTO;
+import com.serein.model.dto.passageDTO.PassageDTO;
+import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.User;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
@@ -18,6 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SpringBootTest
 class BlogApplicationTests {
@@ -31,8 +36,33 @@ class BlogApplicationTests {
     @Autowired
     UserServiceImpl userServiceImpl;
 
+    AddPassageDTO addPassageDTO = new AddPassageDTO();
+    UpdatePassageDTO updatePassageDTO=new UpdatePassageDTO();
 
-    //传入重复的id，查处的结果不重复
+    @Test
+    void doClass(){
+        getDtoClass(addPassageDTO);
+        getDtoClass(updatePassageDTO);
+
+    }
+
+    void getDtoClass(PassageDTO passageDTO){
+        System.out.println(passageDTO.getClass());
+    }
+
+@Test
+void dto(){
+    PassageDTO passageDTO = new PassageDTO();
+    passageDTO.setTitle("哈哈哈");
+    System.out.println(passageDTO.toString());
+
+    AddPassageDTO addPassageDTO = new AddPassageDTO();
+    addPassageDTO.setContent("content");
+    System.out.println(addPassageDTO.toString());
+    System.out.println(addPassageDTO.getContent());
+
+    }
+    //传入重复的id，查出的结果不重复
     @Test
     void selectBatchById(){
         List<Long> idlist=new ArrayList<>();

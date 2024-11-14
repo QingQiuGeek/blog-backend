@@ -32,6 +32,7 @@ import com.serein.utils.JwtHelper;
 
 import com.serein.utils.MailUtils;
 import com.serein.utils.ResultUtils;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -90,7 +91,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     PassageServiceImpl passageService;
 
 
-
     @Autowired
     UserFollowMapper userFollowMapper;
 
@@ -110,16 +110,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public Boolean follow(Long userId) {
-        //todo 也可以存在mysql
         LoginUserVO loginUserVO = UserHolder.getUser();
         if(loginUserVO==null){
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
         }
         Long loginUserId =loginUserVO.getUserId();
-        String key = Common.USER_FOLLOW_KEY + userId;
+        String key = Common.USER_FOLLOW_KEY + loginUserId;
         //使用 stringRedisTemplate.opsForZSet().score(key, loginUserId.toString()) 查询当前登录用户是否已经关注了目标用户。
         // 如果返回值为 null，表示用户未关注目标用户；如果返回一个非 null 的分数，表示已经关注。
-        Double score = stringRedisTemplate.opsForZSet().score(key, loginUserId.toString());
+        Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
         if (score==null){
             //如果用户未关注目标用户，执行关注操作:
             UserFollow userFollow = UserFollow.builder().userId(loginUserId).toUserId(userId).build();
@@ -127,17 +126,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             int insert = userFollowMapper.insert(userFollow);
             if (insert==1){
                 //再更新redis
-                stringRedisTemplate.opsForZSet().add(key, loginUserId.toString(), System.currentTimeMillis());
+                stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
             }else {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
             }
         }else {
-            //如果用户已经关注目标用户，执行取消关注操作:
+            //如果用户已经关注目标用户，执行取消关注操作
             QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("userId",loginUserId).eq("toUserId",userId);
+            //delete是被删除的行数，正常情况下是1，因为关注和被关注的关系只有一个存在数据库，不会重复关注
             int delete = userFollowMapper.delete(queryWrapper);
             if (delete==1){
-                stringRedisTemplate.opsForZSet().remove(key,loginUserId.toString());
+                stringRedisTemplate.opsForZSet().remove(key,userId.toString());
             }else {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
             }
@@ -148,25 +148,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 我关注的用户列表
      * @return
-     * @Description: 关注列表存在mysql，可以从redis查，也可以从mysql查
+     * @Description: 从redis查
      */
     @Override
     public List<UserVO> myFollow() {
-//        LoginUserVO loginUserVO = UserHolder.getUser();
-//        if (loginUserVO==null){
-//            //未登录直接返回空列表
-//            return Collections.emptyList();
-//        }
-//        Long userId = loginUserVO.getUserId();
-        Long userId = checkIsLogin();
-        QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
-        //从数据库查，可以改成从redis查
-        queryWrapper.eq("userId",userId);
-        List<UserFollow> userFollows = userFollowMapper.selectList(queryWrapper);
-        if (CollUtil.isNotEmpty(userFollows)){
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录直接返回空列表
+            return Collections.emptyList();
+        }
+        Long loginUserId = loginUserVO.getUserId();
+        String key= USER_FOLLOW_KEY+loginUserId;
+        //从redis查
+        Set<String> stringIdSet = stringRedisTemplate.opsForZSet().range(key, 0, -1);
+        if (CollUtil.isNotEmpty(stringIdSet)){
             ArrayList<Long> idList = new ArrayList<>();
-            userFollows.forEach(userFollow ->idList.add(userFollow.getToUserId()));
+            //遍历stringIdSet把每一个string类型的userid转换成long
+            stringIdSet.forEach(idString->idList.add(Long.valueOf(idString)));
             List<User> userList = this.listByIds(idList);
+            //把user转化成uservo
             List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
             //我关注的，全部设置成已关注
             userVOListByUserList.forEach(userVO -> userVO.setIsFollow(true));
@@ -179,62 +179,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     //判断我是否关注了这些用户
     private void isFollow(Long loginUserId,List<UserVO> userVOList){
+        String key = Common.USER_FOLLOW_KEY + loginUserId.toString();
         for (UserVO userVO : userVOList) {
-            String key = Common.USER_FOLLOW_KEY + userVO.getUserId().toString();
-            Double score = stringRedisTemplate.opsForZSet().score(key, loginUserId.toString());
+            Double score = stringRedisTemplate.opsForZSet().score(key, userVO.getUserId().toString());
             userVO.setIsFollow(score != null);
         }
-    }
-    
-    private Long checkIsLogin(){
-        LoginUserVO loginUserVO = UserHolder.getUser();
-        if (loginUserVO==null){
-            //未登录返回报错，前端显示空数据并提示用户登录
-            throw  new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
-        }
-        Long userId = loginUserVO.getUserId();
-        return userId;
     }
 
     /**
      * 我的粉丝列表，要判断是否关注了某些粉丝
      * @return
-     * @Description: 以登录用户的 userId为key查redis，也可以查mysql
+     * @Description: redis存储了我关注了哪些用户，适合查询我的关注，而不是我的粉丝，这里查mysql
      */
     @Override
     public List<UserVO> myFollowers() {
-//        //redis
-//        LoginUserVO loginUserVO = UserHolder.getUser();
-//        if (loginUserVO==null){
-//            throw  new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
-//        }
-//        Long userId = loginUserVO.getUserId();
-        Long userId = checkIsLogin();
-        String key = Common.USER_FOLLOW_KEY + userId.toString();
-        // 从 Redis 获取当前用户（userId）的所有粉丝 IDs，返回的是一个 Set<String>，其中每个元素是一个粉丝的 ID。
-        Set<String> myFollowerIds = stringRedisTemplate.opsForZSet().range(key, 0, -1);
-        if (CollUtil.isNotEmpty(myFollowerIds)){
-            //拿到idList
-            List<Long> list = myFollowerIds.stream().map(followerId -> Long.valueOf(followerId)).collect(Collectors.toList());
-            List<User> userList = this.listByIds(list);
-            List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
-                //判断我是否关注了粉丝
-            isFollow(userId,userVOListByUserList);
-            return userVOListByUserList;
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录返回空列表
+            return Collections.emptyList();
         }
-        //mysql
-        /*QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("toUserId",userId);
+        Long loginUserId = loginUserVO.getUserId();
+        QueryWrapper<UserFollow> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("toUserId",loginUserId);
         List<UserFollow> myFollowers = userFollowMapper.selectList(queryWrapper);
         if (CollUtil.isNotEmpty(myFollowers)){
             ArrayList<Long> idList = new ArrayList<>();
+            //拿到我的粉丝的id列表
             myFollowers.forEach(myFollower ->idList.add(myFollower.getUserId()));
+            //根据我的粉丝的idlist查询出来粉丝的uservo
             List<User> userList = this.listByIds(idList);
             List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
             //判断我是否关注了粉丝
-            isFollow(userVOListByUserList);
+            isFollow(loginUserId,userVOListByUserList);
             return userVOListByUserList;
-        }*/
+        }
         return Collections.emptyList();
     }
 
@@ -253,11 +231,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             if (StringUtils.isNotBlank(interestTag)){
                 userVO.setInterestTag(JSONUtil.toList(interestTag,String.class));
             }
+            //查询该用户粉丝数量
+            int followerNum = userFollowMapper.getFollowerNum(uid);
+            userVO.setFollowerNum(followerNum);
+            LoginUserVO loginUserVO = UserHolder.getUser();
+            if (loginUserVO==null){
+                return userVO;
+            }
+            Long loginUserId = loginUserVO.getUserId();
             List<UserVO> userVOS = new ArrayList<>();
             userVOS.add(userVO);
-            LoginUserVO loginUserVO = UserHolder.getUser();
-            if(loginUserVO!=null)
-            {isFollow(loginUserVO.getUserId(),userVOS);}
+            isFollow(loginUserId,userVOS);
             return userVO;
         }
         return null;
@@ -278,6 +262,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return true;
         }
         return null;
+    }
+
+    //自定义sql查询
+    @Override
+    public int getFollowerNum(Long uid) {
+        return userFollowMapper.getFollowerNum(uid);
     }
 
 
@@ -304,14 +294,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<PassageVO> myThumbPassage() {
-//        LoginUserVO loginUserVO = UserHolder.getUser();
-//        if(loginUserVO==null){
-//           return Collections.emptyList();
-//        }
-//        Long userId = loginUserVO.getUserId();
-        Long userId = checkIsLogin();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录返回空列表
+            return  Collections.emptyList();
+        }
+        Long loginUserId = loginUserVO.getUserId();
         QueryWrapper<UserThumbs> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId",userId);
+        queryWrapper.eq("userId",loginUserId);
         List<UserThumbs> userThumbs = userThumbsMapper.selectList(queryWrapper);
         ArrayList<Long> passageIdList = new ArrayList<>();
         if (CollUtil.isEmpty(userThumbs)){
@@ -326,14 +316,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<PassageVO> myPassage() {
-//        LoginUserVO loginUserVO = UserHolder.getUser();
-//        if(loginUserVO==null){
-//            return Collections.emptyList();
-//        }
-//        Long userId = loginUserVO.getUserId();
-        Long userId = checkIsLogin();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            return  Collections.emptyList();
+        }
+        Long loginUserId = loginUserVO.getUserId();
         QueryWrapper<Passage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId",userId);
+        queryWrapper.eq("authorId",loginUserId);
         List<Passage> passages = passageMapper.selectList(queryWrapper);
         if(CollUtil.isEmpty(passages)){
             return Collections.emptyList();
@@ -353,7 +342,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1.判断邮箱和密码是否为空,邮箱格式校验，密码长度校验
         String loginUserMail = loginRequest.getMail();
         String loginPassword = loginRequest.getPassword();
-        if (StringUtils.isAnyBlank(loginUserMail, loginPassword)|| checkMail(loginUserMail) ||loginPassword.length()<6){
+        if (StringUtils.isAnyBlank(loginUserMail, loginPassword)|| checkMail(loginUserMail) ||checkPassword(loginPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,ErrorInfo.LOGIN_INFO_ERROR);
         }
 
@@ -371,7 +360,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         LoginUserVO loginUserVO = new LoginUserVO();
-
         BeanUtil.copyProperties(queryUser,loginUserVO);
 
         saveUserAndToken(queryUser,loginUserVO);
@@ -447,8 +435,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StringUtils.isAnyBlank(mail,password,rePassword,userName,registerCode)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,ErrorInfo.LOGIN_INFO_ERROR);
         }
-        //用户名长度不能<2，密码长度不能<6
-        if (!password.equals(rePassword)|| checkMail(mail)|| userName.length()>2||password.length()<6){
+
+        if (!password.equals(rePassword)|| checkMail(mail)|| checkUserName(userName)||checkPassword(password)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,ErrorInfo.LOGIN_INFO_ERROR);
         }
 
@@ -493,6 +481,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private boolean checkMail(String mail) {
         return !Pattern.compile(EMAIL_REGEX).matcher(mail).matches();
     }
+
+    //用户名格式校验
+    private boolean checkUserName(String userName) {
+        return !Pattern.compile(USERNAME_REGEX).matcher(userName).matches();
+    }
+
+    //密码格式校验
+    private boolean checkPassword(String password) {
+        return !Pattern.compile(PASSWORD_REGEX).matcher(password).matches();
+    }
+
 
     /**
      *

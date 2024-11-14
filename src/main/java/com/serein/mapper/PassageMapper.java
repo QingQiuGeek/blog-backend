@@ -2,7 +2,9 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Date;
 import java.util.List;
@@ -17,6 +19,14 @@ import java.util.List;
 public interface PassageMapper extends BaseMapper<Passage> {
 
     List<Passage> listPassageWithNODelete(Date minutesAgoDate);
+
+    void updateViewNum(Long passageId);
+
+    @Select("select content,authorId from blog.passage where passageId=#{pid}")
+    PassageVO getPassageContentByPid(Long pid);
+
+    @Select("select  avatarUrl from blog.user where userId =#{authorId}")
+    String getAuthorAvatar(Long authorId);
 }
 
 

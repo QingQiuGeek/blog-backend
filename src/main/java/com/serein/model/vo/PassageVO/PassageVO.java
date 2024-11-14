@@ -51,6 +51,11 @@ public class PassageVO implements Serializable {
     private String authorName;
 
     /**
+     * 头像URL
+     */
+    private String avatarUrl;
+
+    /**
      * 文章标题
      */
     private String title;
