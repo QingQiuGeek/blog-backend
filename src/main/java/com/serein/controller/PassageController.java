@@ -3,10 +3,13 @@ package com.serein.controller;
 import com.serein.annotation.AuthCheck;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
+import com.serein.mapper.PassageMapper;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.exception.BusinessException;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
+import com.serein.model.vo.PassageVO.PassageContentVO;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.PassageService;
 import com.serein.utils.BaseResponse;
@@ -32,19 +35,11 @@ public class PassageController {
 
 
     /*
-    * 我的文章总收藏量
-    * */
-    @GetMapping("/CollectNums")
-    public BaseResponse<Integer> getCollectNums(){
-        return passageService.getCollectNums();
-    }
-
-    /*
     * top7 爆款文章
     * */
     @GetMapping("/topCollects")
-    public BaseResponse<List<PassageVO>> getTopCollects(){
-        List<PassageVO> hotCollects = passageService.getTopCollects();
+    public BaseResponse<List<PassageInfoVO>> getTopCollects(){
+        List<PassageInfoVO> hotCollects = passageService.getTopCollects();
         return ResultUtils.success(hotCollects);
     }
 
@@ -73,8 +68,8 @@ public class PassageController {
      */
 
     @GetMapping("/homePassageList/{current}")
-    public BaseResponse<List<PassageVO>> getHomePassageList(@PathVariable int current){
-        List<PassageVO> newPassageList = passageService.getIndexPassageList(current);
+    public BaseResponse<List<PassageInfoVO>> getHomePassageList(@PathVariable int current){
+        List<PassageInfoVO> newPassageList = passageService.getIndexPassageList(current);
         return ResultUtils.success(newPassageList);
     }
 
@@ -85,30 +80,20 @@ public class PassageController {
      * @return
      */
     @PostMapping("/search/text")
-    public BaseResponse<List<PassageVO>> searchFromESByText(@RequestBody SearchPassageDTO searchPassageDTO){
-        List<PassageVO> passageVOList = passageService.searchFromESByText(searchPassageDTO);
+    public BaseResponse<List<PassageInfoVO>> searchFromESByText(@RequestBody SearchPassageDTO searchPassageDTO){
+        List<PassageInfoVO> passageVOList = passageService.searchFromESByText(searchPassageDTO);
         return ResultUtils.success(passageVOList);
     }
 
-    /**
-     * 根据文章id搜索文章
-     * @param pid
-     * @return
-     */
-    @GetMapping("/search/pid/{pid}")
-    public BaseResponse<PassageVO> getPassageByPassageId(@PathVariable String pid){
-        PassageVO passageVO = passageService.getPassageByPassageId(Long.valueOf(pid));
-        return ResultUtils.success(passageVO);
-    }
 
     /**
      * 根据文章id搜索文章Content
      * @param pid
      * @return
      */
-    @GetMapping("/content/{pid}")
-    public BaseResponse<PassageVO> getPassageContentByPassageId(@PathVariable String pid){
-        PassageVO passageContent = passageService.getPassageContentByPassageId(Long.valueOf(pid));
+    @GetMapping("/content/{uid}/{pid}")
+    public BaseResponse<PassageContentVO> getPassageContentByPassageId(@PathVariable Long uid, @PathVariable String pid){
+        PassageContentVO passageContent = passageService.getPassageContentByPassageId(uid,Long.valueOf(pid));
         return ResultUtils.success(passageContent);
     }
 
@@ -118,18 +103,25 @@ public class PassageController {
      * @return
      */
     @GetMapping("/search/uid/{uid}")
-    public BaseResponse<List<PassageVO>> getPassageByUserId(@PathVariable Long uid){
-        List<PassageVO> passageVOList = passageService.getPassageByUserId(uid);
-        return ResultUtils.success(passageVOList);
+    public BaseResponse<List<PassageInfoVO>> getPassageByUserId(@PathVariable Long uid){
+        List<PassageInfoVO> passageInfoVOList = passageService.getPassageByUserId(uid);
+        return ResultUtils.success(passageInfoVOList);
     }
 
    /*
-   * 获取文章详情
-   * */
-    @GetMapping("/passageDetails/{pid}")
-    public BaseResponse<PassageVO> getPassageDetails(@PathVariable String pid) {
-        PassageVO passageDetails = passageService.getPassageByPassageId(Long.valueOf(pid));
-        return ResultUtils.success(passageDetails);
+   * 获取文章信息 collectNum,
+    viewNum,
+    commentNum,
+    thumbNum,
+    isCollect,
+    isThumb,
+    accessTime
+    title,summary这些数据在主页已经存在，那么传给passageDetails复用
+    */
+    @GetMapping("/passageInfo/{pid}")
+    public BaseResponse<PassageInfoVO> getPassageInfo(@PathVariable String pid) {
+        PassageInfoVO passageInfo = passageService.getPassageInfoByPassageId(Long.valueOf(pid));
+        return ResultUtils.success(passageInfo);
     }
 
     /**

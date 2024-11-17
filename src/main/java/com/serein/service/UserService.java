@@ -7,9 +7,11 @@ import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.User;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,11 +46,11 @@ public interface UserService extends IService<User> {
 
     Long addUser(AddUserDTO addUserDTO);
 
-    List<PassageVO> myCollectPassage();
+    List<PassageInfoVO> myCollectPassage();
 
-    List<PassageVO> myThumbPassage();
+    List<PassageInfoVO> myThumbPassage();
 
-    List<PassageVO> myPassage();
+    List<PassageInfoVO> myPassage();
 
     Boolean follow(Long userId);
 
@@ -62,5 +64,5 @@ public interface UserService extends IService<User> {
 
     Boolean setAdmin(Long userId);
 
-    int getFollowerNum(Long uid);
+    UserInfoDataVO getUserInfoData();
 }

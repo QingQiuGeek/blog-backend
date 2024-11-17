@@ -20,19 +20,17 @@ import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.*;
-import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.exception.BusinessException;
 import com.serein.service.UserService;
 import com.serein.constants.ErrorCode;
-import com.serein.utils.BaseResponse;
 import com.serein.utils.JwtHelper;
 
 import com.serein.utils.MailUtils;
-import com.serein.utils.ResultUtils;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -41,7 +39,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
@@ -264,15 +261,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return null;
     }
 
-    //自定义sql查询
+
+
+    /**
+     * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量
+     * //TODO 需要传入用户id，其他用户也要用该接口，复用
+     * @return
+     */
     @Override
-    public int getFollowerNum(Long uid) {
-        return userFollowMapper.getFollowerNum(uid);
+    public UserInfoDataVO getUserInfoData() {
+        UserInfoDataVO userInfoDataVO = new UserInfoDataVO();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        //未登录返回默认数据0
+        //TODO 修改成传uid查数据提高接口复用
+        if(loginUserVO==null){
+            return  userInfoDataVO;
+        }
+        Long userId = loginUserVO.getUserId();
+        int followerNum = userFollowMapper.getFollowerNum(userId);
+        int collectNum=passageMapper.getCollectNumById(userId);
+        int passageNum=passageMapper.getPassageNumById(userId);
+        String key=USER_FOLLOW_KEY+userId;
+        Long followNum = stringRedisTemplate.opsForZSet().size(key);
+        if (followNum ==null){
+            followNum=0L;
+        }
+        int thumbNum=passageMapper.getThumbNum(userId);
+        userInfoDataVO.setCollectNum(collectNum);
+        userInfoDataVO.setFollowNum(followNum.intValue());
+        userInfoDataVO.setPassageNum(passageNum);
+        userInfoDataVO.setThumbNum(thumbNum);
+        userInfoDataVO.setFollowerNum(followerNum);
+        return userInfoDataVO;
     }
 
 
     @Override
-    public List<PassageVO> myCollectPassage() {
+    public List<PassageInfoVO> myCollectPassage() {
         LoginUserVO loginUserVO = UserHolder.getUser();
         if (loginUserVO==null){
             //未登录直接返回空列表
@@ -289,11 +314,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             );
         }
         List<Passage> passageList = passageService.listByIds(passageIdList);
-        return passageService.getPassageVOList(passageList);
+        return passageService.getPassageInfoVOList(passageList);
     }
 
     @Override
-    public List<PassageVO> myThumbPassage() {
+    public List<PassageInfoVO> myThumbPassage() {
         LoginUserVO loginUserVO = UserHolder.getUser();
         if (loginUserVO==null){
             //未登录返回空列表
@@ -311,11 +336,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 passageIdList.add(userThumbs1.getPassageId())
         );
         List<Passage> passageList = passageService.listByIds(passageIdList);
-        return passageService.getPassageVOList(passageList);
+        return passageService.getPassageInfoVOList(passageList);
     }
 
     @Override
-    public List<PassageVO> myPassage() {
+    public List<PassageInfoVO> myPassage() {
         LoginUserVO loginUserVO = UserHolder.getUser();
         if (loginUserVO==null){
             return  Collections.emptyList();
@@ -327,7 +352,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(CollUtil.isEmpty(passages)){
             return Collections.emptyList();
         }
-        return passageService.getPassageVOList(passages);
+        return passageService.getPassageInfoVOList(passages);
     }
 
 

@@ -1,9 +1,6 @@
 package com.serein.model.vo.PassageVO;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -22,7 +19,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @Data
-public class PassageVO implements Serializable {
+public class PassageInfoVO implements Serializable {
 
 
     //todo 当前用户是否点赞
@@ -59,11 +56,6 @@ public class PassageVO implements Serializable {
      * 文章标题
      */
     private String title;
-
-    /**
-     * 文章内容
-     */
-    private String content;
 
     /**
      * 预览图URL

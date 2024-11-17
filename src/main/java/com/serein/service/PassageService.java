@@ -5,6 +5,8 @@ import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageContentVO;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.utils.BaseResponse;
 
@@ -17,29 +19,23 @@ import java.util.List;
 */
 public interface PassageService extends IService<Passage> {
 
-    List<PassageVO> getIndexPassageList(int current);
+    List<PassageInfoVO> getIndexPassageList(int current);
 
-    List<PassageVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
+    List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
 
-    List<PassageVO> getPassageByUserId(Long userId);
+    List<PassageInfoVO> getPassageByUserId(Long userId);
 
     Long addPassage(AddPassageDTO addPassageDTO);
 
     Boolean updatePassage(UpdatePassageDTO updatePassageDTO);
 
-    PassageVO getPassageByPassageId(Long passageId);
+    PassageInfoVO getPassageInfoByPassageId(Long passageId);
 
     Boolean thumbPassage(Long passageId);
 
     Boolean collectPassage(Long passageId);
 
+    List<PassageInfoVO> getTopCollects();
 
-    List<PassageVO> getTopCollects();
-
-    BaseResponse<Integer> getCollectNums();
-
-
-
-
-    PassageVO getPassageContentByPassageId(Long pid);
+    PassageContentVO getPassageContentByPassageId(Long uid, Long pid);
 }

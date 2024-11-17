@@ -5,9 +5,12 @@ import com.serein.model.Request.LoginRequest;
 import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
+import com.serein.service.PassageService;
 import com.serein.service.UserService;
 import com.serein.service.impl.UserServiceImpl;
 import com.serein.utils.BaseResponse;
@@ -30,6 +33,8 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
+    @Autowired
+    PassageService passageService;
     @Autowired
     UserService userService;
 
@@ -63,6 +68,15 @@ public class UserController {
     public BaseResponse<Boolean> logout(HttpServletRequest httpServletRequest){
         Boolean logout = userService.logout(httpServletRequest);
         return ResultUtils.success(logout);
+    }
+
+    /*
+     * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量
+     * */
+    @GetMapping("/userInfoData")
+    public BaseResponse<UserInfoDataVO> getUserInfoData(){
+        UserInfoDataVO userInfoData = userService.getUserInfoData();
+        return ResultUtils.success(userInfoData);
     }
 
     /**
@@ -158,16 +172,16 @@ public class UserController {
     * 我的收藏博客列表
     * */
     @GetMapping("/myCollect")
-    public BaseResponse<List<PassageVO>> myCollectPassage(){
-        List<PassageVO> passageVOList = userService.myCollectPassage();
+    public BaseResponse<List<PassageInfoVO>> myCollectPassage(){
+        List<PassageInfoVO> passageVOList = userService.myCollectPassage();
         return ResultUtils.success(passageVOList);
     }
     /*
     * 我的点赞博客列表
     * */
     @GetMapping("/myThumb")
-    public BaseResponse<List<PassageVO>> myThumbPassage(){
-        List<PassageVO> passageVOList = userService.myThumbPassage();
+    public BaseResponse<List<PassageInfoVO>> myThumbPassage(){
+        List<PassageInfoVO> passageVOList = userService.myThumbPassage();
         return ResultUtils.success(passageVOList);
     }
 
@@ -175,8 +189,8 @@ public class UserController {
      * 我的文章，list.size即为我的文章数量
      * */
     @GetMapping("/myPassages")
-    public BaseResponse<List<PassageVO>> myPassages(){
-        List<PassageVO> passageVOList = userService.myPassage();
+    public BaseResponse<List<PassageInfoVO>> myPassages(){
+        List<PassageInfoVO> passageVOList = userService.myPassage();
         return ResultUtils.success(passageVOList);
     }
 

@@ -16,14 +16,13 @@ import com.serein.model.dto.passageDTO.*;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
-import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.model.vo.PassageVO.PassageContentVO;
+import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.exception.BusinessException;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.service.PassageService;
 import com.serein.mapper.PassageMapper;
 
-import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -67,7 +66,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     PassageMapper passageMapper;
 
     @Override
-    public List<PassageVO> getIndexPassageList(int current) {
+    public List<PassageInfoVO> getIndexPassageList(int current) {
 
         //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
         Page<Passage> passagePage = new Page<>(current, Common.PAGE_SIZE);
@@ -77,48 +76,48 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         if (passageList.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取文章列表失败");
         }
-        List<PassageVO> collect = getPassageVOList(passageList);
-
+        List<PassageInfoVO> collect = getPassageInfoVOList(passageList);
         return collect;
     }
 
-    public List<PassageVO> getPassageVOList(List<Passage> passageList) {
-        List<PassageVO> collect = passageList.stream().map(passage -> {
-                    PassageVO passageVO = new PassageVO();
-                    BeanUtil.copyProperties(passage, passageVO);
+    //主页显示
+    public List<PassageInfoVO> getPassageInfoVOList(List<Passage> passageList) {
+        List<PassageInfoVO> collect = passageList.stream().map(passage -> {
+            PassageInfoVO passageInfoVO = new PassageInfoVO();
+                    BeanUtil.copyProperties(passage, passageInfoVO);
                     if (!StringUtils.isBlank(passage.getPTags())){
                         //把数据库中string类型的json转换成list<String>
                         List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
-                        passageVO.setPTags(pTagList);
+                        passageInfoVO.setPTags(pTagList);
                         //判断当前用户是否点赞、收藏
-                        isThumbCollect(passageVO);
+                        isThumbCollect(passageInfoVO);
                     }
-                    return passageVO;
+                    return passageInfoVO;
                 }
         ).collect(Collectors.toList());
-
         return collect;
     }
 
     //判断当前用户是否点赞或收藏该文章
-    private void isThumbCollect(PassageVO passageVO){
+    private void isThumbCollect(PassageInfoVO passageInfoVO){
         LoginUserVO loginUserVO = UserHolder.getUser();
         if (loginUserVO==null){
             return ;
         }
         Long userId = loginUserVO.getUserId();
-        String passageId = passageVO.getPassageId().toString();
+        String passageId = passageInfoVO.getPassageId().toString();
         String keyThumb =Common.PASSAGE_THUMB_KEY+passageId;
         Double score1 = stringRedisTemplate.opsForZSet().score(keyThumb, userId.toString());
-        passageVO.setIsThumb(score1!=null);
+        passageInfoVO.setIsThumb(score1!=null);
 
         String keyCollect =Common.PASSAGE_COLLECT_KEY+ passageId;
         Double score2 = stringRedisTemplate.opsForZSet().score(keyCollect, userId.toString());
-        passageVO.setIsCollect(score2!=null);
+        passageInfoVO.setIsCollect(score2!=null);
     }
 
+    //todo es搜索优化是否要passageInfoVO
     @Override
-    public List<PassageVO> searchFromESByText(SearchPassageDTO searchPassageDTO) {
+    public List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO) {
         String searchText = searchPassageDTO.getSearchText();
         List<String> pTags = searchPassageDTO.getPTags();
 
@@ -136,7 +135,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             /** term：tags查询使用精确匹配，而上面的title、content、summary是analyzed搜索分析
                 用于精确匹配，适合未分析（not analyzed）字段或关键词字段。
                 直接查找与查询完全匹配的值，不会对输入进行分析。*/
-
             BoolQueryBuilder tagBoolQueryBuilder = QueryBuilders.boolQuery();
             for (String pTag : pTags) {
                 tagBoolQueryBuilder.should(QueryBuilders.termQuery("pTags", pTag));
@@ -169,18 +167,18 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
                 });
             }
         }
-        return getPassageVOList(resourceList);
+        return getPassageInfoVOList(resourceList);
     }
 
     @Override
-    public  List<PassageVO> getPassageByUserId(Long userId) {
+    public  List<PassageInfoVO> getPassageByUserId(Long userId) {
         QueryWrapper<Passage> passageQueryWrapper = new QueryWrapper<>();
         passageQueryWrapper.eq("authorId", userId);
         List<Passage> list = this.list(passageQueryWrapper);
         if (list.isEmpty()){
             return Collections.emptyList();
         }
-        List<PassageVO> collect = getPassageVOList(list);
+        List<PassageInfoVO> collect = getPassageInfoVOList(list);
         return  collect;
     }
 
@@ -229,23 +227,17 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
 
     @Override
-    public PassageVO getPassageByPassageId(Long passageId) {
-        Passage passage = this.getById(passageId);
-        if (passage==null){
-            return null;
+    public PassageInfoVO getPassageInfoByPassageId(Long passageId) {
+        Passage passageInfo = passageMapper.getPassageInfo(passageId);
+        PassageInfoVO passageInfoVO = new PassageInfoVO();
+        BeanUtil.copyProperties(passageInfo,passageInfoVO);
+        if (!StringUtils.isNotBlank(passageInfo.getPTags())){
+            //把数据库中string类型的json转换成list<String>
+            List<String> pTagList = JSONUtil.toList(passageInfo.getPTags(), String.class);
+            passageInfoVO.setPTags(pTagList);
         }
-        passageMapper.updateViewNum(passageId);
-        PassageVO passageVO = new PassageVO();
-        BeanUtil.copyProperties(passage,passageVO);
-        if (!StringUtils.isBlank(passage.getPTags())){
-            List<String> list = JSONUtil.toList(passage.getPTags(), String.class);
-            passageVO.setPTags(list);
-        }
-        //todo 完善点赞收藏逻辑
-
-
-
-        return passageVO;
+         isThumbCollect(passageInfoVO);
+         return passageInfoVO;
     }
 
     @Override
@@ -334,7 +326,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
      * @Description: 从 Redis 查询收藏量前 7 的博客
      */
     @Override
-    public List<PassageVO> getTopCollects() {
+    public List<PassageInfoVO> getTopCollects() {
 
         // 获取所有相关的 passageId 键
         Set<String> keys = stringRedisTemplate.keys(Common.PASSAGE_COLLECT_KEY+"*");
@@ -356,39 +348,14 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             sortedPassageIds.add(Long.valueOf(passageId));
         }
         List<Passage> passageList = listByIds(sortedPassageIds);
-        return getPassageVOList(passageList);
+        return getPassageInfoVOList(passageList);
     }
 
     @Override
-    public BaseResponse<Integer> getCollectNums() {
-        Long userId = UserHolder.getUser().getUserId();
-        QueryWrapper<Passage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("authorId",userId);
-        //获取我的文章列表
-        List<Passage> passageList = list(queryWrapper);
-        if (CollUtil.isNotEmpty(passageList)){
-            ArrayList<Long> passageIdList = new ArrayList<>();
-            //获取我的文章的id列表
-            passageList.forEach(passage -> passageIdList.add(passage.getPassageId()));
-            int totalCollectNum=0;
-            for (Long passageId : passageIdList) {
-                // 根据id获取每篇文章的收藏量
-                Long collectCount = stringRedisTemplate.opsForZSet().zCard(Common.PASSAGE_COLLECT_KEY + passageId.toString());
-//                Double collectCount = stringRedisTemplate.opsForZSet().score(Common.PASSAGE_COLLECT_KEY, passageId.toString());
-                if (collectCount != null) {
-                    totalCollectNum += collectCount.intValue();
-                }
-            }
-            return  ResultUtils.success(totalCollectNum);
-        }
-        return ResultUtils.success(0);
-    }
-
-
-
-    @Override
-    public PassageVO getPassageContentByPassageId(Long pid) {
-        return passageMapper.getPassageContentByPid(pid);
+    public PassageContentVO getPassageContentByPassageId(Long uid, Long pid) {
+        //浏览量+1
+        passageMapper.updateViewNum(pid);
+        return passageMapper.getPassageContentByPid(uid,pid);
 
     }
 
