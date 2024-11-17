@@ -50,7 +50,7 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
                         "/passage/search/uid/{uid}",
                         "/passage/topCollects",
                         "/passage/content/{uid}/{pid}",
-                        "/passage/homePassageList/{current}",
+                        "/passage/homePassageList",
                         "/passage/search/text",
                         "/passage/passageInfo/{pid}",
                         "/webjars/**",

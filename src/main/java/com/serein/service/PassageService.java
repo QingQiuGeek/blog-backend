@@ -1,6 +1,8 @@
 package com.serein.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.model.PageQueryPassage;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
@@ -19,7 +21,7 @@ import java.util.List;
 */
 public interface PassageService extends IService<Passage> {
 
-    List<PassageInfoVO> getIndexPassageList(int current);
+    Page<List<PassageInfoVO>> getIndexPassageList(PageQueryPassage pageQueryPassage);
 
     List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
 

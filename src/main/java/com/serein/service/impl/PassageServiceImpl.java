@@ -11,6 +11,7 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
+import com.serein.model.PageQueryPassage;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.passageDTO.*;
 import com.serein.model.entity.Passage;
@@ -66,18 +67,27 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     PassageMapper passageMapper;
 
     @Override
-    public List<PassageInfoVO> getIndexPassageList(int current) {
-
+    public Page<List<PassageInfoVO>> getIndexPassageList(PageQueryPassage pageQueryPassage) {
+        int currentPage = pageQueryPassage.getCurrentPage();
+        int pageSize = pageQueryPassage.getPageSize();
         //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
-        Page<Passage> passagePage = new Page<>(current, Common.PAGE_SIZE);
+        Page<Passage> passagePage = new Page<>(currentPage, pageSize);
         Page<Passage> pageDesc = page(passagePage, new QueryWrapper<Passage>().eq("status",2).orderByDesc("accessTime").
                 select("passageId","title","viewNum","authorId","authorName","avatarUrl","thumbnail","summary","pTags","commentNum","collectNum","thumbNum","accessTime"));
+        //当前页的数据
         List<Passage> passageList = pageDesc.getRecords();
+        long total = pageDesc.getTotal();
         if (passageList.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取文章列表失败");
         }
-        List<PassageInfoVO> collect = getPassageInfoVOList(passageList);
-        return collect;
+        List<PassageInfoVO> pageInfoVOList = getPassageInfoVOList(passageList);
+        // 创建一个 Page 对象返回，封装分页信息（总记录数、页码等）和当前页的数据
+        Page<List<PassageInfoVO>> listPage = new Page<>(currentPage,pageSize);
+        //包装成单一的list
+        listPage.setRecords(Collections.singletonList(pageInfoVOList));
+        //总数据数量
+        listPage.setTotal(total);
+        return listPage;
     }
 
     //主页显示

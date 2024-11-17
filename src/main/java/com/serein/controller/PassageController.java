@@ -1,9 +1,11 @@
 package com.serein.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.annotation.AuthCheck;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.mapper.PassageMapper;
+import com.serein.model.PageQueryPassage;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.exception.BusinessException;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
@@ -63,13 +65,13 @@ public class PassageController {
 
     /**
      * 博客首页获取文章列表 todo 分页
-     * @param current
+     * @param pageQueryPassage
      * @return
      */
 
-    @GetMapping("/homePassageList/{current}")
-    public BaseResponse<List<PassageInfoVO>> getHomePassageList(@PathVariable int current){
-        List<PassageInfoVO> newPassageList = passageService.getIndexPassageList(current);
+    @PostMapping("/homePassageList")
+    public BaseResponse<Page<List<PassageInfoVO>>> getHomePassageList(@RequestBody PageQueryPassage pageQueryPassage){
+        Page<List<PassageInfoVO>> newPassageList = passageService.getIndexPassageList(pageQueryPassage);
         return ResultUtils.success(newPassageList);
     }
 
