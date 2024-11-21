@@ -17,10 +17,8 @@ import com.serein.mapper.CommentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,16 +36,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     @Autowired
     UserMapper userMapper;
     @Override
-    public Boolean commentPassage(CommentDTO commentDTO) {
+    public Long commentPassage(CommentDTO commentDTO) {
         LoginUserVO loginUserVO = UserHolder.getUser();
         if (loginUserVO==null){
-            return false;
+            return null;
         }
         Long userId = loginUserVO.getUserId();
         Comment comment = new Comment();
         BeanUtil.copyProperties(commentDTO,comment);
         comment.setCommentUserId(userId);
-        return this.save(comment);
+        comment.setCommentTime(new Date(commentDTO.getCommentTime()));
+        commentMapper.insertComment(comment);
+        //拿到生成的commentId
+        return comment.getCommentId();
     }
 
     /**
@@ -58,6 +59,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
      */
     @Override
     public List<CommentVO> getCommentByPassageId(Long authorId, Long passageId) {
+
         List<CommentVO> commentVOS = commentMapper.getCommentVoListByPassageId(passageId);
         if (commentVOS.isEmpty()){
             return commentVOS;

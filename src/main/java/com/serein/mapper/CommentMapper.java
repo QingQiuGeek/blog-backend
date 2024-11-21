@@ -18,8 +18,11 @@ import java.util.List;
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
 
-    @Select("select * from blog.comment where passageId=#{passageId} ORDER BY commentTime DESC")
+    @Select("select * from blog.comment where passageId=#{passageId} and isDelete=1 ORDER BY commentTime DESC")
     List<CommentVO> getCommentVoListByPassageId(Long passageId);
+
+
+    void insertComment(Comment comment);
 }
 
 

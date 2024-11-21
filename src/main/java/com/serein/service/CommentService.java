@@ -14,7 +14,7 @@ import java.util.List;
 */
 public interface CommentService extends IService<Comment> {
 
-    Boolean commentPassage(CommentDTO commentDTO);
+    Long commentPassage(CommentDTO commentDTO);
 
     List<CommentVO> getCommentByPassageId(Long authorId, Long passageId);
 

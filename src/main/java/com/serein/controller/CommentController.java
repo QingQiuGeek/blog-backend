@@ -29,9 +29,9 @@ public class CommentController {
      * 评论文章
      * */
     @PostMapping("")
-    public BaseResponse<Boolean> commentPassage(@RequestBody CommentDTO commentDTO){
-        Boolean aBoolean = commentService.commentPassage(commentDTO);
-        return  ResultUtils.success(aBoolean);
+    public BaseResponse<Long> commentPassage(@RequestBody CommentDTO commentDTO){
+        Long cid = commentService.commentPassage(commentDTO);
+        return  ResultUtils.success(cid);
     }
 
     /*
@@ -46,7 +46,7 @@ public class CommentController {
     /*
      * 删除评论
      * */
-    @PostMapping("/delete/{commentId}")
+    @PutMapping("/delete/{commentId}")
     public BaseResponse<Boolean> deleteComment(@PathVariable Long commentId){
         Boolean aBoolean = commentService.deleteComment(commentId);
         return  ResultUtils.success(aBoolean);

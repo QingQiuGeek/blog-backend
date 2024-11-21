@@ -20,4 +20,11 @@
         passageId,authorId，toCommentId,toCommentUserId,
         commentTime,isDelete
     </sql>
+
+<!--    useGeneratedKeys="true" 告诉 MyBatis 生成的主键应该自动填充到 keyProperty 指定的属性中。
+keyProperty="commentId" 表示将自动生成的主键值填充到 Comment 实体的 commentId 属性中。-->
+    <insert id="insertComment" useGeneratedKeys="true" keyProperty="commentId">
+        INSERT INTO blog.comment(content, commentUserId, commentTime,passageId)
+        VALUES (#{content}, #{commentUserId}, #{commentTime},#{passageId})
+    </insert>
 </mapper>
