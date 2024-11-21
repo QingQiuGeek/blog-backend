@@ -40,7 +40,6 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
           //未登录，直接放行，由登录拦截器拦截
           return true;
         }
-
         /*boolean expiration = jwtHelper.isExpiration(token);
         if (expiration){
             //token过期

@@ -1,18 +1,17 @@
 package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.annotation.AuthCheck;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
-import com.serein.mapper.PassageMapper;
 import com.serein.model.PageQueryPassage;
+import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.exception.BusinessException;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.PassageService;
 import com.serein.utils.BaseResponse;
 import com.serein.utils.ResultUtils;
@@ -34,7 +33,6 @@ public class PassageController {
 
     @Autowired
     PassageService passageService;
-
 
     /*
     * top7 爆款文章

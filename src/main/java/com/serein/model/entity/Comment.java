@@ -35,6 +35,11 @@ public class Comment implements Serializable {
     private Long passageId;
 
     /**
+     * 评论时间
+     */
+    private Long commentTime;
+
+    /**
      * 回复目标评论id
      */
     private Long toCommentId;
@@ -44,15 +49,11 @@ public class Comment implements Serializable {
      */
     private Long toCommentUserId;
 
-    /**
-     * 评论时间
-     */
-    private Date commentTime;
 
     /**
      * 0逻辑删除
      */
-//    @TableLogic
+    @TableLogic
     private Integer isDelete;
 
     @TableField(exist = false)

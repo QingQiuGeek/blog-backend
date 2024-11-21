@@ -18,7 +18,6 @@ import java.util.List;
 @Data
 public class LoginUserVO {
 
-
     //登陆凭证
      @TableField(exist = false)
      private String token;

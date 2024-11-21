@@ -13,10 +13,13 @@ import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.PageQueryPassage;
 import com.serein.model.UserHolder;
+import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.dto.passageDTO.*;
+import com.serein.model.entity.Comment;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.exception.BusinessException;
@@ -100,14 +103,23 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
                         List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
                         passageInfoVO.setPTags(pTagList);
                         //判断当前用户是否点赞、收藏
-                        isThumbCollect(passageInfoVO);
                     }
+                    isThumbCollect(passageInfoVO);
                     return passageInfoVO;
                 }
         ).collect(Collectors.toList());
         return collect;
     }
-
+    @Override
+    public PassageInfoVO getPassageInfoByPassageId(Long passageId) {
+        Passage passageInfo = passageMapper.getPassageInfo(passageId);
+        List<Passage> passage = new ArrayList<>();
+        passage.add(passageInfo);
+        List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passage);
+        PassageInfoVO passageInfoVO = passageInfoVOList.get(0);
+        isThumbCollect(passageInfoVO);
+        return passageInfoVO;
+    }
     //判断当前用户是否点赞或收藏该文章
     private void isThumbCollect(PassageInfoVO passageInfoVO){
         LoginUserVO loginUserVO = UserHolder.getUser();
@@ -119,7 +131,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         String keyThumb =Common.PASSAGE_THUMB_KEY+passageId;
         Double score1 = stringRedisTemplate.opsForZSet().score(keyThumb, userId.toString());
         passageInfoVO.setIsThumb(score1!=null);
-
         String keyCollect =Common.PASSAGE_COLLECT_KEY+ passageId;
         Double score2 = stringRedisTemplate.opsForZSet().score(keyCollect, userId.toString());
         passageInfoVO.setIsCollect(score2!=null);
@@ -236,24 +247,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         return passage;
     }
 
-    @Override
-    public PassageInfoVO getPassageInfoByPassageId(Long passageId) {
-        Passage passageInfo = passageMapper.getPassageInfo(passageId);
-        PassageInfoVO passageInfoVO = new PassageInfoVO();
-        BeanUtil.copyProperties(passageInfo,passageInfoVO);
-        if (!StringUtils.isNotBlank(passageInfo.getPTags())){
-            //把数据库中string类型的json转换成list<String>
-            List<String> pTagList = JSONUtil.toList(passageInfo.getPTags(), String.class);
-            passageInfoVO.setPTags(pTagList);
-        }
-         isThumbCollect(passageInfoVO);
-         return passageInfoVO;
-    }
+
 
     @Override
     public Boolean thumbPassage(Long passageId) {
 
-        Long userId = UserHolder.getUser().getUserId();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            return false;
+        }
+        Long userId = loginUserVO.getUserId();
         /*
         * 同一个用户对一篇文章只能点赞一次，不能重复点赞，取消点赞亦然
         * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否点赞
@@ -294,7 +297,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
      */
     @Override
     public Boolean collectPassage(Long passageId) {
-        Long userId = UserHolder.getUser().getUserId();
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            return false;
+        }
+        Long userId = loginUserVO.getUserId();
+
         /*
          * 同一个用户对一篇文章只能收藏一次，不能重复收藏，取消收藏亦然
          * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
@@ -368,6 +376,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         return passageMapper.getPassageContentByPid(uid,pid);
 
     }
+
 
 
 }

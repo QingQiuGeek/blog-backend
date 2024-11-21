@@ -28,7 +28,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         if (UserHolder.getUser()==null){
             response.setStatus(401);
-
            //response.setHeader("登录拦截器：","该请求被拦截，请登录！");
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
         }

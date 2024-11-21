@@ -17,7 +17,7 @@
 
     <sql id="Base_Column_List">
         commentId,content,commentUserId,
-        passageId,toCommentId,toCommentUserId,
+        passageId,authorId，toCommentId,toCommentUserId,
         commentTime,isDelete
     </sql>
 </mapper>

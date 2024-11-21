@@ -20,11 +20,9 @@ import java.util.List;
 public class CollectsPassageVO implements Serializable {
 
 
-    //todo 当前用户是否点赞
     @TableField(exist = false)
     private Boolean isThumb;
 
-    //todo 当前用户是否收藏
     @TableField(exist = false)
     private Boolean isCollect;
 

@@ -2,7 +2,11 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Comment;
+import com.serein.model.vo.CommentVO.CommentVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
 * @author 懒大王Smile
@@ -14,6 +18,8 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
 
+    @Select("select * from blog.comment where passageId=#{passageId} ORDER BY commentTime DESC")
+    List<CommentVO> getCommentVoListByPassageId(Long passageId);
 }
 
 

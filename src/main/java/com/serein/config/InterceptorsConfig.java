@@ -53,6 +53,7 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
                         "/passage/homePassageList",
                         "/passage/search/text",
                         "/passage/passageInfo/{pid}",
+                        "/comment/{authorId}/{passageId}",
                         "/webjars/**",
                         "/doc.html/**",
                         "/swagger-resources/**"

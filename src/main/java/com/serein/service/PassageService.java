@@ -3,14 +3,14 @@ package com.serein.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.serein.model.PageQueryPassage;
+import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageVO;
-import com.serein.utils.BaseResponse;
 
 import java.util.List;
 
@@ -40,4 +40,6 @@ public interface PassageService extends IService<Passage> {
     List<PassageInfoVO> getTopCollects();
 
     PassageContentVO getPassageContentByPassageId(Long uid, Long pid);
+
+
 }

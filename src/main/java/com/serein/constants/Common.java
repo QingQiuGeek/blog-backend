@@ -29,8 +29,9 @@ public interface Common {
     String USER_REGISTER_CODE_KEY="Blog:user:registerCode:";
 
     Long REGISTER_CODE_TTL=1L;
-     //单位min
-    Long LOGIN_TOKEN_TTL=100L;
+
+    //单位min
+    Long LOGIN_TOKEN_TTL=60L;
 
     //邮箱正则
     String EMAIL_REGEX = "\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}";

@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 public class PageQueryPassage {
-    //页码
+    //默认页码和页大小
     private int currentPage=1;
     private int pageSize=5;
 }
