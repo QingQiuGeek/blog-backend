@@ -26,6 +26,11 @@ public class CommentDTO implements Serializable {
     private String passageId;
 
     /**
+     * 文章作者的id
+     */
+    private Long authorId;
+
+    /**
      * 评论时间
      */
     private Long commentTime;

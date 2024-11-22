@@ -5,11 +5,13 @@ import com.serein.model.Request.LoginRequest;
 import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
+import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.service.UserService;
 import com.serein.service.impl.UserServiceImpl;
@@ -37,6 +39,8 @@ public class UserController {
     PassageService passageService;
     @Autowired
     UserService userService;
+
+
 
     /**
      *用户登录
@@ -193,5 +197,14 @@ public class UserController {
         List<PassageInfoVO> passageVOList = userService.myPassage();
         return ResultUtils.success(passageVOList);
     }
+    /*
+     * 我的消息，用户对我的文章的评论即为我的消息
+     * */
+    @GetMapping("/myMessage")
+    public BaseResponse<List<CommentVO>> myMessage(){
+        List<CommentVO> commentVOList = userService.myMessage();
+        return ResultUtils.success(commentVOList);
+    }
+
 
 }

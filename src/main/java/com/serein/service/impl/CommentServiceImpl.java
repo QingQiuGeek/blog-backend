@@ -79,7 +79,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
             }));
             return commentVOS;
         }
-        //作者拥有对所有文章的所有评论的删除权
+        //管理员拥有对所有文章的所有评论的删除权
         if( "admin".equals(loginUserVO.getRole())){
             commentVOS.forEach((commentVO -> {
                 commentVO.setCanDelete(true);
@@ -96,7 +96,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     }
 
     //根据评论的commentUserId获取评论用户的头像、userName等
-    private void getCommentUserInfo(List<CommentVO> commentVOS) {
+    public void getCommentUserInfo(List<CommentVO> commentVOS) {
 
         List<Long> userIdList = commentVOS.stream().map(CommentVO::getCommentUserId).collect(Collectors.toList());
         List<CommentUserInfoVO> commentUserInfoVOS = userMapper.getCommentUserInfoByUserIdList(userIdList);
@@ -123,8 +123,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     public Boolean deleteComment(Long commentId) {
         return this.removeById(commentId);
     }
-
-
 
 
 }

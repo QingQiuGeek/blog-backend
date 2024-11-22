@@ -37,9 +37,10 @@ push到远程
   * 评论内容限制在200字以内√
   * commentID和passageId联合索引
   * userName,avatar、ip地址根据根据评论者id从用户表查询，authorId从前端传 √
-  * 评论根据时间降序排序
+  * 评论根据时间降序排序 √
   * 评论加上删除字段，作者可以删除所有评论，评论者可删除自己的评论（commentVO加上canDelete字段默认false，如果commentUserId=登录用户id，为true；如果authorId=登录用户id，那么commentVO全为true，即文章作者对评论有所有权）√
   * 前端的评论区可以通过 commentUserId?: number进入用户主页
+  * 评论加载
 
 * 我的消息显示评论
 * 创作功能

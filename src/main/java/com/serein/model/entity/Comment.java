@@ -35,6 +35,11 @@ public class Comment implements Serializable {
     private Long passageId;
 
     /**
+     * 文章作者的id
+     */
+    private Long authorId;
+
+    /**
      * 评论时间
      */
     private Date commentTime;

@@ -7,6 +7,7 @@ import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.User;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
@@ -65,4 +66,6 @@ public interface UserService extends IService<User> {
     Boolean setAdmin(Long userId);
 
     UserInfoDataVO getUserInfoData();
+
+    List<CommentVO> myMessage();
 }

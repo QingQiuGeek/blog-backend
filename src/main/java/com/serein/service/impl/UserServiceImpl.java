@@ -20,12 +20,14 @@ import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.*;
+import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.exception.BusinessException;
+import com.serein.service.CommentService;
 import com.serein.service.UserService;
 import com.serein.constants.ErrorCode;
 import com.serein.utils.JwtHelper;
@@ -72,8 +74,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    JwtHelper jwtHelper;
 
     @Autowired
     UserMapper userMapper;
@@ -87,16 +87,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Autowired
     PassageServiceImpl passageService;
 
-
     @Autowired
     UserFollowMapper userFollowMapper;
 
     @Resource
     protected JavaMailSenderImpl mailSender;
+
     protected MailUtils mailUtils;
 
     @Autowired
     PassageMapper passageMapper;
+
+    @Autowired
+    CommentServiceImpl commentServiceImpl;
+
+    @Autowired
+    CommentMapper commentMapper;
+
 
 
     /**
@@ -293,6 +300,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         userInfoDataVO.setThumbNum(thumbNum);
         userInfoDataVO.setFollowerNum(followerNum);
         return userInfoDataVO;
+    }
+
+    @Override
+    public List<CommentVO> myMessage() {
+        LoginUserVO loginUserVO = UserHolder.getUser();
+        if (loginUserVO==null){
+            //未登录直接返回空列表
+            return Collections.emptyList();
+        }
+        Long userId = loginUserVO.getUserId();
+        List<CommentVO> commentVOS=commentMapper.getCommentVoListByAuthorId(userId);
+        if (commentVOS.isEmpty()){
+            return commentVOS;
+        }
+        //设置评论的用户头像、ip地址、用户名
+        commentServiceImpl.getCommentUserInfo(commentVOS);
+        //全部设置可删除
+        commentVOS.forEach((commentVO -> {
+            commentVO.setCanDelete(true);
+        }));
+        return commentVOS;
     }
 
 
@@ -615,7 +643,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return getAdminUserVOListByUserList(userList);
     }
-
 
     @Override
     public Boolean disableUser(Long userId) {

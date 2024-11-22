@@ -33,6 +33,11 @@ public class CommentVO implements Serializable {
      */
     private Long passageId;
 
+    /**
+     * 文章作者的id
+     */
+    private Long authorId;
+
 
     /**
      * 评论时间

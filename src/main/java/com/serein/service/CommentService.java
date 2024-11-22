@@ -19,4 +19,6 @@ public interface CommentService extends IService<Comment> {
     List<CommentVO> getCommentByPassageId(Long authorId, Long passageId);
 
     Boolean deleteComment(Long commentId);
+
+
 }

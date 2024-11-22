@@ -23,6 +23,9 @@ public interface CommentMapper extends BaseMapper<Comment> {
 
 
     void insertComment(Comment comment);
+
+    @Select("select * from blog.comment where authorId=#{userId} and isDelete=1 ORDER BY commentTime DESC")
+    List<CommentVO> getCommentVoListByAuthorId(Long userId);
 }
 
 
