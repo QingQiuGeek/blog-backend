@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.serein.constants.Common;
@@ -14,6 +15,7 @@ import com.serein.exception.BusinessException;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
+import com.serein.model.AdminPassageQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
@@ -24,6 +26,7 @@ import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
+import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
@@ -32,6 +35,7 @@ import com.serein.utils.FileUtil;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -405,6 +410,89 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public String uploadPassageImg(MultipartFile img) {
     return FileUtil.uploadImageLocal(img);
+  }
+
+  @Override
+  public Page<List<AdminPassageVO>> getPassageList(
+      AdminPassageQueryPageRequest adminPassageQueryPageRequest) {
+    Long passageId = adminPassageQueryPageRequest.getPassageId();
+    int currentPage = adminPassageQueryPageRequest.getCurrentPage();
+    int pageSize = adminPassageQueryPageRequest.getPageSize();
+    String title = adminPassageQueryPageRequest.getTitle();
+    Long authorId = adminPassageQueryPageRequest.getAuthorId();
+    Date endTime = adminPassageQueryPageRequest.getEndTime();
+    Date startTime = adminPassageQueryPageRequest.getStartTime();
+    String authorName = adminPassageQueryPageRequest.getAuthorName();
+
+    Page<Passage> passagePage = new Page<>(currentPage, pageSize);
+    Page<Passage> pageDesc = page(passagePage,
+        new LambdaQueryWrapper<Passage>().orderByDesc(Passage::getAccessTime)
+            .gt(startTime != null, Passage::getCreateTime, startTime)
+            .lt(endTime != null, Passage::getCreateTime, endTime)
+            .eq(authorId != null, Passage::getAuthorId, authorId)
+            .eq(passageId != null, Passage::getPassageId, passageId)
+            .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
+            .eq(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
+            .select(Passage::getPassageId, Passage::getPTags, Passage::getStatus, Passage::getTitle,
+                Passage::getAuthorName, Passage::getAccessTime, Passage::getCommentNum,
+                Passage::getViewNum, Passage::getCollectNum, Passage::getThumbNum,
+                Passage::getAuthorId)
+    );
+    List<Passage> records = pageDesc.getRecords();
+    long total = pageDesc.getTotal();
+    Page<List<AdminPassageVO>> listPage = new Page<>(currentPage, pageSize);
+    if (records.isEmpty()) {
+      //包装成单一的list
+      listPage.setRecords(Collections.singletonList(Collections.emptyList()));
+      //总数据数量
+      listPage.setTotal(0);
+      return listPage;
+    }
+    List<AdminPassageVO> adminPassageVOListByPassageList = getAdminPassageVOListByPassageList(
+        records);
+    //包装成单一的list
+    listPage.setRecords(Collections.singletonList(adminPassageVOListByPassageList));
+    //总数据数量
+    listPage.setTotal(total);
+    return listPage;
+  }
+
+  private List<AdminPassageVO> getAdminPassageVOListByPassageList(List<Passage> records) {
+    return records.stream().map(passage -> {
+      AdminPassageVO adminPassageVO = new AdminPassageVO();
+      BeanUtils.copyProperties(passage, adminPassageVO);
+      if (StringUtils.isNotBlank(passage.getPTags())) {
+        List<String> list = JSONUtil.toList(passage.getPTags(), String.class);
+        adminPassageVO.setPTags(list);
+      }
+      return adminPassageVO;
+    }).collect(Collectors.toList());
+  }
+
+  @Override
+  public Boolean rejectPassage(Long passageId) {
+
+    LambdaUpdateWrapper<Passage> passageQueryWrapper = new LambdaUpdateWrapper<>();
+    passageQueryWrapper.eq(Passage::getPassageId, passageId).set(Passage::getStatus, 3);
+    boolean b = this.update(passageQueryWrapper);
+    if (b) {
+      return b;
+    } else {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+    }
+  }
+
+  @Override
+  public Boolean publishPassage(Long passageId) {
+    //todo 枚举
+    LambdaUpdateWrapper<Passage> passageQueryWrapper = new LambdaUpdateWrapper<>();
+    passageQueryWrapper.eq(Passage::getPassageId, passageId).set(Passage::getStatus, 2);
+    boolean b = this.update(passageQueryWrapper);
+    if (b) {
+      return b;
+    } else {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+    }
   }
 
 

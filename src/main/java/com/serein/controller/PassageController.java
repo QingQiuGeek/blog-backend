@@ -163,8 +163,8 @@ public class PassageController {
      * @return
      */
     @DeleteMapping("/delete/{passageId}")
-    public BaseResponse<Boolean> deleteByPassageId(@PathVariable String passageId){
-        boolean b = passageService.removeById(Long.valueOf(passageId));
+    public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId){
+        boolean b = passageService.removeById(passageId);
         if (b){
             return ResultUtil.success(b);
         }

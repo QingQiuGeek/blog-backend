@@ -16,7 +16,7 @@ public class AdminUserQueryPageRequest {
 
   //默认的页码和页大小
   private int currentPage = 1;
-  private int pageSize = 5;
+  private int pageSize = 10;
 
   private String mail;
   private String userName;

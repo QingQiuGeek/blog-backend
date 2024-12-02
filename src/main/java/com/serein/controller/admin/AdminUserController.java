@@ -25,7 +25,7 @@ import java.util.List;
  * @Description:
  */
 
-@RequestMapping("/admin")
+@RequestMapping("/admin/user")
 @RestController
 public class AdminUserController {
 
@@ -42,18 +42,6 @@ public class AdminUserController {
     public BaseResponse<Boolean> disableUser(@PathVariable Long userId){
         Boolean aBoolean = userService.disableUser(userId);
         return ResultUtil.success(aBoolean);
-    }
-
-    /**
-     * 设置、取消管理员
-     * @param userId
-     * @return
-     */
-    @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
-    @GetMapping("/setAdmin/{userId}")
-    public BaseResponse<Boolean> setAdmin(@PathVariable Long userId){
-        Boolean aBoolean = userService.setAdmin(userId);
-        return  ResultUtil.success(aBoolean);
     }
 
 
