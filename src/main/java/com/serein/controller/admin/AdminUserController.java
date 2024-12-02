@@ -1,18 +1,18 @@
 package com.serein.controller.admin;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.annotation.AuthCheck;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.UserRole;
+import com.serein.model.AdminUserQueryPageRequest;
 import com.serein.model.Request.GetUserByIdListRequest;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.exception.BusinessException;
-import com.serein.model.enums.UserRoleEnum;
 import com.serein.model.vo.UserVO.AdminUserVO;
-import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
 import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
+import com.serein.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +32,16 @@ public class AdminUserController {
     @Autowired
     UserService userService;
 
+    /**
+     * 禁用、解除禁用用户
+     * @param userId
+     * @return
+     */
     @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
     @GetMapping("/disable/{userId}")
     public BaseResponse<Boolean> disableUser(@PathVariable Long userId){
         Boolean aBoolean = userService.disableUser(userId);
-        return ResultUtils.success(aBoolean);
+        return ResultUtil.success(aBoolean);
     }
 
     /**
@@ -48,7 +53,7 @@ public class AdminUserController {
     @GetMapping("/setAdmin/{userId}")
     public BaseResponse<Boolean> setAdmin(@PathVariable Long userId){
         Boolean aBoolean = userService.setAdmin(userId);
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 
 
@@ -60,10 +65,11 @@ public class AdminUserController {
     @PostMapping("/getByIdList")
     public BaseResponse<List<AdminUserVO>> getByIdList(@RequestBody GetUserByIdListRequest idList){
         List<AdminUserVO> adminUserVOList = userService.getByIdList(idList.getIdList());
-        return ResultUtils.success(adminUserVOList);
+        return ResultUtil.success(adminUserVOList);
     }
 
     /**
+     * 删除用户
      * @param userId
      * @return
      */
@@ -72,22 +78,21 @@ public class AdminUserController {
     public BaseResponse<Boolean> deleteUserById(@PathVariable Long userId){
 
         if (userService.removeById(userId)){
-            return ResultUtils.success(true);
+            return ResultUtil.success(true);
         }
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DB_FAIL);
     }
 
     /**
-     * todo 分页查询优化
-     * @param current
+     *
+     * @param adminUserQueryPageRequest
      * @return
-     * 分页查询
      */
     @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
-    @GetMapping("/getUserList/{current}")
-    public BaseResponse<List<AdminUserVO>> getUserList(@PathVariable Long current){
-        List<AdminUserVO> adminUserVOList = userService.getUserList(current);
-        return ResultUtils.success(adminUserVOList);
+    @PostMapping("/getUserList")
+    public BaseResponse<Page<List<AdminUserVO>>> getUserList(@RequestBody AdminUserQueryPageRequest adminUserQueryPageRequest){
+        Page<List<AdminUserVO>> adminUserVOList = userService.getUserList(adminUserQueryPageRequest);
+        return ResultUtil.success(adminUserVOList);
     }
 
 
@@ -99,7 +104,7 @@ public class AdminUserController {
     @PostMapping("/addUser")
     public BaseResponse<Long> addUser(@RequestBody AddUserDTO addUserDTO){
         Long userId = userService.addUser(addUserDTO);
-        return ResultUtils.success(userId);
+        return ResultUtil.success(userId);
     }
 
 }

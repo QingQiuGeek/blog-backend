@@ -9,7 +9,13 @@ package com.serein.constants;
 
 public interface Common {
 
+    String IMG_UPLOAD_DIR = "A:\\IDEA\\blog\\src\\main\\resources\\uploadImg";
 
+    //限制可上传的图片大小
+    int IMG_SIZE_LIMIT=1;
+
+    //限制可上传的图片大小单位
+    String IMG_SIZE_UNIT="M";
     //用户登录态key，可以保存在session或者redis
 //     String USER_LOGIN_STATE="USER_LOGIN_STATE:";
 

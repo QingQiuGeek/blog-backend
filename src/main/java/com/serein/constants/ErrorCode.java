@@ -15,7 +15,10 @@ public enum ErrorCode {
     FORBIDDEN_ERROR(40300, "禁止访问"),
     SYSTEM_ERROR(50000, "系统内部异常"),
     OPERATION_ERROR(50001, "操作失败"),
-    UNEXPECT_ERROR(50002,"未知异常");
+    UNEXPECT_ERROR(50002,"未知异常"),
+    FILE_TYPE_ERROR(50003, "文件类型错误，请上传png文件");
+
+
     /**
      * 状态码
      */

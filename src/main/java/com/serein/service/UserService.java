@@ -1,6 +1,8 @@
 package com.serein.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.model.AdminUserQueryPageRequest;
 import com.serein.model.Request.LoginRequest;
 import com.serein.model.Request.RegisterCodeRequest;
 import com.serein.model.Request.RegisterRequest;
@@ -9,7 +11,6 @@ import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.entity.User;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
@@ -35,7 +36,7 @@ public interface UserService extends IService<User> {
 
     LoginUserVO getLoginUser();
 
-    List<AdminUserVO> getUserList(Long current);
+    Page<List<AdminUserVO>> getUserList(AdminUserQueryPageRequest adminUserQueryPageRequest);
 
     List<UserVO> getUserListByName(String userName);
 

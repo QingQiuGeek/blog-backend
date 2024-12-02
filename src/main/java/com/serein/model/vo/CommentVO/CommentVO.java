@@ -38,7 +38,6 @@ public class CommentVO implements Serializable {
      */
     private Long authorId;
 
-
     /**
      * 评论时间
      */

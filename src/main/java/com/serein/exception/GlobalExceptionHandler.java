@@ -2,7 +2,7 @@ package com.serein.exception;
 
 import com.serein.constants.ErrorCode;
 import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
+import com.serein.utils.ResultUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -21,13 +21,13 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(BusinessException.class)
     public BaseResponse businessExceptionHandler(BusinessException e) {
         log.error("BusinessException", e);
-        return ResultUtils.error(e.getErrorCode(), e.getMessage());
+        return ResultUtil.error(e.getErrorCode(), e.getMessage());
     }
 
     //出现未定义的异常，统一抛出自定义状态码1000
     @ExceptionHandler(RuntimeException.class)
     public BaseResponse runtimeExceptionHandler(RuntimeException e) {
         log.error("RuntimeException", e);
-        return ResultUtils.error(ErrorCode.UNEXPECT_ERROR, e.getMessage());
+        return ResultUtil.error(ErrorCode.UNEXPECT_ERROR, e.getMessage());
     }
 }

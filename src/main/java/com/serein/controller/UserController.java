@@ -7,16 +7,13 @@ import com.serein.model.Request.RegisterRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
-import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.service.UserService;
-import com.serein.service.impl.UserServiceImpl;
 import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
+import com.serein.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +48,7 @@ public class UserController {
     public BaseResponse<LoginUserVO> login(@RequestBody LoginRequest loginRequest){
 //        int a=1/0;
         LoginUserVO loginUserVO = userService.login(loginRequest);
-        return ResultUtils.success(loginUserVO);
+        return ResultUtil.success(loginUserVO);
     }
 
     /**
@@ -61,7 +58,7 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponse<LoginUserVO> register(@RequestBody RegisterRequest registerRequest){
         LoginUserVO loginUserVO = userService.register(registerRequest);
-        return ResultUtils.success(loginUserVO);
+        return ResultUtil.success(loginUserVO);
     }
 
     /**
@@ -71,7 +68,7 @@ public class UserController {
     @PostMapping("/logout")
     public BaseResponse<Boolean> logout(HttpServletRequest httpServletRequest){
         Boolean logout = userService.logout(httpServletRequest);
-        return ResultUtils.success(logout);
+        return ResultUtil.success(logout);
     }
 
     /*
@@ -80,7 +77,7 @@ public class UserController {
     @GetMapping("/userInfoData")
     public BaseResponse<UserInfoDataVO> getUserInfoData(){
         UserInfoDataVO userInfoData = userService.getUserInfoData();
-        return ResultUtils.success(userInfoData);
+        return ResultUtil.success(userInfoData);
     }
 
     /**
@@ -92,7 +89,7 @@ public class UserController {
     @GetMapping("/find/{userName}")
     public BaseResponse<List<UserVO>> getUserListByName(@PathVariable String userName){
         List<UserVO> userVOList = userService.getUserListByName(userName);
-        return ResultUtils.success(userVOList);
+        return ResultUtil.success(userVOList);
     }
 
 
@@ -103,7 +100,7 @@ public class UserController {
     @GetMapping("/getLoginUser")
     public BaseResponse<LoginUserVO> getLoginUser(){
         LoginUserVO loginUserVO = userService.getLoginUser();
-        return ResultUtils.success(loginUserVO);
+        return ResultUtil.success(loginUserVO);
     }
 
     /**
@@ -114,7 +111,7 @@ public class UserController {
     @PostMapping("/updateUser")
     public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         Boolean aBoolean = userService.updateUser(updateUserDTO);
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 
     /*
@@ -123,7 +120,7 @@ public class UserController {
     @PutMapping("/follow/{userId}")
     public BaseResponse<Boolean> follow(@PathVariable Long userId){
         Boolean follow = userService.follow(userId);
-        return ResultUtils.success(follow);
+        return ResultUtil.success(follow);
     }
 
     /**
@@ -133,7 +130,7 @@ public class UserController {
     @GetMapping("/getUserInfo/{uid}")
     public BaseResponse<UserVO> getUserInfo(@PathVariable Long uid){
         UserVO userInfo = userService.getUserInfo(uid);
-        return ResultUtils.success(userInfo);
+        return ResultUtil.success(userInfo);
     }
 
     /*
@@ -142,7 +139,7 @@ public class UserController {
     @GetMapping("/myFollowers")
     public BaseResponse<List<UserVO>> myFollowers(){
         List<UserVO> userVOS = userService.myFollowers();
-        return ResultUtils.success(userVOS);
+        return ResultUtil.success(userVOS);
     }
 
     /*
@@ -163,13 +160,13 @@ public class UserController {
     @GetMapping("/myFollow")
     public BaseResponse<List<UserVO>> myFollow(){
         List<UserVO> userVOS = userService.myFollow();
-        return ResultUtils.success(userVOS);
+        return ResultUtil.success(userVOS);
     }
 
     @PostMapping("/sendRegisterCode")
     public BaseResponse<Boolean> sendRegisterCode(@RequestBody RegisterCodeRequest registerCodeRequest){
         userService.sendRegisterCode(registerCodeRequest);
-        return ResultUtils.success(true);
+        return ResultUtil.success(true);
     }
 
     /*
@@ -178,7 +175,7 @@ public class UserController {
     @GetMapping("/myCollect")
     public BaseResponse<List<PassageInfoVO>> myCollectPassage(){
         List<PassageInfoVO> passageVOList = userService.myCollectPassage();
-        return ResultUtils.success(passageVOList);
+        return ResultUtil.success(passageVOList);
     }
     /*
     * 我的点赞博客列表
@@ -186,7 +183,7 @@ public class UserController {
     @GetMapping("/myThumb")
     public BaseResponse<List<PassageInfoVO>> myThumbPassage(){
         List<PassageInfoVO> passageVOList = userService.myThumbPassage();
-        return ResultUtils.success(passageVOList);
+        return ResultUtil.success(passageVOList);
     }
 
     /*
@@ -195,7 +192,7 @@ public class UserController {
     @GetMapping("/myPassages")
     public BaseResponse<List<PassageInfoVO>> myPassages(){
         List<PassageInfoVO> passageVOList = userService.myPassage();
-        return ResultUtils.success(passageVOList);
+        return ResultUtil.success(passageVOList);
     }
     /*
      * 我的消息，用户对我的文章的评论即为我的消息
@@ -203,7 +200,7 @@ public class UserController {
     @GetMapping("/myMessage")
     public BaseResponse<List<CommentVO>> myMessage(){
         List<CommentVO> commentVOList = userService.myMessage();
-        return ResultUtils.success(commentVOList);
+        return ResultUtil.success(commentVOList);
     }
 
 

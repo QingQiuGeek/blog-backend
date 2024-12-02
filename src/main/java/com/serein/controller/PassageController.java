@@ -3,20 +3,19 @@ package com.serein.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
-import com.serein.model.PageQueryPassage;
-import com.serein.model.dto.CommentDTO.CommentDTO;
+import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
 import com.serein.exception.BusinessException;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
-import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.service.PassageService;
 import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
+import com.serein.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class PassageController {
     @GetMapping("/topCollects")
     public BaseResponse<List<PassageInfoVO>> getTopCollects(){
         List<PassageInfoVO> hotCollects = passageService.getTopCollects();
-        return ResultUtils.success(hotCollects);
+        return ResultUtil.success(hotCollects);
     }
 
     /*
@@ -49,7 +48,7 @@ public class PassageController {
     @PutMapping("/thumb/{passageId}")
     public BaseResponse<Boolean> thumbPassage(@PathVariable String passageId){
         Boolean aBoolean = passageService.thumbPassage(Long.valueOf(passageId));
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 
     /*
@@ -58,19 +57,19 @@ public class PassageController {
     @PutMapping("/collect/{passageId}")
     public BaseResponse<Boolean> collectPassage(@PathVariable String passageId){
         Boolean aBoolean = passageService.collectPassage(Long.valueOf(passageId));
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 
     /**
      * 博客首页获取文章列表 todo 分页
-     * @param pageQueryPassage
+     * @param adminUserQueryPageRequest
      * @return
      */
 
     @PostMapping("/homePassageList")
-    public BaseResponse<Page<List<PassageInfoVO>>> getHomePassageList(@RequestBody PageQueryPassage pageQueryPassage){
-        Page<List<PassageInfoVO>> newPassageList = passageService.getIndexPassageList(pageQueryPassage);
-        return ResultUtils.success(newPassageList);
+    public BaseResponse<Page<List<PassageInfoVO>>> getHomePassageList(@RequestBody QueryPageRequest queryPageRequest){
+        Page<List<PassageInfoVO>> newPassageList = passageService.getIndexPassageList(queryPageRequest);
+        return ResultUtil.success(newPassageList);
     }
 
 
@@ -82,7 +81,7 @@ public class PassageController {
     @PostMapping("/search/text")
     public BaseResponse<List<PassageInfoVO>> searchFromESByText(@RequestBody SearchPassageDTO searchPassageDTO){
         List<PassageInfoVO> passageVOList = passageService.searchFromESByText(searchPassageDTO);
-        return ResultUtils.success(passageVOList);
+        return ResultUtil.success(passageVOList);
     }
 
 
@@ -94,7 +93,7 @@ public class PassageController {
     @GetMapping("/content/{uid}/{pid}")
     public BaseResponse<PassageContentVO> getPassageContentByPassageId(@PathVariable Long uid, @PathVariable String pid){
         PassageContentVO passageContent = passageService.getPassageContentByPassageId(uid,Long.valueOf(pid));
-        return ResultUtils.success(passageContent);
+        return ResultUtil.success(passageContent);
     }
 
     /**
@@ -105,7 +104,7 @@ public class PassageController {
     @GetMapping("/search/uid/{uid}")
     public BaseResponse<List<PassageInfoVO>> getPassageByUserId(@PathVariable Long uid){
         List<PassageInfoVO> passageInfoVOList = passageService.getPassageByUserId(uid);
-        return ResultUtils.success(passageInfoVOList);
+        return ResultUtil.success(passageInfoVOList);
     }
 
    /*
@@ -121,7 +120,7 @@ public class PassageController {
     @GetMapping("/passageInfo/{pid}")
     public BaseResponse<PassageInfoVO> getPassageInfo(@PathVariable String pid) {
         PassageInfoVO passageInfo = passageService.getPassageInfoByPassageId(Long.valueOf(pid));
-        return ResultUtils.success(passageInfo);
+        return ResultUtil.success(passageInfo);
     }
 
     /**
@@ -132,8 +131,31 @@ public class PassageController {
     @PostMapping("/add")
     public BaseResponse<Long> addPassage(@RequestBody AddPassageDTO addpassageDTO){
         Long passageId = passageService.addPassage(addpassageDTO);
-        return ResultUtils.success(passageId);
+        return ResultUtil.success(passageId);
     }
+
+    /**
+     * 添加文章封面
+     * @param
+     * @return
+     */
+    @PostMapping("/uploadPassageCover")
+    public BaseResponse<String> uploadPassageCover(@RequestParam("img") MultipartFile img){
+       String coverUrl=passageService.uploadPassageCover(img);
+        return ResultUtil.success(coverUrl);
+    }
+
+    /**
+     * 添加文章内容图片
+     * @param
+     * @return
+     */
+    @PostMapping("/uploadPassageImg")
+    public BaseResponse<String> uploadPassageImg(@RequestParam("file") MultipartFile file){
+        String imgUrl=passageService.uploadPassageImg(file);
+        return ResultUtil.success(imgUrl);
+    }
+
 
     /**
      * 根据文章id删除文章
@@ -144,7 +166,7 @@ public class PassageController {
     public BaseResponse<Boolean> deleteByPassageId(@PathVariable String passageId){
         boolean b = passageService.removeById(Long.valueOf(passageId));
         if (b){
-            return ResultUtils.success(b);
+            return ResultUtil.success(b);
         }
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
@@ -159,7 +181,7 @@ public class PassageController {
     @PostMapping("/update")
     public BaseResponse<Boolean> updateByPassageId(@RequestBody UpdatePassageDTO updatePassageDTO){
         Boolean aBoolean = passageService.updatePassage(updatePassageDTO);
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 
 }

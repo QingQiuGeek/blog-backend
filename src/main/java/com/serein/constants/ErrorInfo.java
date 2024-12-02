@@ -9,6 +9,7 @@ package com.serein.constants;
 
 public interface ErrorInfo {
 
+    String FILE_TYPE_ERROR="文件类型错误，请上传png文件";
     String ADD_ERROR="添加失败";
 
     String UPDATE_ERROR="更新失败";
@@ -41,5 +42,8 @@ public interface ErrorInfo {
     String PARAMS_ERROR="请求参数错误";
 
     String USERNAME_EXISTED_ERROR="用户名已存在";
+
+
+    String FILE_SIZE_ERROR="文件过大";
 
 }

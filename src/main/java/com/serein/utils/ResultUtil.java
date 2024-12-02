@@ -7,7 +7,7 @@ import com.serein.constants.ErrorCode;
  *
  * @author 懒大王Smile
  */
-public class ResultUtils {
+public class ResultUtil {
 
     /**
      * 成功

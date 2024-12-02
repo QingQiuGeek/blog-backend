@@ -9,13 +9,13 @@ import javax.mail.internet.MimeMessage;
 
 
 @Slf4j
-public class MailUtils {
+public class MailUtil {
 
     //邮件发送器
     private final JavaMailSenderImpl mailSender;
     private final String fromEmail;
 
-    public MailUtils(JavaMailSenderImpl mailSender, String fromEmail) {
+    public MailUtil(JavaMailSenderImpl mailSender, String fromEmail) {
         this.mailSender = mailSender;
         this.fromEmail = fromEmail;
     }

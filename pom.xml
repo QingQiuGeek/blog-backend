@@ -35,6 +35,11 @@
             <artifactId>spring-aspects</artifactId>
             <version>6.1.5</version>
         </dependency>
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.18.0</version>
+        </dependency>
 
 <!--        Spring Boot 启动器，提供了 MyBatis-Plus 的自动配置功能-->
         <dependency>

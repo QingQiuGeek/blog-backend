@@ -53,6 +53,11 @@ spring:
         max-active: 5
         max-idle: 5
         min-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 10MB
+
 #  cache:
 #    使用redis缓存
 #    type: redis
@@ -97,6 +102,11 @@ custom:
 #  添加用户的初始密码
   originPassword: '123456'
 
+oss:
+  accessKey: ''
+  secretKey: ''
+  endPoint: ''
+  bucket: ''
 #jwt配置
 #jwt:
 #  token:

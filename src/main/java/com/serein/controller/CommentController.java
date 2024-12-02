@@ -3,9 +3,8 @@ package com.serein.controller;
 import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.service.CommentService;
-import com.serein.service.PassageService;
 import com.serein.utils.BaseResponse;
-import com.serein.utils.ResultUtils;
+import com.serein.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +30,7 @@ public class CommentController {
     @PostMapping("")
     public BaseResponse<Long> commentPassage(@RequestBody CommentDTO commentDTO){
         Long cid = commentService.commentPassage(commentDTO);
-        return  ResultUtils.success(cid);
+        return  ResultUtil.success(cid);
     }
 
     /*
@@ -40,7 +39,7 @@ public class CommentController {
     @GetMapping("/{authorId}/{passageId}")
     public BaseResponse<List<CommentVO>> getCommentByPassageId(@PathVariable Long authorId, @PathVariable String passageId){
         List<CommentVO> commentVOList  = commentService.getCommentByPassageId(authorId,Long.valueOf(passageId));
-        return  ResultUtils.success(commentVOList);
+        return  ResultUtil.success(commentVOList);
     }
 
     /*
@@ -49,6 +48,6 @@ public class CommentController {
     @PutMapping("/delete/{commentId}")
     public BaseResponse<Boolean> deleteComment(@PathVariable Long commentId){
         Boolean aBoolean = commentService.deleteComment(commentId);
-        return  ResultUtils.success(aBoolean);
+        return  ResultUtil.success(aBoolean);
     }
 }
