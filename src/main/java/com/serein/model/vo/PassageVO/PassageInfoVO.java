@@ -66,11 +66,6 @@ public class PassageInfoVO implements Serializable {
    */
   private String summary;
 
-  /**
-   * 文章所属类别
-   */
-  private Integer categoryId;
-
   /*
    * 标签列表 存到数据库的时候是json格式
    * */

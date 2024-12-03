@@ -30,11 +30,6 @@ public class Category implements Serializable {
   private String categoryName;
 
   /**
-   * 该类别下所有标签（json格式）
-   */
-  private String cTags;
-
-  /**
    * 创建时间
    */
   private Date createTime;

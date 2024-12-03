@@ -37,10 +37,6 @@ public class PassageDTO implements Serializable {
    */
   private String summary;
 
-  /**
-   * 文章所属类别
-   */
-  private Integer categoryId;
 
   /**
    * 文章标签

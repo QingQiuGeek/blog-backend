@@ -10,16 +10,17 @@ create table category
     createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间',
     isDelete     tinyint  default 1                 not null comment '0逻辑删除'
-)
-    comment '类别表';
+) comment '类别表';
 
-create table category_tag
+create table tags
 (
-    categoryId bigint auto_increment comment '类别id'
+    tagId   bigint auto_increment comment '标签id'
         primary key,
-    tagId      bigint not null comment '标签id'
-)
-    comment '类别-标签表';
+    categoryName varchar(50)                       not null comment '标签名',
+    categoryId bigint      not null   comment '所属类别id',
+    createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间'
+) comment '标签表';
 
 create table comment
 (
@@ -73,19 +74,6 @@ create table passage
 
 
 
-create table tag
-(
-    tagId            bigint auto_increment comment '标签id'
-        primary key,
-    tagName          varchar(20)                        not null comment '标签名',
-    parentCategoryId tinyint                            not null comment '标签所属类别id',
-    createUserId     bigint                             null comment '创建标签的用户id',
-    createTime       datetime default CURRENT_TIMESTAMP not null comment '发布时间',
-    updateTime       datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间',
-    isDelete         tinyint  default 1                 not null comment '0逻辑删除'
-)
-    comment '标签表';
-
 use blog;
 create table user_collects
 (
@@ -113,7 +101,6 @@ create table user_follow
 ) comment '用户关注表';
 
 
-
 create table user
 (
     userId      bigint auto_increment comment '用户ID'
@@ -137,6 +124,7 @@ create table user
     isDelete    tinyint       default 1                                           not null comment '0逻辑删除'
 )
     comment '用户表';
+
 
 
 

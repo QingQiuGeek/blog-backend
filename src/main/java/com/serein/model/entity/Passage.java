@@ -60,9 +60,9 @@ public class Passage implements Serializable {
   private String summary;
 
   /**
-   * 文章所属类别
+   * 文章的标签id(json数组)
    */
-  private Integer categoryId;
+  private String tagsId;
 
   /**
    * 文章标签(json数组)
@@ -105,7 +105,7 @@ public class Passage implements Serializable {
   private Date accessTime;
 
   /**
-   * 文章状态(0草稿,1待审核,2已发布)
+   * 文章状态(0草稿,1待审核,2已发布,3驳回)
    */
   private Integer status;
 

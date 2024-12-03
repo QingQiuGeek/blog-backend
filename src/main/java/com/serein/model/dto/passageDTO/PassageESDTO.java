@@ -81,6 +81,7 @@ public class PassageESDTO implements Serializable {
 //    private Integer categoryId;
 
   /**
+   * todo 修改了passage的标签，这里也要改
    * 标签
    */
   private List<String> pTags;

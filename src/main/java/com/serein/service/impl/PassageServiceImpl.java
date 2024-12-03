@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +12,7 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.PassageMapper;
+import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.AdminPassageQueryPageRequest;
@@ -24,6 +24,7 @@ import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.entity.Tags;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
@@ -81,6 +82,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Autowired
   PassageMapper passageMapper;
 
+  @Autowired
+  TagsMapper tagsMapper;
+
+
   @Override
   public Page<List<PassageInfoVO>> getIndexPassageList(QueryPageRequest queryPageRequest) {
     int currentPage = queryPageRequest.getCurrentPage();
@@ -88,10 +93,14 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
     Page<Passage> passagePage = new Page<>(currentPage, pageSize);
     Page<Passage> pageDesc = page(passagePage,
-        new QueryWrapper<Passage>().eq("status", 2).orderByDesc("accessTime").
-            select("passageId", "title", "viewNum", "authorId", "authorName", "avatarUrl",
-                "thumbnail", "summary", "pTags", "commentNum", "collectNum", "thumbNum",
-                "accessTime"));
+        new LambdaQueryWrapper<Passage>().eq(Passage::getStatus, 2)
+            .orderByDesc(Passage::getAccessTime).
+            select(Passage::getPassageId, Passage::getTitle, Passage::getViewNum,
+                Passage::getAuthorId, Passage::getAuthorName, Passage::getAvatarUrl,
+                Passage::getThumbnail, Passage::getSummary, Passage::getTagsId,
+                Passage::getCommentNum, Passage::getCollectNum, Passage::getThumbNum,
+                Passage::getAccessTime));
+
     //当前页的数据
     List<Passage> passageList = pageDesc.getRecords();
     long total = pageDesc.getTotal();
@@ -113,12 +122,22 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     List<PassageInfoVO> collect = passageList.stream().map(passage -> {
           PassageInfoVO passageInfoVO = new PassageInfoVO();
           BeanUtil.copyProperties(passage, passageInfoVO);
-          if (!StringUtils.isBlank(passage.getPTags())) {
-            //把数据库中string类型的json转换成list<String>
-            List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
-            passageInfoVO.setPTags(pTagList);
-            //判断当前用户是否点赞、收藏
+          String tagsId = passage.getTagsId();
+          if (StringUtils.isNotBlank(tagsId)) {
+            List<Long> tagsIdlist = JSONUtil.toList(tagsId, Long.class);
+            log.info("tagsIdlist："+tagsIdlist);
+            List<Tags> tags = tagsMapper.selectBatchIds(tagsIdlist);
+            log.info("tags："+tags);
+            List<String> tagStrList = tags.stream().map(Tags::getTagName)
+                .collect(Collectors.toList());
+            passageInfoVO.setPTags(tagStrList);
           }
+//          if (!StringUtils.isBlank(passage.getPTags())) {
+//            //把数据库中string类型的json转换成list<String>
+//            List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
+//            passageInfoVO.setPTags(pTagList);
+//            //判断当前用户是否点赞、收藏
+//          }
           isThumbCollect(passageInfoVO);
           return passageInfoVO;
         }
