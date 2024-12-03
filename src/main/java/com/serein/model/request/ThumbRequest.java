@@ -1,4 +1,4 @@
-package com.serein.model.Request;
+package com.serein.model.request;
 
 import lombok.Data;
 
@@ -12,8 +12,8 @@ import lombok.Data;
 @Data
 public class ThumbRequest {
 
-    Long userId;
+  Long userId;
 
-    Long passageId;
+  Long passageId;
 
 }

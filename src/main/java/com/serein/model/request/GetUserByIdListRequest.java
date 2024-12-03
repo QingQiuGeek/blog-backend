@@ -1,10 +1,9 @@
-package com.serein.model.Request;
+package com.serein.model.request;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+import lombok.Data;
 
 /**
  * @Author:懒大王Smile
@@ -16,8 +15,8 @@ import java.util.List;
 @Data
 public class GetUserByIdListRequest implements Serializable {
 
-    List<Long> idList;
+  List<Long> idList;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+  @TableField(exist = false)
+  private static final long serialVersionUID = 1L;
 }

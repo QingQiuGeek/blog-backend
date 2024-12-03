@@ -12,35 +12,35 @@ import org.apache.commons.lang3.ObjectUtils;
 public enum UserRoleEnum {
 
 
-    USER("普通用户","user"),
-    ADMIN("管理员","admin"),
-    BAN("封号","ban");
+  USER("普通用户", "user"),
+  ADMIN("管理员", "admin"),
+  BAN("封号", "ban");
 
-    private final String  text;
-    private final String role;
-    UserRoleEnum(String text, String role){
-        this.role=role;
-        this.text=text;
+  private final String text;
+  private final String role;
+
+  UserRoleEnum(String text, String role) {
+    this.role = role;
+    this.text = text;
+  }
+
+  /**
+   * 根据 value 获取枚举
+   *
+   * @param role
+   * @return
+   */
+  public static UserRoleEnum getEnumByRole(String role) {
+    if (ObjectUtils.isEmpty(role)) {
+      return null;
     }
-
-    /**
-     * 根据 value 获取枚举
-     *
-     * @param role
-     * @return
-     */
-    public static UserRoleEnum getEnumByRole(String role) {
-        if (ObjectUtils.isEmpty(role)) {
-            return null;
-        }
-        for (UserRoleEnum anEnum : UserRoleEnum.values()) {
-            if (anEnum.role.equals(role)) {
-                return anEnum;
-            }
-        }
-        return null;
+    for (UserRoleEnum anEnum : UserRoleEnum.values()) {
+      if (anEnum.role.equals(role)) {
+        return anEnum;
+      }
     }
-
+    return null;
+  }
 
 
 }

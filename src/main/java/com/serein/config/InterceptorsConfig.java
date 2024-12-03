@@ -19,54 +19,55 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 @Slf4j
 public class InterceptorsConfig extends WebMvcConfigurationSupport {
 
-    @Autowired
-    LoginInterceptor loginInterceptor;
+  @Autowired
+  LoginInterceptor loginInterceptor;
 
-    @Autowired
-    RefreshTokenInterceptor refreshTokenInterceptor;
+  @Autowired
+  RefreshTokenInterceptor refreshTokenInterceptor;
 
-    @Override
-    protected void addInterceptors(InterceptorRegistry registry) {
+  @Override
+  protected void addInterceptors(InterceptorRegistry registry) {
 
-        log.info("注册自定义拦截器");
-        registry.addInterceptor(refreshTokenInterceptor)
-                .addPathPatterns("/**")
-                .excludePathPatterns(
-                        "/doc.html/**",
-                        "/swagger-resources/**",
-                        "/webjars/**"
-                ).order(0);
+    log.info("注册自定义拦截器");
+    registry.addInterceptor(refreshTokenInterceptor)
+        .addPathPatterns("/**")
+        .excludePathPatterns(
+            "/doc.html/**",
+            "/swagger-resources/**",
+            "/webjars/**"
+        ).order(0);
 //        order越小，优先级越高
 
-        registry.addInterceptor(loginInterceptor)
-                .addPathPatterns()
-                .excludePathPatterns(
-                        "/user/login",
-                        "/user/register",
-                        "/user/getUserInfo/{uid}",
-                        "/user/sendRegisterCode",
-                        "/user/find/{userName}",
-                        "/user/userInfoData",
-                        "/passage/search/uid/{uid}",
-                        "/passage/topCollects",
-                        "/passage/content/{uid}/{pid}",
-                        "/passage/homePassageList",
-                        "/passage/search/text",
-                        "/passage/passageInfo/{pid}",
-                        "/comment/{authorId}/{passageId}",
-                        "/webjars/**",
-                        "/doc.html/**",
-                        "/swagger-resources/**"
-                );
-    }
+    registry.addInterceptor(loginInterceptor)
+        .addPathPatterns()
+        .excludePathPatterns(
+            "/user/login",
+            "/user/register",
+            "/user/getUserInfo/{uid}",
+            "/user/sendRegisterCode",
+            "/user/find/{userName}",
+            "/user/userInfoData",
+            "/passage/search/uid/{uid}",
+            "/passage/topCollects",
+            "/passage/content/{uid}/{pid}",
+            "/passage/homePassageList",
+            "/passage/search/text",
+            "/passage/passageInfo/{pid}",
+            "/comment/{authorId}/{passageId}",
+            "/webjars/**",
+            "/doc.html/**",
+            "/swagger-resources/**"
+        );
+  }
 
 
-    //没有该配置将无法使用swagger API测试
-    @Override
-    protected void addResourceHandlers(ResourceHandlerRegistry registry) {
+  //没有该配置将无法使用swagger API测试
+  @Override
+  protected void addResourceHandlers(ResourceHandlerRegistry registry) {
 //        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
+    registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
 //        registry.addResourceHandler("/favicon.ico").addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-    }
+    registry.addResourceHandler("/webjars/**")
+        .addResourceLocations("classpath:/META-INF/resources/webjars/");
+  }
 }

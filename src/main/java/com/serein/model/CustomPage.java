@@ -1,8 +1,7 @@
 package com.serein.model;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 /**
  * @Author:懒大王Smile
@@ -14,20 +13,21 @@ import java.util.List;
 
 @Data
 public class CustomPage<T> {
-    private Long current;
-    // 当前页码
-    private Long size;
-    // 每页显示的记录数
-    private Long total;
-    // 总记录数
-    private List<T> records;
-    // 数据列表
 
-    public CustomPage(Long current, Long size, Long total, List<T> records) {
-        this.current = current;
-        this.size = size;
-        this.total = total;
-        this.records = records;
-    }
+  private Long current;
+  // 当前页码
+  private Long size;
+  // 每页显示的记录数
+  private Long total;
+  // 总记录数
+  private List<T> records;
+  // 数据列表
+
+  public CustomPage(Long current, Long size, Long total, List<T> records) {
+    this.current = current;
+    this.size = size;
+    this.total = total;
+    this.records = records;
+  }
 
 }

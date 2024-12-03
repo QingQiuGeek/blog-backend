@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.constants.Common;
 import com.serein.mapper.PassageMapper;
 import com.serein.model.dto.passageDTO.AddPassageDTO;
@@ -13,20 +12,15 @@ import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.entity.User;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.UserVO.UserVO;
-import com.serein.service.UserService;
 import com.serein.service.impl.UserServiceImpl;
-import com.serein.utils.JwtHelper;
+import com.serein.util.JwtHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SpringBootTest
 class BlogApplicationTests {

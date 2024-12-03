@@ -12,9 +12,10 @@ import lombok.Data;
 
 @Data
 public class UserInfoDataVO {
-    Integer followerNum=0;
-    Integer collectNum=0;
-    Integer passageNum=0;
-    Integer followNum=0;
-    Integer thumbNum=0;
+
+  Integer followerNum = 0;
+  Integer collectNum = 0;
+  Integer passageNum = 0;
+  Integer followNum = 0;
+  Integer thumbNum = 0;
 }

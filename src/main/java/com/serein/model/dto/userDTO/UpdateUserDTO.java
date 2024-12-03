@@ -1,16 +1,15 @@
 package com.serein.model.dto.userDTO;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.util.Date;
-
 /**
  * 用户表
+ *
  * @author 懒大王Smile
  * @TableName user
  * @Date: 2024/9/19
@@ -22,37 +21,34 @@ import java.util.Date;
 public class UpdateUserDTO implements Serializable {
 
 
+  /**
+   * 头像URL
+   */
+  private String avatarUrl;
 
-    /**
-     * 头像URL
-     */
-    private String avatarUrl;
+  /**
+   * 性别(0女,1男,2未知)
+   */
+  private Integer sex;
 
-    /**
-     * 性别(0女,1男,2未知)
-     */
-    private Integer sex;
+  /**
+   * 用户简介
+   */
+  private String profiles;
 
-    /**
-     * 用户简介
-     */
-    private String profiles;
-
-    /**
-     * 预留字段，兴趣标签
-     */
-    private String interestTag;
-
+  /**
+   * 预留字段，兴趣标签
+   */
+  private String interestTag;
 
 
+  /**
+   * 用户名
+   */
+  private String userName;
 
-    /**
-     * 用户名
-     */
-    private String userName;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+  @TableField(exist = false)
+  private static final long serialVersionUID = 1L;
 
 
 }

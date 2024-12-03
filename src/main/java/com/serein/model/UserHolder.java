@@ -7,17 +7,18 @@ import com.serein.model.vo.UserVO.LoginUserVO;
  * @author 懒大王Smile
  */
 public class UserHolder {
-    private static final ThreadLocal<LoginUserVO> tl = new ThreadLocal<>();
 
-    public static void saveUser(LoginUserVO user){
-        tl.set(user);
-    }
+  private static final ThreadLocal<LoginUserVO> tl = new ThreadLocal<>();
 
-    public static LoginUserVO getUser(){
-        return tl.get();
-    }
+  public static void saveUser(LoginUserVO user) {
+    tl.set(user);
+  }
 
-    public static void removeUser(){
-        tl.remove();
-    }
+  public static LoginUserVO getUser() {
+    return tl.get();
+  }
+
+  public static void removeUser() {
+    tl.remove();
+  }
 }

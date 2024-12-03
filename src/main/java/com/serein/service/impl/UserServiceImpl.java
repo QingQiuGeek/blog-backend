@@ -28,9 +28,6 @@ import com.serein.mapper.UserFollowMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.AdminUserQueryPageRequest;
-import com.serein.model.Request.LoginRequest;
-import com.serein.model.Request.RegisterCodeRequest;
-import com.serein.model.Request.RegisterRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
@@ -39,6 +36,9 @@ import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserFollow;
 import com.serein.model.entity.UserThumbs;
+import com.serein.model.request.LoginRequest;
+import com.serein.model.request.RegisterCodeRequest;
+import com.serein.model.request.RegisterRequest;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
@@ -46,14 +46,13 @@ import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
-import com.serein.utils.MailUtil;
+import com.serein.util.MailUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -614,8 +613,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     Page<User> userPage = new Page<>(currentPage, pageSize);
     Page<User> userDesc = page(userPage,
         new LambdaQueryWrapper<User>().orderByDesc(User::getCreateTime)
-            .gt(startTime!=null,User::getCreateTime,startTime)
-            .lt(endTime!=null,User::getCreateTime,endTime)
+            .gt(startTime != null, User::getCreateTime, startTime)
+            .lt(endTime != null, User::getCreateTime, endTime)
             .eq(userId != null, User::getUserId, userId)
             .eq(StringUtils.isNotBlank(mail), User::getMail, mail)
             .eq(StringUtils.isNotBlank(userName), User::getUserName, userName)

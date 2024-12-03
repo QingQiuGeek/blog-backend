@@ -1,11 +1,10 @@
 package com.serein.model.vo.UserVO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import lombok.Data;
 
 
 /**
@@ -16,73 +15,73 @@ import java.util.List;
  */
 
 @Data
-public class UserVO  implements Serializable {
+public class UserVO implements Serializable {
 
-    /*todo 是否关注
-    *
-    * */
-    @TableField(exist = false)
-    private Boolean isFollow=false;
-    /**
-     * 用户id
-     */
-    private Long userId;
+  /*todo 是否关注
+   *
+   * */
+  @TableField(exist = false)
+  private Boolean isFollow = false;
+  /**
+   * 用户id
+   */
+  private Long userId;
 
-    /**
-     * 头像URL
-     */
-    private String avatarUrl;
+  /**
+   * 头像URL
+   */
+  private String avatarUrl;
 
-    /**
-     * 性别(0女,1男,2未知)
-     */
-    private Integer sex;
+  /**
+   * 性别(0女,1男,2未知)
+   */
+  private Integer sex;
 
-    /**
-     * 用户简介
-     */
-    private String profiles;
+  /**
+   * 用户简介
+   */
+  private String profiles;
 
-    /**
-     * 预留字段，兴趣标签
-     */
-    private List<String> interestTag;
+  /**
+   * 预留字段，兴趣标签
+   */
+  private List<String> interestTag;
 
-    /**
-     * 粉丝数量
-     */
-    private Integer followerNum;
+  /**
+   * 粉丝数量
+   */
+  private Integer followerNum;
 
-    /**
-     * 用户名
-     */
-    private String userName;
+  /**
+   * 用户名
+   */
+  private String userName;
 
-    /**
-     * 邮箱
-     */
-    private String mail;
+  /**
+   * 邮箱
+   */
+  private String mail;
 
-    /**
-     * ip地址
-     */
-    private String ipAddress;
+  /**
+   * ip地址
+   */
+  private String ipAddress;
 
-    /**
-     * 电话,预留字段
-     */
-    private String phone;
+  /**
+   * 电话,预留字段
+   */
+  private String phone;
 
-    /**
-     * 预留字段,用户等级
-     */
-    private Integer level;
+  /**
+   * 预留字段,用户等级
+   */
+  private Integer level;
 
-    /**
-     * 创建时间
-     */
-    private Date createTime;
+  /**
+   * 创建时间
+   */
+  private Date createTime;
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
 }

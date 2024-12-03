@@ -31,7 +31,7 @@ import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.service.PassageService;
-import com.serein.utils.FileUtil;
+import com.serein.util.FileUtil;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;

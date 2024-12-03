@@ -11,12 +11,13 @@ import lombok.Getter;
  */
 
 @Getter
-public class BusinessException extends RuntimeException{
+public class BusinessException extends RuntimeException {
 
-    ErrorCode errorCode;
-    public BusinessException(ErrorCode errorCode,String message) {
-        super(message);
-        this.errorCode=errorCode;
-    }
+  ErrorCode errorCode;
+
+  public BusinessException(ErrorCode errorCode, String message) {
+    super(message);
+    this.errorCode = errorCode;
+  }
 
 }

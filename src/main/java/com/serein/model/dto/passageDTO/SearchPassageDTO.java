@@ -1,8 +1,7 @@
 package com.serein.model.dto.passageDTO;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 /**
  * @Author:懒大王Smile
@@ -11,8 +10,9 @@ import java.util.List;
  * @Description:
  */
 @Data
-public class SearchPassageDTO{
-    private String searchText;
+public class SearchPassageDTO {
 
-    private List<String> pTags;
+  private String searchText;
+
+  private List<String> pTags;
 }

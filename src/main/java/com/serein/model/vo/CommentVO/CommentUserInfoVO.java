@@ -1,9 +1,8 @@
 package com.serein.model.vo.CommentVO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import lombok.Data;
-
 import java.io.Serializable;
+import lombok.Data;
 
 /**
  * @Author:懒大王Smile
@@ -15,27 +14,27 @@ import java.io.Serializable;
 @Data
 public class CommentUserInfoVO implements Serializable {
 
-    /**
-     * 评论的用户名
-     */
-    private String userName;
+  /**
+   * 评论的用户名
+   */
+  private String userName;
 
-    /**
-     * 评论的用户id
-     */
-    private Long userId;
+  /**
+   * 评论的用户id
+   */
+  private Long userId;
 
-    /**
-     * 评论的用户头像
-     */
-    private String avatarUrl;
+  /**
+   * 评论的用户头像
+   */
+  private String avatarUrl;
 
-    /**
-     * 评论的用户ip
-     */
+  /**
+   * 评论的用户ip
+   */
 
-    private String ipAddress;
+  private String ipAddress;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+  @TableField(exist = false)
+  private static final long serialVersionUID = 1L;
 }

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile
@@ -19,13 +18,13 @@ import org.springframework.stereotype.Component;
 @Configuration
 public class RedisConfig {
 
-    //todo 优化：redis序列化
-    @Bean
-    public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory){
-        RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-        //序列化后写入redis的key不乱码
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        return redisTemplate;
-    }
+  //todo 优化：redis序列化
+  @Bean
+  public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
+    redisTemplate.setConnectionFactory(redisConnectionFactory);
+    //序列化后写入redis的key不乱码
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
+    return redisTemplate;
+  }
 }
