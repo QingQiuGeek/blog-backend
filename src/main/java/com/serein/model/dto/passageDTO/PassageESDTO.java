@@ -3,10 +3,13 @@ package com.serein.model.dto.passageDTO;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageVO;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -84,7 +87,7 @@ public class PassageESDTO implements Serializable {
    * todo 修改了passage的标签，这里也要改
    * 标签
    */
-  private List<String> pTags;
+  private Map<Long,String> pTagsMap;
 
   /**
    * 浏览量
@@ -124,22 +127,21 @@ public class PassageESDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+
   /**
    * 对象转包装类
    *
-   * @param passage
+   * @param passageVO
    * @return
    */
-  public static PassageESDTO objToDto(Passage passage) {
-    if (passage == null) {
+  public static PassageESDTO objToDto(PassageVO passageVO) {
+    if (passageVO == null) {
       return null;
     }
     PassageESDTO passageESDTO = new PassageESDTO();
-    BeanUtils.copyProperties(passage, passageESDTO);
-    String tagsStr = passage.getPTags();
-    if (StringUtils.isNotBlank(tagsStr)) {
-      passageESDTO.setPTags(JSONUtil.toList(tagsStr, String.class));
-    }
+    BeanUtils.copyProperties(passageVO, passageESDTO);
+    Map<Long, String> pTagsMap = passageVO.getPTagsMap();
+    passageESDTO.setPTagsMap(pTagsMap);
     return passageESDTO;
   }
 
@@ -153,13 +155,13 @@ public class PassageESDTO implements Serializable {
     if (passageESDTO == null) {
       return null;
     }
-    Passage post = new Passage();
-    BeanUtils.copyProperties(passageESDTO, post);
-    List<String> tagList = passageESDTO.getPTags();
-    if (CollUtil.isNotEmpty(tagList)) {
-      post.setPTags(JSONUtil.toJsonStr(tagList));
-    }
-    return post;
+    Passage passage = new Passage();
+    BeanUtils.copyProperties(passageESDTO, passage);
+    Map<Long, String> tagsMap = passageESDTO.getPTagsMap();
+    List<Long> list = new ArrayList<>(tagsMap.keySet());
+    String jsonStr = JSONUtil.toJsonStr(list);
+    passage.setTagsId(jsonStr);
+    return passage;
   }
 
 }

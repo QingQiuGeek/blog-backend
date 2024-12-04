@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,8 +18,8 @@ import lombok.NoArgsConstructor;
  * @Description:
  */
 
-@NoArgsConstructor
 @Data
+//@Builder
 public class PassageVO implements Serializable {
 
 
@@ -71,15 +73,12 @@ public class PassageVO implements Serializable {
    */
   private String summary;
 
-  /**
-   * 文章所属类别
-   */
-  private Integer categoryId;
-
   /*
-   * 标签列表 存到数据库的时候是json格式
+   * 标签列表
    * */
-  private List<String> pTags;
+  private Map<Long,String> pTagsMap;
+
+
 
   /**
    * 浏览量

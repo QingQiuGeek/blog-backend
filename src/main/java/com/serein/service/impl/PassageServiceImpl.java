@@ -37,6 +37,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,14 +101,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
                 Passage::getThumbnail, Passage::getSummary, Passage::getTagsId,
                 Passage::getCommentNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAccessTime));
-
     //当前页的数据
     List<Passage> passageList = pageDesc.getRecords();
     long total = pageDesc.getTotal();
     if (passageList.isEmpty()) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取文章列表失败");
     }
+    log.info("passageList：" + passageList);
     List<PassageInfoVO> pageInfoVOList = getPassageInfoVOList(passageList);
+    log.info("passageInfoVOList：" + pageInfoVOList);
+
     // 创建一个 Page 对象返回，封装分页信息（总记录数、页码等）和当前页的数据
     Page<List<PassageInfoVO>> listPage = new Page<>(currentPage, pageSize);
     //包装成单一的list
@@ -122,15 +125,13 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     List<PassageInfoVO> collect = passageList.stream().map(passage -> {
           PassageInfoVO passageInfoVO = new PassageInfoVO();
           BeanUtil.copyProperties(passage, passageInfoVO);
+          isThumbCollect(passageInfoVO);
           String tagsId = passage.getTagsId();
           if (StringUtils.isNotBlank(tagsId)) {
-            List<Long> tagsIdlist = JSONUtil.toList(tagsId, Long.class);
-            log.info("tagsIdlist："+tagsIdlist);
-            List<Tags> tags = tagsMapper.selectBatchIds(tagsIdlist);
-            log.info("tags："+tags);
-            List<String> tagStrList = tags.stream().map(Tags::getTagName)
-                .collect(Collectors.toList());
-            passageInfoVO.setPTags(tagStrList);
+            log.info("tagsId：" + tagsId);
+            Map<Long, String> tagStrList = getTagStrList(tagsId);
+//            passageInfoVO.setPTags(tagStrList);
+            passageInfoVO.setPTagsMap(tagStrList);
           }
 //          if (!StringUtils.isBlank(passage.getPTags())) {
 //            //把数据库中string类型的json转换成list<String>
@@ -138,11 +139,35 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 //            passageInfoVO.setPTags(pTagList);
 //            //判断当前用户是否点赞、收藏
 //          }
-          isThumbCollect(passageInfoVO);
+          log.info("passageInfoVO：" + passageInfoVO.toString());
           return passageInfoVO;
         }
     ).collect(Collectors.toList());
+
     return collect;
+  }
+
+  /**
+   * @param tagsId 入参json类型的id数组
+   * @return key=tagId，value=tagName
+   * @Description: 根据json格式的字符串id获取标签列表
+   */
+  public Map<Long, String> getTagStrList(String tagsId) {
+    List<Long> tagsIdlist = JSONUtil.toList(tagsId, Long.class);
+    log.info("tagsIdlist：" + tagsIdlist);
+    HashMap<Long, String> map = new HashMap<>();
+    tagsIdlist.forEach(tagId -> {
+      Tags tags = tagsMapper.selectById(tagId);
+      if (tags != null) {
+        String tagName = tags.getTagName();
+        map.put(tagId, tagName);
+      }
+    });
+//    List<Tags> tags = tagsMapper.selectBatchIds(tagsIdlist);
+    log.info("tagsMap：" + map);
+//    List<String> tagStrList = tags.stream().map(Tags::getTagName)
+//        .collect(Collectors.toList());
+    return map;
   }
 
   @Override
@@ -278,9 +303,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     if (passageDTO.getClass() == UpdatePassageDTO.class) {
       passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
     }
-    List<String> tags = passageDTO.getPTags();
+    Map<Long, String> tags = passageDTO.getPtagsMap();
     if (tags != null) {
-      passage.setPTags(JSONUtil.toJsonStr(tags));
+      Set<Long> longs = tags.keySet();
+      passage.setTagsId(JSONUtil.toJsonStr(longs));
     }
     passage.setAuthorId(UserHolder.getUser().getUserId());
     passage.setAuthorName(UserHolder.getUser().getUserName());
@@ -452,7 +478,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .eq(passageId != null, Passage::getPassageId, passageId)
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
             .eq(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
-            .select(Passage::getPassageId, Passage::getPTags, Passage::getStatus, Passage::getTitle,
+            .select(Passage::getPassageId, Passage::getTagsId, Passage::getStatus,
+                Passage::getTitle,
                 Passage::getAuthorName, Passage::getAccessTime, Passage::getCommentNum,
                 Passage::getViewNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAuthorId)
@@ -480,9 +507,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return records.stream().map(passage -> {
       AdminPassageVO adminPassageVO = new AdminPassageVO();
       BeanUtils.copyProperties(passage, adminPassageVO);
-      if (StringUtils.isNotBlank(passage.getPTags())) {
-        List<String> list = JSONUtil.toList(passage.getPTags(), String.class);
-        adminPassageVO.setPTags(list);
+      String tagsId = passage.getTagsId();
+      if (StringUtils.isNotBlank(tagsId)) {
+        Map<Long, String> tagStrList = getTagStrList(tagsId);
+        adminPassageVO.setPTagsMap(tagStrList);
       }
       return adminPassageVO;
     }).collect(Collectors.toList());

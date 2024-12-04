@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * @author 懒大王Smile
@@ -36,12 +37,15 @@ public interface PassageMapper extends BaseMapper<Passage> {
   String getAuthorAvatar(Long authorId);
 
 
-  @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary,pTags from blog.passage where passageId=#{passageId}")
+  @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary,tagsId from blog.passage where passageId=#{passageId}")
   Passage getPassageInfo(Long passageId);
 
 
   @Select("select count(*) from blog.user_thumbs where userId=#{uid}")
   Integer getThumbNum(Long uid);
+
+  @Update("update blog.passage set commentNum=commentNum+1 where passageId=#{passageId}")
+  Boolean updateCommentNum(Long passageId);
 }
 
 

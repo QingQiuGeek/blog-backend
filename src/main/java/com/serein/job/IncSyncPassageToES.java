@@ -5,11 +5,16 @@ import com.serein.esdao.PassageESDao;
 import com.serein.mapper.PassageMapper;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageVO;
+import com.serein.service.impl.PassageServiceImpl;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 
 /**
@@ -28,6 +33,9 @@ public class IncSyncPassageToES {
   @Resource
   private PassageESDao passageESDao;
 
+  @Resource
+  private PassageServiceImpl passageServiceImpl;
+
   //单位分钟
   private static final int AGO_MINUTES = 600;
 
@@ -44,7 +52,17 @@ public class IncSyncPassageToES {
       return;
     }
     List<PassageESDTO> passageESDTOList = passageList.stream()
-        .map(PassageESDTO::objToDto)
+        .map(passage -> {
+          PassageVO passageVO = new PassageVO();
+          BeanUtils.copyProperties(passage, passageVO);
+          String tagsId = passage.getTagsId();
+          if (StringUtils.isNotBlank(tagsId)) {
+            Map<Long, String> tagMap = passageServiceImpl.getTagStrList(tagsId);
+            passageVO.setPTagsMap(tagMap);
+            return PassageESDTO.objToDto(passageVO);
+          }
+          return PassageESDTO.objToDto(passageVO);
+        })
         .collect(Collectors.toList());
     //每个批次处理的项目数
     final int pageSize = 50;

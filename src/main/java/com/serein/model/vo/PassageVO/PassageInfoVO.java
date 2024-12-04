@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -69,7 +70,12 @@ public class PassageInfoVO implements Serializable {
   /*
    * 标签列表 存到数据库的时候是json格式
    * */
-  private List<String> pTags;
+//  private List<String> pTags;
+
+  /**
+   * long是标签id，value是标签名
+   */
+  private Map<Long,String> pTagsMap;
 
   /**
    * 浏览量

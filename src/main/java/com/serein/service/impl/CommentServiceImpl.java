@@ -3,7 +3,11 @@ package com.serein.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.serein.constants.ErrorCode;
+import com.serein.constants.ErrorInfo;
+import com.serein.exception.BusinessException;
 import com.serein.mapper.CommentMapper;
+import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.CommentDTO.CommentDTO;
@@ -17,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +30,7 @@ import org.springframework.stereotype.Service;
  * @description 针对表【comment(评论表)】的数据库操作Service实现
  * @createDate 2024-09-12 22:19:13
  */
+@Slf4j
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     implements CommentService {
@@ -35,6 +41,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
   @Autowired
   UserMapper userMapper;
 
+  @Autowired
+  PassageMapper passageMapper;
+
   @Override
   public Long commentPassage(CommentDTO commentDTO) {
     LoginUserVO loginUserVO = UserHolder.getUser();
@@ -44,9 +53,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     Long userId = loginUserVO.getUserId();
     Comment comment = new Comment();
     BeanUtil.copyProperties(commentDTO, comment);
+    comment.setPassageId(Long.valueOf(commentDTO.getPassageId()));
     comment.setCommentUserId(userId);
     comment.setCommentTime(new Date(commentDTO.getCommentTime()));
+    //todo 事务一致性
     commentMapper.insertComment(comment);
+    if(comment.getCommentId()==null){
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.COMMENT_ERROR);
+    }
+    Boolean b=passageMapper.updateCommentNum(comment.getPassageId());
+    if(!b){
+      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
+    }
+    log.info("insert comment："+comment);
+    log.info("update passage_Table viewNum+1");
     //拿到生成的commentId
     return comment.getCommentId();
   }

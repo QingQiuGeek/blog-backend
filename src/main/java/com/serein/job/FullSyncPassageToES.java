@@ -4,11 +4,16 @@ import cn.hutool.core.collection.CollUtil;
 import com.serein.esdao.PassageESDao;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.PassageService;
+import com.serein.service.impl.PassageServiceImpl;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.CommandLineRunner;
 
 /**
@@ -32,7 +37,8 @@ public class FullSyncPassageToES implements CommandLineRunner {
 
   @Resource
   private PassageESDao passageESDao;
-
+  @Resource
+  private PassageServiceImpl passageServiceImpl;
 
   @Override
   public void run(String... args) {
@@ -40,7 +46,18 @@ public class FullSyncPassageToES implements CommandLineRunner {
     if (CollUtil.isEmpty(postList)) {
       return;
     }
-    List<PassageESDTO> passageESDTOList = postList.stream().map(PassageESDTO::objToDto)
+    List<PassageESDTO> passageESDTOList = postList.stream()
+        .map(passage -> {
+              PassageVO passageVO = new PassageVO();
+              BeanUtils.copyProperties(passage, passageVO);
+              String tagsId = passage.getTagsId();
+              if (StringUtils.isNotBlank(tagsId)) {
+                Map<Long, String> tagMap = passageServiceImpl.getTagStrList(tagsId);
+                passageVO.setPTagsMap(tagMap);
+                return PassageESDTO.objToDto(passageVO);
+              }
+              return PassageESDTO.objToDto(passageVO);
+            })
         .collect(Collectors.toList());
     final int pageSize = 500;
     int total = passageESDTOList.size();

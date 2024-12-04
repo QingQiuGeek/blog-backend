@@ -12,6 +12,8 @@ public interface ErrorInfo {
   String FILE_TYPE_ERROR = "文件类型错误，请上传png文件";
   String ADD_ERROR = "添加失败";
 
+  String COMMENT_ERROR = "评论失败";
+
   String UPDATE_ERROR = "更新失败";
 
   String RELEASED_ERROR = "发布失败";
