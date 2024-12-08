@@ -22,6 +22,8 @@ public interface Common {
 
   Long PAGE_SIZE = 10L;
 
+  //前端category页随机抽取的标签数量
+  Integer TAGS_NUM=50;
   String LOGIN_TOKEN_KEY = "Blog:login:token:";
 
   String PASSAGE_THUMB_KEY = "Blog:passage:thumb:";

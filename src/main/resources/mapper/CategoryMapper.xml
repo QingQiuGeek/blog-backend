@@ -7,13 +7,14 @@
     <resultMap id="BaseResultMap" type="com.serein.model.entity.Category">
             <id property="categoryId" column="categoryId" jdbcType="BIGINT"/>
             <result property="categoryName" column="categoryName" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        categoryId,categoryName,
+        categoryId,categoryName,description,
         createTime,updateTime,isDelete
     </sql>
 </mapper>

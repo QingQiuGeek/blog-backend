@@ -1,4 +1,4 @@
-package com.serein.model.entity;
+package com.serein.model.vo.CategoryVO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -14,14 +14,12 @@ import lombok.Data;
  * @author 懒大王Smile
  * @TableName category
  */
-@TableName(value = "category")
 @Data
-public class Category implements Serializable {
+public class CategoryVO implements Serializable {
 
   /**
    * 类别id
    */
-  @TableId(type = IdType.AUTO)
   private Long categoryId;
 
   /**
@@ -35,21 +33,6 @@ public class Category implements Serializable {
    */
   private String description;
 
-  /**
-   * 创建时间
-   */
-  private Date createTime;
 
-  /**
-   * 修改时间
-   */
-  private Date updateTime;
-
-  /**
-   * 0逻辑删除
-   */
-  private Integer isDelete;
-
-  @TableField(exist = false)
   private static final long serialVersionUID = 1L;
 }

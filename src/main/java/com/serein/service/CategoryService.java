@@ -1,7 +1,11 @@
 package com.serein.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.model.CategoryPageRequest;
 import com.serein.model.entity.Category;
+import com.serein.model.vo.CategoryVO.CategoryVO;
+import java.util.List;
 
 /**
  * @author 懒大王Smile
@@ -10,4 +14,5 @@ import com.serein.model.entity.Category;
  */
 public interface CategoryService extends IService<Category> {
 
+  Page<List<CategoryVO>> getCategories(CategoryPageRequest categoryPageRequest);
 }

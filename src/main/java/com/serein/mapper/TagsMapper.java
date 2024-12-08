@@ -2,6 +2,9 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Tags;
+import com.serein.model.vo.TagVO.TagVO;
+import java.util.List;
+import org.apache.ibatis.annotations.Select;
 
 /**
 * @author 懒大王Smile
@@ -11,6 +14,8 @@ import com.serein.model.entity.Tags;
 */
 public interface TagsMapper extends BaseMapper<Tags> {
 
+
+  List<Tags> getRandomTags();
 }
 
 

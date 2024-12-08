@@ -3,6 +3,8 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.serein.model.entity.Tags;
+import com.serein.model.vo.TagVO.TagVO;
+import java.util.List;
 
 /**
 * @author 懒大王Smile
@@ -11,4 +13,5 @@ import com.serein.model.entity.Tags;
 */
 public interface TagsService extends IService<Tags> {
 
+  List<TagVO> getRandomTags();
 }

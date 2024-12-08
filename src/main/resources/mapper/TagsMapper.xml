@@ -16,4 +16,12 @@
         tagId,tagName,categoryId,
         createTime,updateTime
     </sql>
+
+<!--  随机抽取25个标签-->
+  <select id="getRandomTags" resultType="com.serein.model.entity.Tags">
+    select * from blog.tags
+    where tags.tagId >= ( SELECT floor( RAND() * ( SELECT MAX( tagId ) FROM tags ) ) )
+    ORDER by tagId
+    LIMIT 25;
+  </select>
 </mapper>

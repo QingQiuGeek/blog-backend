@@ -154,8 +154,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/uploadPassageCover")
-  public BaseResponse<String> uploadPassageCover(@RequestParam("img") MultipartFile img) {
-    String coverUrl = passageService.uploadPassageCover(img);
+  public BaseResponse<String> uploadPassageCover(@RequestParam("file") MultipartFile file) {
+    String coverUrl = passageService.uploadPassageCover(file);
     return ResultUtil.success(coverUrl);
   }
 
