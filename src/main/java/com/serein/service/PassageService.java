@@ -11,6 +11,7 @@ import com.serein.model.entity.Passage;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
+import com.serein.model.vo.PassageVO.PassageTitleVO;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +26,7 @@ public interface PassageService extends IService<Passage> {
 
   List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
 
-  List<PassageInfoVO> getPassageByUserId(Long userId);
+  List<PassageTitleVO> getPassageByUserId(Long userId);
 
   Long addPassage(AddPassageDTO addPassageDTO);
 
@@ -37,7 +38,7 @@ public interface PassageService extends IService<Passage> {
 
   Boolean collectPassage(Long passageId);
 
-  List<PassageInfoVO> getTopCollects();
+  List<PassageTitleVO> getTopPassages();
 
   PassageContentVO getPassageContentByPassageId(Long uid, Long pid);
 

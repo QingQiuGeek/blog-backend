@@ -31,12 +31,10 @@ import com.serein.model.entity.UserThumbs;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
+import com.serein.model.vo.PassageVO.PassageTitleVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
-import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.util.FileUtil;
-import com.serein.util.ResultUtil;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -263,16 +261,20 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Override
-  public List<PassageInfoVO> getPassageByUserId(Long userId) {
-//    QueryWrapper<Passage> passageQueryWrapper = new QueryWrapper<>();
+  public List<PassageTitleVO> getPassageByUserId(Long userId) {
     LambdaQueryWrapper<Passage> passageQueryWrapper = new LambdaQueryWrapper<>();
     passageQueryWrapper.eq(Passage::getAuthorId, userId);
     List<Passage> list = this.list(passageQueryWrapper);
     if (list.isEmpty()) {
       return Collections.emptyList();
     }
-    List<PassageInfoVO> collect = getPassageInfoVOList(list);
-    return collect;
+    ArrayList<PassageTitleVO> passageTitleVOS = new ArrayList<>();
+    list.forEach(passage -> {
+      PassageTitleVO passageTitleVO = new PassageTitleVO();
+      BeanUtils.copyProperties(passage, passageTitleVO);
+      passageTitleVOS.add(passageTitleVO);
+    });
+    return passageTitleVOS;
   }
 
   @Override
@@ -412,32 +414,23 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   /**
    * @return
-   * @Description: 从 Redis 查询收藏量前 7 的博客
+   * @Description: 从 mysql 查询浏览量量前 7 的博客
    */
   @Override
-  public List<PassageInfoVO> getTopCollects() {
-
-    // 获取所有相关的 passageId 键
-    Set<String> keys = stringRedisTemplate.keys(Common.PASSAGE_COLLECT_KEY + "*");
-    // 用于存储 passageId 和对应用户数量的列表
-    List<Map.Entry<String, Long>> passageNum = new ArrayList<>();
-    // 遍历每个key，获取该key收藏用户的数量
-    if (CollUtil.isNotEmpty(keys)) {
-      for (String key : keys) {
-        Long collectNum = stringRedisTemplate.opsForZSet().size(key);
-        passageNum.add(new AbstractMap.SimpleEntry<>(key, collectNum != null ? collectNum : 0));
-      }
-    }
-    // 按照用户数量降序排序
-    passageNum.sort((entry1, entry2) -> Long.compare(entry2.getValue(), entry1.getValue()));
-    List<Long> sortedPassageIds = new ArrayList<>();
-    for (Map.Entry<String, Long> entry : passageNum) {
-      int lastIndexOf = entry.getKey().lastIndexOf(":") + 1;
-      String passageId = entry.getKey().substring(lastIndexOf);
-      sortedPassageIds.add(Long.valueOf(passageId));
-    }
-    List<Passage> passageList = listByIds(sortedPassageIds);
-    return getPassageInfoVOList(passageList);
+  public List<PassageTitleVO> getTopPassages() {
+    Page<Passage> page = new Page<>(1, 10);
+    LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
+    queryWrapper.orderByDesc(Passage::getViewNum);
+    Page<Passage> passagePage = passageMapper.selectPage(page, queryWrapper);
+    List<Passage> records = passagePage.getRecords();
+    List<PassageTitleVO> passageTitleVOS = new ArrayList<>();
+    records.forEach(passage -> {
+      PassageTitleVO passageTitleVO = new PassageTitleVO();
+      BeanUtils.copyProperties(passage, passageTitleVO);
+      passageTitleVOS.add(passageTitleVO);
+    });
+    return passageTitleVOS;
+    // 返回查询的记录
   }
 
   @Override
@@ -551,8 +544,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public boolean deleteByPassageId(Long passageId) {
     boolean b1 = removeById(passageId);
-    boolean b2=commentMapper.deleteByPassageId(passageId);
-    if (b1&&b2) {
+    boolean b2 = commentMapper.deleteByPassageId(passageId);
+    if (b1 && b2) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

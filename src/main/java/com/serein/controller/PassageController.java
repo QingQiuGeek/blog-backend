@@ -10,6 +10,7 @@ import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
+import com.serein.model.vo.PassageVO.PassageTitleVO;
 import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
@@ -46,10 +47,10 @@ public class PassageController {
   /*
    * top7 爆款文章
    * */
-  @GetMapping("/topCollects")
-  public BaseResponse<List<PassageInfoVO>> getTopCollects() {
-    List<PassageInfoVO> hotCollects = passageService.getTopCollects();
-    return ResultUtil.success(hotCollects);
+  @GetMapping("/topPassages")
+  public BaseResponse<List<PassageTitleVO>> getTopPassages() {
+    List<PassageTitleVO> topPassages = passageService.getTopPassages();
+    return ResultUtil.success(topPassages);
   }
 
   /*
@@ -112,14 +113,13 @@ public class PassageController {
 
   /**
    * 根据用户id搜索文章列表 todo 分页查询
-   *
    * @param uid
    * @return
    */
-  @GetMapping("/search/uid/{uid}")
-  public BaseResponse<List<PassageInfoVO>> getPassageByUserId(@PathVariable Long uid) {
-    List<PassageInfoVO> passageInfoVOList = passageService.getPassageByUserId(uid);
-    return ResultUtil.success(passageInfoVOList);
+  @GetMapping("/otherPassages/{uid}")
+  public BaseResponse<List<PassageTitleVO>> getPassageByUserId(@PathVariable Long uid) {
+    List<PassageTitleVO> PassageTitleVOList = passageService.getPassageByUserId(uid);
+    return ResultUtil.success(PassageTitleVOList);
   }
 
   /*

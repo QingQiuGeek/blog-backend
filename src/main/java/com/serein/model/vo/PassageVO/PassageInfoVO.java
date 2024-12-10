@@ -35,7 +35,7 @@ public class PassageInfoVO implements Serializable {
    */
 //    @JsonFormat(shape = JsonFormat.Shape.STRING)
   @JsonSerialize(using = ToStringSerializer.class)
-  private String passageId;
+  private Long passageId;
 
   /**
    * 作者id,逻辑关联用户表
