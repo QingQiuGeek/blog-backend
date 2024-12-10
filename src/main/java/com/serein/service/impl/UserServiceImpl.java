@@ -28,6 +28,7 @@ import com.serein.mapper.UserFollowMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.AdminUserQueryPageRequest;
+import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
@@ -64,6 +65,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
@@ -76,8 +78,7 @@ import org.springframework.util.DigestUtils;
  */
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
   //盐值.从yml文件获取
   @Value("${custom.salt}")
@@ -173,38 +174,56 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
    * @Description: 从redis查
    */
   @Override
-  public List<UserVO> myFollow() {
+  public Page<List<UserVO>> myFollow(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
+      Page<List<UserVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
-      return Collections.emptyList();
+      return objectPage;
+      //未登录直接返回空列表
     }
     Long loginUserId = loginUserVO.getUserId();
     String key = USER_FOLLOW_KEY + loginUserId;
     //从redis查
-    Set<String> stringIdSet = stringRedisTemplate.opsForZSet().range(key, 0, -1);
-    if (CollUtil.isNotEmpty(stringIdSet)) {
-      ArrayList<Long> idList = new ArrayList<>();
-      //遍历stringIdSet把每一个string类型的userid转换成long
-      stringIdSet.forEach(idString -> idList.add(Long.valueOf(idString)));
-      List<User> userList = this.listByIds(idList);
-      //把user转化成uservo
-      List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
-      //我关注的，全部设置成已关注
-      userVOListByUserList.forEach(userVO -> userVO.setIsFollow(true));
-      return userVOListByUserList;
+    int currentPage = queryPageRequest.getCurrentPage();
+    int pageSize = queryPageRequest.getPageSize();
+    Set<String> stringIdSet = stringRedisTemplate.opsForZSet()
+        .range(key, (long) (currentPage - 1) * pageSize, (long) currentPage * pageSize - 1);
+    if (CollUtil.isEmpty(stringIdSet)) {
+      Page<List<UserVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
-    return Collections.emptyList();
+    ArrayList<Long> idList = new ArrayList<>();
+    //遍历stringIdSet把每一个string类型的userid转换成long
+    stringIdSet.forEach(idString -> idList.add(Long.valueOf(idString)));
+    List<User> userList = this.listByIds(idList);
+    //把user转化成uservo
+    List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
+    //我关注的，全部设置成已关注
+    userVOListByUserList.forEach(userVO -> userVO.setIsFollow(true));
+    int size = stringIdSet.size();
+    Page<List<UserVO>> listPage = new Page<>(currentPage, pageSize);
+    listPage.setRecords(Collections.singletonList(userVOListByUserList));
+    listPage.setTotal((long)size);
+    return listPage;
   }
 
 
   //判断我是否关注了这些用户
-  private void isFollow(Long loginUserId, List<UserVO> userVOList) {
+  private List<UserVO> isFollow(Long loginUserId, List<UserVO> userVOList) {
+    List<UserVO> userVOS = new ArrayList<>();
     String key = Common.USER_FOLLOW_KEY + loginUserId.toString();
     for (UserVO userVO : userVOList) {
       Double score = stringRedisTemplate.opsForZSet().score(key, userVO.getUserId().toString());
       userVO.setIsFollow(score != null);
+      userVOS.add(userVO);
     }
+    return userVOS;
   }
 
   /**
@@ -214,28 +233,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
    * @Description: redis存储了我关注了哪些用户，适合查询我的关注，而不是我的粉丝，这里查mysql
    */
   @Override
-  public List<UserVO> myFollowers() {
+  public Page<List<UserVO>> myFollowers(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
-      //未登录返回空列表
-      return Collections.emptyList();
+      Page<List<UserVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
     Long loginUserId = loginUserVO.getUserId();
-    LambdaQueryWrapper<UserFollow> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(UserFollow::getUserId, loginUserId);
-    List<UserFollow> myFollowers = userFollowMapper.selectList(queryWrapper);
-    if (CollUtil.isNotEmpty(myFollowers)) {
-      ArrayList<Long> idList = new ArrayList<>();
-      //拿到我的粉丝的id列表
-      myFollowers.forEach(myFollower -> idList.add(myFollower.getUserId()));
-      //根据我的粉丝的idlist查询出来粉丝的uservo
-      List<User> userList = this.listByIds(idList);
-      List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
-      //判断我是否关注了粉丝
-      isFollow(loginUserId, userVOListByUserList);
-      return userVOListByUserList;
+    int pageSize = queryPageRequest.getPageSize();
+    int currentPage = queryPageRequest.getCurrentPage();
+    Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getToUserId, loginUserId));
+    List<UserFollow> records = userFollowPage.getRecords();
+    if (CollUtil.isEmpty(records)) {
+      Page<List<UserVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
-    return Collections.emptyList();
+    long total = userFollowPage.getTotal();
+    ArrayList<Long> idList = new ArrayList<>();
+    //拿到我的粉丝的id列表
+    records.forEach(myFollower -> idList.add(myFollower.getUserId()));
+    //根据我的粉丝的idlist查询出来粉丝的uservo
+    List<User> userList = this.listByIds(idList);
+    List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
+    //判断我是否关注了粉丝
+    List<UserVO> follow = isFollow(loginUserId, userVOListByUserList);
+    Page<List<UserVO>> listPage = new Page<>(currentPage, pageSize);
+    listPage.setRecords(Collections.singletonList(follow));
+    listPage.setTotal(total);
+    return listPage;
   }
 
   /**
@@ -341,62 +373,106 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
   @Override
-  public List<PassageInfoVO> myCollectPassage() {
+  public Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
+      Page<List<PassageInfoVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
-      return Collections.emptyList();
+      return objectPage;
     }
     Long userId = loginUserVO.getUserId();
-    LambdaQueryWrapper<UserCollects> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(UserCollects::getUserId, userId);
-    List<UserCollects> userCollects = userCollectsMapper.selectList(queryWrapper);
-    ArrayList<Long> passageIdList = new ArrayList<>();
-    if (CollUtil.isNotEmpty(userCollects)) {
-      userCollects.forEach(userCollects1 ->
-          passageIdList.add(userCollects1.getPassageId())
-      );
+    int pageSize = queryPageRequest.getPageSize();
+    int currentPage = queryPageRequest.getCurrentPage();
+    Page<UserCollects> userCollectsPage = userCollectsMapper.selectPage(
+        new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<UserCollects>().eq(UserCollects::getUserId, userId));
+    List<UserCollects> records = userCollectsPage.getRecords();
+    if (CollUtil.isEmpty(records)) {
+      Page<List<PassageInfoVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
+    ArrayList<Long> passageIdList = new ArrayList<>();
+    records.forEach(userCollects1 -> passageIdList.add(userCollects1.getPassageId()));
+    long total = userCollectsPage.getTotal();
     List<Passage> passageList = passageService.listByIds(passageIdList);
-    return passageService.getPassageInfoVOList(passageList);
+    List<PassageInfoVO> passageInfoVOList = passageService.getPassageInfoVOList(passageList);
+    Page<List<PassageInfoVO>> listPage = new Page<List<PassageInfoVO>>(currentPage, pageSize);
+    listPage.setTotal(total);
+    listPage.setRecords(Collections.singletonList(passageInfoVOList));
+    return listPage;
   }
 
   @Override
-  public List<PassageInfoVO> myThumbPassage() {
+  public Page<List<PassageInfoVO>> myThumbPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
       //未登录返回空列表
-      return Collections.emptyList();
+      Page<List<PassageInfoVO>> listPage = new Page<>();
+      listPage.setTotal(0);
+      listPage.setRecords(Collections.emptyList());
+      return listPage;
     }
     Long loginUserId = loginUserVO.getUserId();
-    LambdaQueryWrapper<UserThumbs> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(UserThumbs::getUserId, loginUserId);
-    List<UserThumbs> userThumbs = userThumbsMapper.selectList(queryWrapper);
-    ArrayList<Long> passageIdList = new ArrayList<>();
-    if (CollUtil.isEmpty(userThumbs)) {
-      return Collections.emptyList();
+    int currentPage = queryPageRequest.getCurrentPage();
+    int pageSize = queryPageRequest.getPageSize();
+
+    Page<UserThumbs> thumbsPage = userThumbsMapper.selectPage(new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<UserThumbs>().eq(UserThumbs::getUserId, loginUserId));
+
+    List<UserThumbs> records = thumbsPage.getRecords();
+    if (CollUtil.isEmpty(records)) {
+      Page<List<PassageInfoVO>> listPage = new Page<>();
+      listPage.setTotal(0);
+      listPage.setRecords(Collections.emptyList());
+      return listPage;
     }
-    userThumbs.forEach(userThumbs1 ->
-        passageIdList.add(userThumbs1.getPassageId())
-    );
+    long total = thumbsPage.getTotal();
+    ArrayList<Long> passageIdList = new ArrayList<>();
+    records.forEach(userThumbs1 -> passageIdList.add(userThumbs1.getPassageId()));
     List<Passage> passageList = passageService.listByIds(passageIdList);
-    return passageService.getPassageInfoVOList(passageList);
+    List<PassageInfoVO> passageInfoVOList = passageService.getPassageInfoVOList(passageList);
+    Page<List<PassageInfoVO>> passageInfoVOPage = new Page<>(currentPage, pageSize);
+    Page<List<PassageInfoVO>> listPage = passageInfoVOPage.setRecords(
+        Collections.singletonList(passageInfoVOList));
+    listPage.setTotal(total);
+    return listPage;
   }
 
   @Override
-  public List<PassageInfoVO> myPassage() {
+  public Page<List<PassageInfoVO>> myPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
-      return Collections.emptyList();
+      Page<List<PassageInfoVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
     Long loginUserId = loginUserVO.getUserId();
-    LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(Passage::getAuthorId, loginUserId);
-    List<Passage> passages = passageMapper.selectList(queryWrapper);
-    if (CollUtil.isEmpty(passages)) {
-      return Collections.emptyList();
+
+    int currentPage = queryPageRequest.getCurrentPage();
+    int pageSize = queryPageRequest.getPageSize();
+    Page<Passage> passagePage = passageMapper.selectPage(new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId));
+    List<Passage> records = passagePage.getRecords();
+    if (CollUtil.isEmpty(records)) {
+      Page<List<PassageInfoVO>> objectPage = new Page<>();
+      objectPage.setTotal(0);
+      objectPage.setRecords(Collections.emptyList());
+      //未登录直接返回空列表
+      return objectPage;
     }
-    return passageService.getPassageInfoVOList(passages);
+    long total = passagePage.getTotal();
+    List<PassageInfoVO> passageInfoVOList = passageService.getPassageInfoVOList(records);
+    Page<List<PassageInfoVO>> listPage = new Page<>(currentPage, pageSize);
+    listPage.setRecords(Collections.singletonList(passageInfoVOList));
+    listPage.setTotal(total);
+    return listPage;
   }
 
 
@@ -642,8 +718,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
   @Override
   public List<UserVO> getUserListByName(String userName) {
     LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(User::getUserName, userName).
-        eq(User::getStatus, 1);
+    queryWrapper.eq(User::getUserName, userName).eq(User::getStatus, 1);
     List<User> userList = this.list(queryWrapper);
     if (userList.isEmpty()) {
       return Collections.emptyList();

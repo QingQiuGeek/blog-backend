@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Comment;
 import com.serein.model.vo.CommentVO.CommentVO;
 import java.util.List;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -25,6 +26,10 @@ public interface CommentMapper extends BaseMapper<Comment> {
 
   @Select("select * from blog.comment where authorId=#{userId} and isDelete=1 ORDER BY commentTime DESC")
   List<CommentVO> getCommentVoListByAuthorId(Long userId);
+
+  @Delete("delete from blog.comment where passageId=#{passageId}")
+  boolean deleteByPassageId(Long passageId);
+
 }
 
 

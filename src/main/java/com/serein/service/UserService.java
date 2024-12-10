@@ -3,6 +3,7 @@ package com.serein.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.serein.model.AdminUserQueryPageRequest;
+import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.entity.User;
@@ -17,6 +18,7 @@ import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * @author 懒大王Smile
@@ -46,19 +48,19 @@ public interface UserService extends IService<User> {
 
   Long addUser(AddUserDTO addUserDTO);
 
-  List<PassageInfoVO> myCollectPassage();
+  Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest);
 
-  List<PassageInfoVO> myThumbPassage();
+  Page<List<PassageInfoVO>>  myThumbPassage(QueryPageRequest queryPageRequest);
 
-  List<PassageInfoVO> myPassage();
+  Page<List<PassageInfoVO>> myPassage(QueryPageRequest queryPageRequest);
 
   Boolean follow(Long userId);
 
-  List<UserVO> myFollow();
+  Page<List<UserVO>> myFollow(QueryPageRequest queryPageRequest);
 
   void sendRegisterCode(RegisterCodeRequest registerCodeRequest);
 
-  List<UserVO> myFollowers();
+  Page<List<UserVO>> myFollowers(QueryPageRequest queryPageRequest);
 
   UserVO getUserInfo(Long uid);
 

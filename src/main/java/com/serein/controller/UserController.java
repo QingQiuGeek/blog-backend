@@ -1,6 +1,8 @@
 package com.serein.controller;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.request.LoginRequest;
 import com.serein.model.request.RegisterCodeRequest;
@@ -134,7 +136,7 @@ public class UserController {
 
   /**
    * 根据uid获取用户的信息，一般用于查询用户主页或者文章作者信息
-   *
+   *TODO 该方法和 getUserInfoData重复
    * @return
    */
   @GetMapping("/getUserInfo/{uid}")
@@ -146,9 +148,9 @@ public class UserController {
   /*
    * 我的粉丝，list.size是粉丝数量
    * */
-  @GetMapping("/myFollowers")
-  public BaseResponse<List<UserVO>> myFollowers() {
-    List<UserVO> userVOS = userService.myFollowers();
+  @PostMapping("/myFollowers")
+  public BaseResponse<Page<List<UserVO>>> myFollowers(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<UserVO>> userVOS = userService.myFollowers(queryPageRequest);
     return ResultUtil.success(userVOS);
   }
 
@@ -166,9 +168,9 @@ public class UserController {
    * 我关注的用户
    * list.size是数量
    * */
-  @GetMapping("/myFollow")
-  public BaseResponse<List<UserVO>> myFollow() {
-    List<UserVO> userVOS = userService.myFollow();
+  @PostMapping("/myFollow")
+  public BaseResponse<Page<List<UserVO>>> myFollow(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<UserVO>> userVOS = userService.myFollow(queryPageRequest);
     return ResultUtil.success(userVOS);
   }
 
@@ -182,27 +184,27 @@ public class UserController {
   /*
    * 我的收藏博客列表
    * */
-  @GetMapping("/myCollect")
-  public BaseResponse<List<PassageInfoVO>> myCollectPassage() {
-    List<PassageInfoVO> passageVOList = userService.myCollectPassage();
+  @PostMapping("/myCollect")
+  public BaseResponse<Page<List<PassageInfoVO>>> myCollectPassage(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<PassageInfoVO>> passageVOList = userService.myCollectPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
 
   /*
    * 我的点赞博客列表
    * */
-  @GetMapping("/myThumb")
-  public BaseResponse<List<PassageInfoVO>> myThumbPassage() {
-    List<PassageInfoVO> passageVOList = userService.myThumbPassage();
+  @PostMapping("/myThumb")
+  public BaseResponse<Page<List<PassageInfoVO>>> myThumbPassage(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<PassageInfoVO>> passageVOList = userService.myThumbPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
 
   /*
    * 我的文章，list.size即为我的文章数量
    * */
-  @GetMapping("/myPassages")
-  public BaseResponse<List<PassageInfoVO>> myPassages() {
-    List<PassageInfoVO> passageVOList = userService.myPassage();
+  @PostMapping("/myPassages")
+  public BaseResponse<Page<List<PassageInfoVO>>> myPassages(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<PassageInfoVO>> passageVOList = userService.myPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
 

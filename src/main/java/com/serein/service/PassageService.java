@@ -52,4 +52,6 @@ public interface PassageService extends IService<Passage> {
   Boolean rejectPassage(Long passageId);
 
   Boolean publishPassage(Long passageId);
+
+  boolean deleteByPassageId(Long passageId);
 }

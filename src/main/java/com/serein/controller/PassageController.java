@@ -10,6 +10,7 @@ import com.serein.model.dto.passageDTO.SearchPassageDTO;
 import com.serein.model.dto.passageDTO.UpdatePassageDTO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
+import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
@@ -39,6 +40,8 @@ public class PassageController {
 
   @Autowired
   PassageService passageService;
+
+
 
   /*
    * top7 爆款文章
@@ -174,17 +177,14 @@ public class PassageController {
 
   /**
    * 根据文章id删除文章
-   *
+   *todo 删除了文章还要删除评论，收藏、点赞等，删除数据库和redis
    * @param passageId
    * @return
    */
   @DeleteMapping("/delete/{passageId}")
   public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId) {
-    boolean b = passageService.removeById(passageId);
-    if (b) {
-      return ResultUtil.success(b);
-    }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+    boolean b=passageService.deleteByPassageId(passageId);
+   return ResultUtil.success(b);
   }
 
 

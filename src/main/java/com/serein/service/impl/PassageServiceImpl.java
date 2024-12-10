@@ -11,6 +11,7 @@ import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
+import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
@@ -31,8 +32,10 @@ import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.service.CommentService;
 import com.serein.service.PassageService;
 import com.serein.util.FileUtil;
+import com.serein.util.ResultUtil;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,6 +89,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Autowired
   TagsMapper tagsMapper;
 
+  @Autowired
+  CommentMapper commentMapper;
 
   @Override
   public Page<List<PassageInfoVO>> getIndexPassageList(QueryPageRequest queryPageRequest) {
@@ -540,6 +545,17 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     } else {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
     }
+  }
+
+  //todo 事务一致性
+  @Override
+  public boolean deleteByPassageId(Long passageId) {
+    boolean b1 = removeById(passageId);
+    boolean b2=commentMapper.deleteByPassageId(passageId);
+    if (b1&&b2) {
+      return true;
+    }
+    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
   }
 
 
