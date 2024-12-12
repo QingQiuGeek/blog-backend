@@ -1,7 +1,8 @@
-package com.serein.controller;
+package com.serein.controller.admin;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.model.AdminCommentPageRequest;
 import com.serein.model.dto.CommentDTO.CommentDTO;
-import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.service.CommentService;
 import com.serein.util.BaseResponse;
@@ -24,39 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping("/comment")
-public class CommentController {
+@RequestMapping("/admin/comment")
+public class AdminCommentController {
 
 
   @Autowired
   CommentService commentService;
 
   /*
-   * 评论文章
-   * */
-  @PostMapping("")
-  public BaseResponse<Long> commentPassage(@RequestBody CommentDTO commentDTO) {
-    Long cid = commentService.commentPassage(commentDTO);
-    return ResultUtil.success(cid);
-  }
-
-  /*
    * 获取文章评论
    * */
-  @GetMapping("/{authorId}/{passageId}")
-  public BaseResponse<List<CommentVO>> getCommentByPassageId(@PathVariable Long authorId,
-      @PathVariable String passageId) {
-    List<CommentVO> commentVOList = commentService.getCommentByPassageId(authorId,
-        Long.valueOf(passageId));
+  @PostMapping("/getComments/")
+  public BaseResponse<Page<List<CommentVO>>> getComments(@RequestBody
+      AdminCommentPageRequest adminCommentPageRequest) {
+    Page<List<CommentVO>> commentVOList = commentService.getComments(adminCommentPageRequest);
     return ResultUtil.success(commentVOList);
   }
 
-  /*
-   * 删除评论
-   * */
-  @PostMapping("/delete")
-  public BaseResponse<Boolean> deleteComment(@RequestBody DeleteCommentDTO deleteCommentDTO) {
-    Boolean aBoolean = commentService.deleteComment(deleteCommentDTO);
-    return ResultUtil.success(aBoolean);
-  }
 }

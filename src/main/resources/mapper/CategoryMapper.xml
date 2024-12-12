@@ -17,4 +17,24 @@
         categoryId,categoryName,description,
         createTime,updateTime,isDelete
     </sql>
+  <insert id="insertCategory" useGeneratedKeys="true" keyProperty="categoryId">
+    insert into blog.category (categoryName, description,updateTime,createTime)
+    VALUES (#{categoryName}, #{description},#{updateTime},#{createTime})
+  </insert>
+  <update id="updateCategory">
+    update blog.category <set>
+    <if test="description != null and description != ''">
+      description = #{description},
+    </if>
+    <if test="categoryName != null and categoryName != ''">
+      categoryName = #{categoryName},
+    </if>
+    <if test="updateTime != null">
+      updateTime = #{updateTime},
+    </if>
+        </set>
+    <where>
+         categoryId = #{categoryId}
+    </where>
+  </update>
 </mapper>

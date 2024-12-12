@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Tags;
 import com.serein.model.vo.TagVO.TagVO;
 import java.util.List;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -16,6 +17,13 @@ public interface TagsMapper extends BaseMapper<Tags> {
 
 
   List<Tags> getRandomTags();
+
+  @Delete("delete from blog.tags where categoryId=#{categoryId}")
+  int deleteByCategoryId(Long categoryId);
+
+  void insertTag(Tags tags);
+
+  boolean updateTag(Tags tag);
 }
 
 

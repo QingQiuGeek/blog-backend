@@ -11,11 +11,18 @@ import lombok.Data;
  */
 
 @Data
-public class CategoryPageRequest {
+public class AdminCommentPageRequest {
 
   //默认的页码和页大小
   private int currentPage = 1;
   private int pageSize = 10;
+  private Long commentId;
+  private String content;
+  private Long authorId;
+  private Long commentUserId;
+  private Long passageId;
+  private Date startTime;
+  private Date endTime;
 
 
 }

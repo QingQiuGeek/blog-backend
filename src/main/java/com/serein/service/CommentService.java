@@ -1,7 +1,10 @@
 package com.serein.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.model.AdminCommentPageRequest;
 import com.serein.model.dto.CommentDTO.CommentDTO;
+import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
 import com.serein.model.entity.Comment;
 import com.serein.model.vo.CommentVO.CommentVO;
 import java.util.List;
@@ -17,7 +20,8 @@ public interface CommentService extends IService<Comment> {
 
   List<CommentVO> getCommentByPassageId(Long authorId, Long passageId);
 
-  Boolean deleteComment(Long commentId);
+  Boolean deleteComment(DeleteCommentDTO deleteCommentDTO);
 
 
+  Page<List<CommentVO>> getComments(AdminCommentPageRequest adminCommentPageRequest);
 }

@@ -2,20 +2,19 @@ package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.CategoryPageRequest;
+import com.serein.model.dto.CategoryDTO.CategoryDTO;
+import com.serein.model.entity.Category;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
-import java.util.Map;
-import org.apache.ibatis.annotations.Results;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -36,10 +35,12 @@ public class CategoryController {
    *
    * @param categoryPageRequest
    * @return
+   * @Description: 获取分类专栏页面的类别
    */
   @PostMapping("/getCategories")
   public BaseResponse<Page<List<CategoryVO>>> getCategories(@RequestBody CategoryPageRequest categoryPageRequest){
     Page<List<CategoryVO>> categoryMap=categoryService.getCategories(categoryPageRequest);
     return ResultUtil.success(categoryMap);
   }
+
 }

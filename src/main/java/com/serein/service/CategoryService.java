@@ -2,7 +2,9 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.serein.model.AdminCategoryPageRequest;
 import com.serein.model.CategoryPageRequest;
+import com.serein.model.dto.CategoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import java.util.List;
@@ -15,4 +17,12 @@ import java.util.List;
 public interface CategoryService extends IService<Category> {
 
   Page<List<CategoryVO>> getCategories(CategoryPageRequest categoryPageRequest);
+
+  Page<List<Category>> getAdminCategories(AdminCategoryPageRequest adminCategoryPageRequest);
+
+  Long addCategory(CategoryDTO categoryDTO);
+
+  boolean updateCategory(CategoryDTO updateCategoryDTO);
+
+  boolean deleteCategory(Long categoryId);
 }

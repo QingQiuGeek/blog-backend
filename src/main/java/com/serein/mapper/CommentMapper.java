@@ -18,14 +18,9 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
 
-  @Select("select * from blog.comment where passageId=#{passageId} and isDelete=1 ORDER BY commentTime DESC")
-  List<CommentVO> getCommentVoListByPassageId(Long passageId);
-
 
   void insertComment(Comment comment);
 
-  @Select("select * from blog.comment where authorId=#{userId} and isDelete=1 ORDER BY commentTime DESC")
-  List<CommentVO> getCommentVoListByAuthorId(Long userId);
 
   @Delete("delete from blog.comment where passageId=#{passageId}")
   boolean deleteByPassageId(Long passageId);

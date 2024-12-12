@@ -1,6 +1,8 @@
 package com.serein.model.vo.CommentVO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
@@ -27,6 +29,7 @@ public class CommentVO implements Serializable {
   /**
    * 评论的文章id
    */
+  @JsonSerialize(using = ToStringSerializer.class)
   private Long passageId;
 
   /**
@@ -63,6 +66,5 @@ public class CommentVO implements Serializable {
   @TableField(exist = false)
   private Boolean canDelete = false;
 
-  @TableField(exist = false)
   private static final long serialVersionUID = 1L;
 }

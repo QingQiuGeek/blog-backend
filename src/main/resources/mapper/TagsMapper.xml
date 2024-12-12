@@ -16,12 +16,33 @@
         tagId,tagName,categoryId,
         createTime,updateTime
     </sql>
+  <insert id="insertTag" useGeneratedKeys="true" keyProperty="tagId">
+    insert into blog.tags ( tagName, categoryId, createTime, updateTime)
+    values (#{tagName},#{categoryId},#{createTime},#{updateTime})
+  </insert>
 
-<!--  随机抽取25个标签-->
+  <!--  随机抽取25个标签-->
   <select id="getRandomTags" resultType="com.serein.model.entity.Tags">
     select * from blog.tags
     where tags.tagId >= ( SELECT floor( RAND() * ( SELECT MAX( tagId ) FROM tags ) ) )
     ORDER by tagId
     LIMIT 25;
   </select>
+
+  <update id="updateTag">
+    update blog.tags <set>
+    <if test="tagName != null and tagName != ''">
+      tagName = #{tagName},
+    </if>
+    <if test="updateTime != null">
+      updateTime = #{updateTime},
+    </if>
+    <if test="categoryId != null">
+      categoryId = #{categoryId},
+    </if>
+  </set>
+    <where>
+      tagId = #{tagId}
+    </where>
+  </update>
 </mapper>

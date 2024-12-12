@@ -475,7 +475,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .eq(authorId != null, Passage::getAuthorId, authorId)
             .eq(passageId != null, Passage::getPassageId, passageId)
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
-            .eq(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
+            .like(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
             .select(Passage::getPassageId, Passage::getTagsId, Passage::getStatus,
                 Passage::getTitle,
                 Passage::getAuthorName, Passage::getAccessTime, Passage::getCommentNum,

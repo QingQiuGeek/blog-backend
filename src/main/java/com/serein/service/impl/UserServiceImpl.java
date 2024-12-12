@@ -32,6 +32,7 @@ import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.userDTO.AddUserDTO;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.entity.Comment;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
@@ -358,7 +359,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       return Collections.emptyList();
     }
     Long userId = loginUserVO.getUserId();
-    List<CommentVO> commentVOS = commentMapper.getCommentVoListByAuthorId(userId);
+    List<Comment> comments = commentMapper.selectList(
+        new LambdaQueryWrapper<Comment>().eq(Comment::getAuthorId, userId));
+    List<CommentVO> commentVOS= commentServiceImpl.getCommentVOList(comments);
+//    List<CommentVO> commentVOS = commentMapper.getCommentVoListByAuthorId(userId);
     if (commentVOS.isEmpty()) {
       return commentVOS;
     }
@@ -670,10 +674,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     log.info("获取登录用户线程：" + Thread.currentThread().getId());
     LoginUserVO loginUserVO = UserHolder.getUser();
+    log.info("获取登陆用户信息："+loginUserVO);
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "获取当前登录用户失败");
     }
-    return loginUserVO;
+    Long userId = loginUserVO.getUserId();
+    //获取数据库最新的数据，防止用户更新完个人信息后拿到的还是老数据
+    User user = userMapper.selectById(userId);
+    LoginUserVO loginUserVO1 = new LoginUserVO();
+    BeanUtils.copyProperties(user,loginUserVO1);
+    String interestTag = user.getInterestTag();
+    if(StringUtils.isNotBlank(interestTag)){
+      List<String> list = JSONUtil.toList(interestTag, String.class);
+      loginUserVO1.setInterestTag(list);
+    }
+    return loginUserVO1;
   }
 
 
@@ -789,6 +804,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     Long userId = UserHolder.getUser().getUserId();
     user.setUserId(userId);
     BeanUtil.copyProperties(updateUserDTO, user);
+//    updateUserDTO.getInterestTag()
     boolean b = this.updateById(user);
     if (!b) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
