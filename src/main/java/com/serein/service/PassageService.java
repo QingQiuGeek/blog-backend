@@ -2,11 +2,11 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.AdminPassageQueryPageRequest;
+import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.passageDTO.AddPassageDTO;
-import com.serein.model.dto.passageDTO.SearchPassageDTO;
-import com.serein.model.dto.passageDTO.UpdatePassageDTO;
+import com.serein.model.dto.PassageDTO.AddPassageDTO;
+import com.serein.model.dto.PassageDTO.SearchPassageDTO;
+import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;

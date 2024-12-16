@@ -1,4 +1,4 @@
-package com.serein.model;
+package com.serein.model.request.TagRequest;
 
 import java.util.Date;
 import lombok.Data;
@@ -11,11 +11,15 @@ import lombok.Data;
  */
 
 @Data
-public class CategoryPageRequest {
+public class AdminTagPageRequest {
 
   //默认的页码和页大小
   private int currentPage = 1;
   private int pageSize = 10;
-
+  private String tagName;
+  private Long tagId;
+  private Long categoryId;
+  private Date startTime;
+  private Date endTime;
 
 }

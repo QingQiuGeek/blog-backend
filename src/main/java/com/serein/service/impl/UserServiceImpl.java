@@ -27,20 +27,20 @@ import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserFollowMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.AdminUserQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
-import com.serein.model.dto.userDTO.AddUserDTO;
-import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.dto.UserDTO.AddUserDTO;
+import com.serein.model.dto.UserDTO.UpdateUserDTO;
 import com.serein.model.entity.Comment;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserFollow;
 import com.serein.model.entity.UserThumbs;
-import com.serein.model.request.LoginRequest;
-import com.serein.model.request.RegisterCodeRequest;
-import com.serein.model.request.RegisterRequest;
+import com.serein.model.request.UserRequest.AdminUserQueryPageRequest;
+import com.serein.model.request.UserRequest.LoginRequest;
+import com.serein.model.request.UserRequest.RegisterCodeRequest;
+import com.serein.model.request.UserRequest.RegisterRequest;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
@@ -66,7 +66,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
@@ -156,7 +155,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     } else {
       //如果用户已经关注目标用户，执行取消关注操作
       LambdaQueryWrapper<UserFollow> queryWrapper = new LambdaQueryWrapper<>();
-      queryWrapper.eq(UserFollow::getUserId, loginUserId).eq(UserFollow::getUserId, userId);
+      queryWrapper.eq(UserFollow::getUserId, loginUserId).eq(UserFollow::getToUserId, userId);
       //delete是被删除的行数，正常情况下是1，因为关注和被关注的关系只有一个存在数据库，不会重复关注
       int delete = userFollowMapper.delete(queryWrapper);
       if (delete == 1) {
@@ -210,7 +209,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int size = stringIdSet.size();
     Page<List<UserVO>> listPage = new Page<>(currentPage, pageSize);
     listPage.setRecords(Collections.singletonList(userVOListByUserList));
-    listPage.setTotal((long)size);
+    listPage.setTotal((long) size);
     return listPage;
   }
 
@@ -352,27 +351,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   }
 
   @Override
-  public List<CommentVO> myMessage() {
+  public Page<List<CommentVO>> myMessage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
+    Page<List<CommentVO>> listPage = new Page<List<CommentVO>>();
     if (loginUserVO == null) {
       //未登录直接返回空列表
-      return Collections.emptyList();
+      listPage.setTotal(0);
+      listPage.setRecords(Collections.emptyList());
+      return listPage;
     }
     Long userId = loginUserVO.getUserId();
-    List<Comment> comments = commentMapper.selectList(
-        new LambdaQueryWrapper<Comment>().eq(Comment::getAuthorId, userId));
-    List<CommentVO> commentVOS= commentServiceImpl.getCommentVOList(comments);
-//    List<CommentVO> commentVOS = commentMapper.getCommentVoListByAuthorId(userId);
-    if (commentVOS.isEmpty()) {
-      return commentVOS;
+    int pageSize = queryPageRequest.getPageSize();
+    int currentPage = queryPageRequest.getCurrentPage();
+    Page<Comment> commentPage = new Page<>(currentPage, pageSize);
+    Page<Comment> page = commentServiceImpl.page(commentPage,
+        new LambdaQueryWrapper<Comment>().eq(Comment::getAuthorId, userId)
+            .orderByDesc(Comment::getCommentTime));
+    List<Comment> records = page.getRecords();
+    if (records.isEmpty()) {
+      listPage.setTotal(0);
+      listPage.setRecords(Collections.emptyList());
+      return listPage;
     }
+    List<CommentVO> commentVOS = commentServiceImpl.getCommentVOList(records);
     //设置评论的用户头像、ip地址、用户名
     commentServiceImpl.getCommentUserInfo(commentVOS);
     //全部设置可删除
     commentVOS.forEach((commentVO -> {
       commentVO.setCanDelete(true);
     }));
-    return commentVOS;
+    listPage.setTotal(page.getTotal());
+    listPage.setRecords(Collections.singletonList(commentVOS));
+    return listPage;
   }
 
 
@@ -502,11 +512,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     if (queryUser == null) {
       throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_DB_DATA);
     }
-
+    if (queryUser.getStatus() == 0){
+      throw new BusinessException(ErrorCode.NO_AUTH_ERROR,ErrorInfo.BAN_ACCOUNT);
+    }
     //核对密码
-    if (!DigestUtils.md5DigestAsHex((SALT + loginPassword).getBytes())
-        .equals(queryUser.getPassword())) {
-      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
+    {
+      if (!DigestUtils.md5DigestAsHex((SALT + loginPassword).getBytes())
+          .equals(queryUser.getPassword())) {
+        throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
+      }
     }
 
     LoginUserVO loginUserVO = new LoginUserVO();
@@ -674,7 +688,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     log.info("获取登录用户线程：" + Thread.currentThread().getId());
     LoginUserVO loginUserVO = UserHolder.getUser();
-    log.info("获取登陆用户信息："+loginUserVO);
+    log.info("获取登陆用户信息：" + loginUserVO);
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "获取当前登录用户失败");
     }
@@ -682,9 +696,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     //获取数据库最新的数据，防止用户更新完个人信息后拿到的还是老数据
     User user = userMapper.selectById(userId);
     LoginUserVO loginUserVO1 = new LoginUserVO();
-    BeanUtils.copyProperties(user,loginUserVO1);
+    BeanUtils.copyProperties(user, loginUserVO1);
     String interestTag = user.getInterestTag();
-    if(StringUtils.isNotBlank(interestTag)){
+    if (StringUtils.isNotBlank(interestTag)) {
       List<String> list = JSONUtil.toList(interestTag, String.class);
       loginUserVO1.setInterestTag(list);
     }

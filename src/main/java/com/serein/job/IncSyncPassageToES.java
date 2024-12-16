@@ -3,7 +3,7 @@ package com.serein.job;
 import cn.hutool.core.collection.CollUtil;
 import com.serein.esdao.PassageESDao;
 import com.serein.mapper.PassageMapper;
-import com.serein.model.dto.passageDTO.PassageESDTO;
+import com.serein.model.dto.PassageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.impl.PassageServiceImpl;

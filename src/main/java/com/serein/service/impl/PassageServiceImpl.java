@@ -16,14 +16,14 @@ import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.AdminPassageQueryPageRequest;
+import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
-import com.serein.model.dto.passageDTO.AddPassageDTO;
-import com.serein.model.dto.passageDTO.PassageDTO;
-import com.serein.model.dto.passageDTO.PassageESDTO;
-import com.serein.model.dto.passageDTO.SearchPassageDTO;
-import com.serein.model.dto.passageDTO.UpdatePassageDTO;
+import com.serein.model.dto.PassageDTO.AddPassageDTO;
+import com.serein.model.dto.PassageDTO.PassageDTO;
+import com.serein.model.dto.PassageDTO.PassageESDTO;
+import com.serein.model.dto.PassageDTO.SearchPassageDTO;
+import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.Tags;
 import com.serein.model.entity.UserCollects;
@@ -414,10 +414,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   /**
    * @return
-   * @Description: 从 mysql 查询浏览量量前 7 的博客
+   * @Description: 从 mysql 查询浏览量量前 10 的博客
    */
   @Override
   public List<PassageTitleVO> getTopPassages() {
+    //根据viewNum降序获取前10
     Page<Passage> page = new Page<>(1, 10);
     LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
     queryWrapper.orderByDesc(Passage::getViewNum);

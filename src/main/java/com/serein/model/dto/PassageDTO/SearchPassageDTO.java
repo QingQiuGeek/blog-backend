@@ -1,4 +1,4 @@
-package com.serein.model.dto.passageDTO;
+package com.serein.model.dto.PassageDTO;
 
 import java.util.List;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.serein.model.dto.passageDTO;
+package com.serein.model.dto.PassageDTO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;

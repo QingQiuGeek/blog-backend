@@ -1,8 +1,7 @@
-package com.serein.model.dto.passageDTO;
+package com.serein.model.dto.PassageDTO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;

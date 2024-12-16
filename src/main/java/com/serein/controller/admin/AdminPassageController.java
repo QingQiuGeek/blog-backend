@@ -3,7 +3,7 @@ package com.serein.controller.admin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.annotation.AuthCheck;
 import com.serein.constants.UserRole;
-import com.serein.model.AdminPassageQueryPageRequest;
+import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;

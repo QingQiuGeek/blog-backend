@@ -1,6 +1,5 @@
-package com.serein.model.dto.passageDTO;
+package com.serein.model.dto.PassageDTO;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.serein.model.entity.Passage;
 import com.serein.model.vo.PassageVO.PassageVO;
@@ -8,7 +7,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;

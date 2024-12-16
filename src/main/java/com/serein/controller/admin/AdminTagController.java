@@ -1,16 +1,14 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.AdminTagPageRequest;
+import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.dto.TagDTO.TagDTO;
 import com.serein.model.entity.Tags;
-import com.serein.model.vo.TagVO.TagVO;
 import com.serein.service.TagsService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;

@@ -11,11 +11,12 @@ import com.serein.exception.BusinessException;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserMapper;
-import com.serein.model.AdminCommentPageRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
 import com.serein.model.entity.Comment;
+import com.serein.model.request.CommentRequest.AdminCommentPageRequest;
+import com.serein.model.request.CommentRequest.CursorCommentRequest;
 import com.serein.model.vo.CommentVO.CommentUserInfoVO;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
@@ -78,28 +79,41 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     return comment.getCommentId();
   }
 
-  /**
-   * avatar name ipAddress
-   *
-   * @param authorId
-   * @param passageId
-   * @return
-   */
+
   @Override
-  public List<CommentVO> getCommentByPassageId(Long authorId, Long passageId) {
-    List<Comment> comments = commentMapper.selectList(
+  public Page<List<CommentVO>> getCommentByCursor(CursorCommentRequest cursorCommentRequest) {
+    Long lastCommentId = cursorCommentRequest.getLastCommentId();
+    Long passageId = cursorCommentRequest.getPassageId();
+    Long authorId = cursorCommentRequest.getAuthorId();
+    Integer pageSize = cursorCommentRequest.getPageSize();
+    Long total = commentMapper.selectCount(
         new LambdaQueryWrapper<Comment>().eq(Comment::getPassageId, passageId)
             .eq(Comment::getAuthorId, authorId));
-    List<CommentVO> commentVOList = getCommentVOList(comments);
-    if (commentVOList.isEmpty()) {
-      return commentVOList;
+    Page page = new Page();
+
+    if (total == 0) {
+      page.setTotal(0);
+      page.setRecords(Collections.emptyList());
+      return page;
     }
+
+    List<Comment> comments = commentMapper.selectCommentsByCursor(passageId, authorId,
+        pageSize, lastCommentId);
+    if(comments.isEmpty()){
+      //当查完最后一批评论时，就无法再查出来数据了
+      page.setTotal(0);
+      page.setRecords(Collections.emptyList());
+      return page;
+    }
+    List<CommentVO> commentVOList = getCommentVOList(comments);
     //设置评论的用户头像、ip地址、用户名
     getCommentUserInfo(commentVOList);
     //判断用户是否登录，登录就判断该用户是否可以自己的删除评论
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
-      return commentVOList;
+      page.setTotal(total);
+      page.setRecords(Collections.singletonList(commentVOList));
+      return page;
     }
     Long userId = loginUserVO.getUserId();
     //作者拥有对自己文章的所有评论的删除权
@@ -107,14 +121,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
       commentVOList.forEach((commentVO -> {
         commentVO.setCanDelete(true);
       }));
-      return commentVOList;
+      page.setTotal(total);
+      page.setRecords(Collections.singletonList(commentVOList));
+      return page;
     }
     //管理员拥有对所有文章的所有评论的删除权
     if ("admin".equals(loginUserVO.getRole())) {
       commentVOList.forEach((commentVO -> {
         commentVO.setCanDelete(true);
       }));
-      return commentVOList;
+      page.setTotal(total);
+      page.setRecords(Collections.singletonList(commentVOList));
+      return page;
     }
     //不是管理、不是文章作者，那么只能删除自己的评论
     commentVOList.forEach((commentVO -> {
@@ -122,7 +140,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
         commentVO.setCanDelete(true);
       }
     }));
-    return commentVOList;
+    page.setTotal(total);
+    page.setRecords(Collections.singletonList(commentVOList));
+    return page;
   }
 
   //根据评论的commentUserId获取评论用户的头像、userName等

@@ -1,18 +1,14 @@
 package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.CategoryPageRequest;
-import com.serein.model.dto.CategoryDTO.CategoryDTO;
-import com.serein.model.entity.Category;
+import com.serein.model.request.CategoryRequest.CategoryPageRequest;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,11 +1,9 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.AdminCategoryPageRequest;
-import com.serein.model.CategoryPageRequest;
+import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.model.dto.CategoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
-import com.serein.model.vo.CategoryVO.CategoryVO;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
@@ -34,10 +32,9 @@ public class AdminCategoryController {
 
 
   /**
-   *
-   * @param categoryPageRequest
+   * 获取管理页的类别列表
+   * @param adminCategoryPageRequest
    * @return
-   * @description 获取管理页的类别列表
    */
   @PostMapping("/getCategories")
   public BaseResponse<Page<List<Category>>> getAdminCategories(@RequestBody AdminCategoryPageRequest adminCategoryPageRequest){

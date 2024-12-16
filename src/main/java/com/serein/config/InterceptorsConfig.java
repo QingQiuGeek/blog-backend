@@ -54,7 +54,7 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
             "/passage/search/text",
             "/passage/passageInfo/{pid}",
             "/passage/topPassages",
-            "/comment/{authorId}/{passageId}",
+            "/comment/getCommentByCursor",
             "/category/getCategories",
             "/tag/getRandomTags",
             "/webjars/**",

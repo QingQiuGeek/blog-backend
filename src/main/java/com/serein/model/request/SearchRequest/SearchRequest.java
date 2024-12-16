@@ -1,4 +1,4 @@
-package com.serein.model.request;
+package com.serein.model.request.SearchRequest;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;

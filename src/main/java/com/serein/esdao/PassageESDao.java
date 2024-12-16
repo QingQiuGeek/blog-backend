@@ -1,6 +1,6 @@
 package com.serein.esdao;
 
-import com.serein.model.dto.passageDTO.PassageESDTO;
+import com.serein.model.dto.PassageDTO.PassageESDTO;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**

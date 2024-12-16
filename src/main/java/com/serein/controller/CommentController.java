@@ -1,12 +1,15 @@
 package com.serein.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.dto.CommentDTO.CommentDTO;
 import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
+import com.serein.model.request.CommentRequest.CursorCommentRequest;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.service.CommentService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,14 +43,16 @@ public class CommentController {
     return ResultUtil.success(cid);
   }
 
-  /*
-   * 获取文章评论
-   * */
-  @GetMapping("/{authorId}/{passageId}")
-  public BaseResponse<List<CommentVO>> getCommentByPassageId(@PathVariable Long authorId,
-      @PathVariable String passageId) {
-    List<CommentVO> commentVOList = commentService.getCommentByPassageId(authorId,
-        Long.valueOf(passageId));
+
+  /**
+   * @description 通过游标获取评论
+   * @param cursorCommentRequest
+   * @return
+   */
+  @PostMapping("/getCommentByCursor")
+//  BaseResponse<Map<Long,List<CommentVO>>>
+  public BaseResponse<Page<List<CommentVO>>> getCommentByCursor(@RequestBody CursorCommentRequest cursorCommentRequest) {
+    Page<List<CommentVO>> commentVOList = commentService.getCommentByCursor(cursorCommentRequest);
     return ResultUtil.success(commentVOList);
   }
 

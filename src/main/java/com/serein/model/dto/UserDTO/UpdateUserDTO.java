@@ -1,8 +1,7 @@
-package com.serein.model.dto.userDTO;
+package com.serein.model.dto.UserDTO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

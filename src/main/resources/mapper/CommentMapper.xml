@@ -1,31 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.serein.mapper.CommentMapper">
 
-    <resultMap id="BaseResultMap" type="com.serein.model.entity.Comment">
-            <id property="commentId" column="commentId" jdbcType="BIGINT"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
-            <result property="commentUserId" column="commentUserId" jdbcType="BIGINT"/>
-            <result property="passageId" column="passageId" jdbcType="BIGINT"/>
-             <result property="authorId" column="authorId" jdbcType="BIGINT"/>
-            <result property="toCommentId" column="toCommentId" jdbcType="BIGINT"/>
-            <result property="toCommentUserId" column="toCommentUserId" jdbcType="BIGINT"/>
-            <result property="commentTime" column="commentTime" jdbcType="TIMESTAMP"/>
-            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-    </resultMap>
+  <resultMap id="BaseResultMap" type="com.serein.model.entity.Comment">
+    <id property="commentId" column="commentId" jdbcType="BIGINT"/>
+    <result property="content" column="content" jdbcType="VARCHAR"/>
+    <result property="commentUserId" column="commentUserId" jdbcType="BIGINT"/>
+    <result property="passageId" column="passageId" jdbcType="BIGINT"/>
+    <result property="authorId" column="authorId" jdbcType="BIGINT"/>
+    <result property="toCommentId" column="toCommentId" jdbcType="BIGINT"/>
+    <result property="toCommentUserId" column="toCommentUserId" jdbcType="BIGINT"/>
+    <result property="commentTime" column="commentTime" jdbcType="TIMESTAMP"/>
+    <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+  </resultMap>
 
-    <sql id="Base_Column_List">
-        commentId,content,commentUserId,
+  <sql id="Base_Column_List">
+    commentId,content,commentUserId,
         passageId,authorId,toCommentId,toCommentUserId,
         commentTime,isDelete
-    </sql>
+  </sql>
 
-<!--    useGeneratedKeys="true" 告诉 MyBatis 生成的主键应该自动填充到 keyProperty 指定的属性中。
-keyProperty="commentId" 表示将自动生成的主键值填充到 Comment 实体的 commentId 属性中。-->
-    <insert id="insertComment" useGeneratedKeys="true" keyProperty="commentId">
-        INSERT INTO blog.comment(content, commentUserId, commentTime,passageId,authorId)
-        VALUES (#{content}, #{commentUserId}, #{commentTime},#{passageId},#{authorId})
-    </insert>
+  <!--    useGeneratedKeys="true" 告诉 MyBatis 生成的主键应该自动填充到 keyProperty 指定的属性中。
+  keyProperty="commentId" 表示将自动生成的主键值填充到 Comment 实体的 commentId 属性中。-->
+  <insert id="insertComment" useGeneratedKeys="true" keyProperty="commentId">
+    INSERT INTO blog.comment(content, commentUserId, commentTime, passageId, authorId)
+    VALUES (#{content}, #{commentUserId}, #{commentTime}, #{passageId}, #{authorId})
+  </insert>
+
+<!--  mapper.xml中大于小于等符号要用&lt等代替，否则报错：元素内容必须由格式正确的字符数据或标记组成!!-->
+<!--  如果在xml文件中使用了！=null的if判断，那么mapper.java要的入参要加上@Param显式指定参数，否则会出现参数匹配失败 -->
+  <select id="selectCommentsByCursor" resultType="com.serein.model.entity.Comment">
+    SELECT * FROM blog.comment
+    WHERE passageId = #{passageId}
+    AND authorId = #{authorId} and isDelete=1
+    <if test="lastCommentId != null">
+      AND commentId &lt; #{lastCommentId}
+    </if>
+    ORDER BY commentTime DESC
+    LIMIT #{pageSize}
+  </select>
+
+
 </mapper>

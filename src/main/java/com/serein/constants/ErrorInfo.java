@@ -48,4 +48,5 @@ public interface ErrorInfo {
 
   String FILE_SIZE_ERROR = "文件过大";
 
+  String BAN_ACCOUNT = "该账户被禁用";
 }

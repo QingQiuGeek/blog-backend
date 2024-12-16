@@ -1,4 +1,4 @@
-package com.serein.model;
+package com.serein.model.request.UserRequest;
 
 import java.util.Date;
 import lombok.Data;
@@ -11,16 +11,15 @@ import lombok.Data;
  */
 
 @Data
-public class AdminPassageQueryPageRequest {
+public class AdminUserQueryPageRequest {
 
   //默认的页码和页大小
   private int currentPage = 1;
   private int pageSize = 10;
-  private String authorName;
-  private String title;
-  private Long authorId;
-  private Long passageId;
-  private Date startTime;
-  private Date endTime;
 
+  private String mail;
+  private String userName;
+  private Long userId;
+  private Date endTime;
+  private Date startTime;
 }

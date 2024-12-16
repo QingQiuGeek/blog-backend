@@ -2,14 +2,14 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.AdminUserQueryPageRequest;
+import com.serein.model.request.UserRequest.AdminUserQueryPageRequest;
 import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.userDTO.AddUserDTO;
-import com.serein.model.dto.userDTO.UpdateUserDTO;
+import com.serein.model.dto.UserDTO.AddUserDTO;
+import com.serein.model.dto.UserDTO.UpdateUserDTO;
 import com.serein.model.entity.User;
-import com.serein.model.request.LoginRequest;
-import com.serein.model.request.RegisterCodeRequest;
-import com.serein.model.request.RegisterRequest;
+import com.serein.model.request.UserRequest.LoginRequest;
+import com.serein.model.request.UserRequest.RegisterCodeRequest;
+import com.serein.model.request.UserRequest.RegisterRequest;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.AdminUserVO;
@@ -18,7 +18,6 @@ import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * @author 懒大王Smile
@@ -68,5 +67,5 @@ public interface UserService extends IService<User> {
 
   UserInfoDataVO getUserInfoData();
 
-  List<CommentVO> myMessage();
+  Page<List<CommentVO>> myMessage(QueryPageRequest queryPageRequest);
 }

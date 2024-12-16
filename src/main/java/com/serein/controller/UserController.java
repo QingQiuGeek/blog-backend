@@ -3,10 +3,10 @@ package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.userDTO.UpdateUserDTO;
-import com.serein.model.request.LoginRequest;
-import com.serein.model.request.RegisterCodeRequest;
-import com.serein.model.request.RegisterRequest;
+import com.serein.model.dto.UserDTO.UpdateUserDTO;
+import com.serein.model.request.UserRequest.LoginRequest;
+import com.serein.model.request.UserRequest.RegisterCodeRequest;
+import com.serein.model.request.UserRequest.RegisterRequest;
 import com.serein.model.vo.CommentVO.CommentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
@@ -211,9 +211,9 @@ public class UserController {
   /*
    * 我的消息，用户对我的文章的评论即为我的消息
    * */
-  @GetMapping("/myMessage")
-  public BaseResponse<List<CommentVO>> myMessage() {
-    List<CommentVO> commentVOList = userService.myMessage();
+  @PostMapping("/myMessage")
+  public BaseResponse<Page<List<CommentVO>>> myMessage(@RequestBody QueryPageRequest queryPageRequest) {
+    Page<List<CommentVO>> commentVOList = userService.myMessage(queryPageRequest);
     return ResultUtil.success(commentVOList);
   }
 
