@@ -21,6 +21,7 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.UserRole;
 import com.serein.exception.BusinessException;
+import com.serein.exception.ExecutionRejectHandler;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserCollectsMapper;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -67,8 +69,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -125,6 +130,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Autowired
   CommentMapper commentMapper;
 
+  @Bean
+  public ThreadPoolTaskExecutor taskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(10);
+    //线程数量>core放入queue，queue满了，再来的任务会创建新线程，直到线程数量=max，之后的任务就会被拒绝
+     executor.setMaxPoolSize(20);
+//    缓存队列（阻塞队列）当核心线程数达到最大时，新任务会放在队列中排队等待执行
+    executor.setQueueCapacity(25);
+    executor.setThreadNamePrefix("async-sendCode");
+    //自定义拒绝策略
+    executor.setRejectedExecutionHandler(new ExecutionRejectHandler());
+    executor.initialize();
+
+    log.info("线程池初始化成功，核心线程数：" + executor.getCorePoolSize() +
+        ", 最大线程数：" + executor.getMaxPoolSize() +
+        ", 队列容量：" + executor.getQueueCapacity());
+    return executor;
+  }
 
   /**
    * 关注或取关
@@ -499,7 +522,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public LoginUserVO login(LoginRequest loginRequest) {
-
     //1.判断邮箱和密码是否为空,邮箱格式校验，密码长度校验
     String loginUserMail = loginRequest.getMail();
     String loginPassword = loginRequest.getPassword();
@@ -578,7 +600,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     //设置token有效期10min，用户进行操作时会刷新redis的token有效期
   }
 
-  private void sendCodeForRegister(String email) {
+  @Async
+  public void sendCodeForRegister(String email) {
     log.info("尝试发送邮箱验证码给用户：" + email + "进行注册操作");
     log.info("开始发送邮件..." + "获取的到邮件发送对象为:" + mailSender);
     mailUtil = new MailUtil(mailSender, fromEmail);
