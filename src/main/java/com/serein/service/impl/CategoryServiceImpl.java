@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author 懒大王Smile
@@ -106,14 +107,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     Long updateTime = updateCategoryDTO.getUpdateTime();
     category.setUpdateTime(new Date(updateTime));
     boolean b = categoryMapper.updateCategory(category);
-    if (b) {
-      log.info("update category success ：{}", updateCategoryDTO);
-      return true;
+    if (!b) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+    log.info("update category success ：{}", updateCategoryDTO);
+    return true;
   }
 
-  //TODO 事务
+  @Transactional
   @Override
   public boolean deleteCategory(Long categoryId) {
     int num1 = categoryMapper.deleteById(categoryId);

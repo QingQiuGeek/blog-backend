@@ -18,6 +18,8 @@ public interface ErrorInfo {
 
   String UPDATE_ERROR = "更新失败";
 
+  String REDIS_UPDATE_ERROR = "更新失败";
+
   String RELEASED_ERROR = "发布失败";
 
   String DELETE_ERROR = "删除失败";

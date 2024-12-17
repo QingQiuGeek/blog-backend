@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author 懒大王Smile
@@ -52,6 +53,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
   @Autowired
   PassageMapper passageMapper;
 
+  @Transactional
   @Override
   public Long commentPassage(CommentDTO commentDTO) {
     LoginUserVO loginUserVO = UserHolder.getUser();
@@ -64,7 +66,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     comment.setPassageId(Long.valueOf(commentDTO.getPassageId()));
     comment.setCommentUserId(userId);
     comment.setCommentTime(new Date(commentDTO.getCommentTime()));
-    //todo 事务一致性
     commentMapper.insertComment(comment);
     if (comment.getCommentId() == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.COMMENT_ERROR);
@@ -170,21 +171,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     });
   }
 
-  //todo 事务
   @Override
   public Boolean deleteComment(DeleteCommentDTO deleteCommentDTO) {
     Long commentId = deleteCommentDTO.getCommentId();
     String passageId = deleteCommentDTO.getPassageId();
-
     int i = commentMapper.deleteById(commentId);
     if (i == 0) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
     Boolean b = passageMapper.subCommentNum(Long.valueOf(passageId));
-    if (b) {
-      return true;
+    if (!b) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+    return true;
   }
 
   @Override

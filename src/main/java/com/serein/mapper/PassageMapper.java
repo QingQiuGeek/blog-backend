@@ -49,6 +49,20 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   @Update("update blog.passage set commentNum=commentNum-1 where passageId=#{passageId}")
   Boolean subCommentNum(Long passageId);
+
+  @Update("update blog.passage set collectNum=collectNum+1 where passageId=#{passageId}")
+  Boolean addCollectNum(Long passageId);
+
+  @Update("update blog.passage set collectNum=collectNum-1 where passageId=#{passageId}")
+  boolean subCollectNum(Long passageId);
+
+  @Update("update blog.passage set thumbNum=thumbNum+1 where passageId=#{passageId}")
+  boolean addThumbNum(Long passageId);
+
+  @Update("update blog.passage set thumbNum=thumbNum-1 where passageId=#{passageId}")
+  boolean subThumbNum(Long passageId);
+
+
 }
 
 

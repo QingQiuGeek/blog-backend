@@ -51,11 +51,11 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
     tags.setCreateTime(new Date(addTagDTO.getCreateTime()));
     tagsMapper.insertTag(tags);
     Long tagId = tags.getTagId();
-    if (tagId != null) {
-      log.info("insert a new tag:{} ,tagId={}", tags, tagId);
-      return tagId;
+    if (tagId == null) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
+    log.info("insert a new tag:{} ,tagId={}", tags, tagId);
+    return tagId;
   }
 
   @Override
@@ -110,12 +110,12 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
   @Override
   public boolean deleteTag(Long tagId) {
     int num1 = tagsMapper.deleteById(tagId);
-    if (num1 != 0) {
-      log.info("delete tag success,tagId：{},deleteTagNum：{}",
-          tagId, num1);
-      return true;
+    if (num1 == 0) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+    log.info("delete tag success,tagId：{},deleteTagNum：{}",
+        tagId, num1);
+    return true;
   }
 
   private List<TagVO> getTagVOList(List<Tags> tagList) {

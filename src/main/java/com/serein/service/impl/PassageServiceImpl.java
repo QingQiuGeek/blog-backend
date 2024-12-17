@@ -290,11 +290,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
   }
 
-  @Transactional
   @Override
   public Boolean updatePassage(UpdatePassageDTO updatePassageDTO) {
     Passage passage = getPassage(updatePassageDTO);
-
     //更新文章时，审核通过时间在数据库中自动更新
     boolean b = this.updateById(passage);
     if (b) {
@@ -323,6 +321,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
 
+  @Transactional
   @Override
   public Boolean thumbPassage(Long passageId) {
 
@@ -338,7 +337,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     String key = Common.PASSAGE_THUMB_KEY + passageId;
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
-      boolean b = update().setSql("thumbNum=thumbNum+1").eq("passageId", passageId).update();
+      boolean b=passageMapper.addThumbNum(passageId);
       //插入用户点赞表
       UserThumbs userThumbs = UserThumbs.builder().userId(userId).passageId(passageId).build();
       int insert = userThumbsMapper.insert(userThumbs);
@@ -349,13 +348,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
     } else {
-      boolean b = update().setSql("thumbNum=thumbNum-1").eq("passageId", passageId).update();
+      boolean b = passageMapper.subThumbNum(passageId);
       //删除用户点赞表
       LambdaQueryWrapper<UserThumbs> queryWrapper = new LambdaQueryWrapper<>();
       queryWrapper.eq(UserThumbs::getUserId, userId).eq(UserThumbs::getPassageId, passageId);
       int delete = userThumbsMapper.delete(queryWrapper);
       if (b && delete == 1) {
-        stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        if(remove!=1){
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
@@ -368,6 +370,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
    * @return
    * @Description: 以passageId作为key，收藏该文章的userId为value存入redis
    */
+  @Transactional
   @Override
   public Boolean collectPassage(Long passageId) {
     LoginUserVO loginUserVO = UserHolder.getUser();
@@ -375,7 +378,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       return false;
     }
     Long userId = loginUserVO.getUserId();
-
     /*
      * 同一个用户对一篇文章只能收藏一次，不能重复收藏，取消收藏亦然
      * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
@@ -384,26 +386,33 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
       // todo 事务一致性
-      boolean b = update().setSql("collectNum=collectNum+1").eq("passageId", passageId).update();
+      Boolean b=passageMapper.addCollectNum(passageId);
       //先插入mysql用户收藏表
       UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
           .build();
       int insert = userCollectsMapper.insert(userCollects);
       if (b && insert == 1) {
         //写入redis
-        stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+        Boolean add = stringRedisTemplate.opsForZSet()
+            .add(key, userId.toString(), System.currentTimeMillis());
+        if(Boolean.FALSE.equals(add)){
+          throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
     } else {
-      boolean b = update().setSql("collectNum=collectNum-1").eq("passageId", passageId).update();
+      boolean b=passageMapper.subCollectNum(passageId);
       //删除用户收藏表
       LambdaQueryWrapper<UserCollects> queryWrapper = new LambdaQueryWrapper<>();
       queryWrapper.eq(UserCollects::getUserId, userId).eq(UserCollects::getPassageId, passageId);
       int delete = userCollectsMapper.delete(queryWrapper);
 //            userCollectsMapper.deleteById(userCollects);
       if (b && delete == 1) {
-        stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        if(remove!=1){
+          throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
@@ -541,8 +550,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
-  //todo 事务一致性
   @Override
+  @Transactional
   public boolean deleteByPassageId(Long passageId) {
     boolean b1 = removeById(passageId);
     boolean b2 = commentMapper.deleteByPassageId(passageId);

@@ -58,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -75,6 +74,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -135,7 +135,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(10);
     //线程数量>core放入queue，queue满了，再来的任务会创建新线程，直到线程数量=max，之后的任务就会被拒绝
-     executor.setMaxPoolSize(20);
+    executor.setMaxPoolSize(20);
 //    缓存队列（阻塞队列）当核心线程数达到最大时，新任务会放在队列中排队等待执行
     executor.setQueueCapacity(25);
     executor.setThreadNamePrefix("async-sendCode");
@@ -156,6 +156,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    * @return
    * @Description: 用户的关注信息存在redis中，登录用户的Id为key，被关注的用户Id为value
    */
+  @Transactional
   @Override
   public Boolean follow(Long userId) {
     LoginUserVO loginUserVO = UserHolder.getUser();
@@ -174,7 +175,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       int insert = userFollowMapper.insert(userFollow);
       if (insert == 1) {
         //再更新redis
-        stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+        Boolean add = stringRedisTemplate.opsForZSet()
+            .add(key, userId.toString(), System.currentTimeMillis());
+        if(Boolean.FALSE.equals(add)){
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
@@ -185,7 +190,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       //delete是被删除的行数，正常情况下是1，因为关注和被关注的关系只有一个存在数据库，不会重复关注
       int delete = userFollowMapper.delete(queryWrapper);
       if (delete == 1) {
-        stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        if(remove!=1){
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
@@ -585,7 +593,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       List<String> pTagList = JSONUtil.toList(user.getInterestTag(), String.class);
       loginUserVO.setInterestTag(pTagList);
     }
-
     String token = UUID.randomUUID(true).toString(false);
     //以LOGIN_TOKEN_KEY+userid为key，loginUserVO为值序列化存到redis
     log.info(loginUserVO.getUserId() + "用户的token: " + token);
