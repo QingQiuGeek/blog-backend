@@ -85,7 +85,7 @@ public class PassageESDTO implements Serializable {
    * todo 修改了passage的标签，这里也要改
    * 标签
    */
-  private Map<Long,String> pTagsMap;
+  private Map<Long, String> pTagsMap;
 
   /**
    * 浏览量

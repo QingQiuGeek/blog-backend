@@ -48,6 +48,7 @@ import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
+import com.serein.util.IPUtil;
 import com.serein.util.MailUtil;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,6 +71,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * @author 懒大王Smile
@@ -512,8 +515,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     if (queryUser == null) {
       throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_DB_DATA);
     }
-    if (queryUser.getStatus() == 0){
-      throw new BusinessException(ErrorCode.NO_AUTH_ERROR,ErrorInfo.BAN_ACCOUNT);
+    if (queryUser.getStatus() == 0) {
+      throw new BusinessException(ErrorCode.NO_AUTH_ERROR, ErrorInfo.BAN_ACCOUNT);
     }
     //核对密码
     {
@@ -522,10 +525,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
       }
     }
-
+    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (requestAttributes == null) {
+      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
+    }
+    HttpServletRequest request = requestAttributes.getRequest();
+    String ipAddr = IPUtil.getIpAddr(request);
+    log.info("用户登录，ip地址：{}", ipAddr);
+    if (!queryUser.getIpAddress().equals(ipAddr)) {
+      log.info("入参{}", ipAddr);
+      //如果用户id地址变化，那么更新数据库
+      log.info("userid{}", queryUser.getUserId());
+      Long userId = queryUser.getUserId();
+      userMapper.updateIpAddress(ipAddr, userId);
+    }
+    String ipRegion = IPUtil.getIpRegion(ipAddr);
+    log.info("用户登录，ip归属地：{}", ipRegion);
     LoginUserVO loginUserVO = new LoginUserVO();
     BeanUtil.copyProperties(queryUser, loginUserVO);
-
+    loginUserVO.setIpAddress(ipRegion);
     saveUserAndToken(queryUser, loginUserVO);
     log.info("loginUserVO：" + loginUserVO);
     log.info("登录线程：" + Thread.currentThread().getId());
@@ -540,7 +558,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   private void saveUserAndToken(User user, LoginUserVO loginUserVO) {
     //登录态保存到本地线程
     //UserHolder.saveUser(loginUserVO);
-
     if (!StringUtils.isBlank(user.getInterestTag())) {
       //把数据库中string类型的json转换成list<String>
       List<String> pTagList = JSONUtil.toList(user.getInterestTag(), String.class);
@@ -621,7 +638,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     //4.密码盐值加密，写入数据库，注册成功
     String bcrypt = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
-    User user = User.builder().userName(userName).password(bcrypt).mail(mail).build();
+    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (requestAttributes == null) {
+      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
+    }
+    HttpServletRequest request = requestAttributes.getRequest();
+    String ipAddr = IPUtil.getIpAddr(request);
+    log.info("用户注册，ip地址：{}", ipAddr);
+    String ipRegion = IPUtil.getIpRegion(ipAddr);
+    log.info("用户注册，ip归属地：{}", ipRegion);
+    User user = User.builder().userName(userName).password(bcrypt).mail(mail).ipAddress(ipAddr)
+        .build();
     int insert = userMapper.insert(user);
     if (insert <= 0) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
@@ -630,6 +657,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     user = this.getById(user.getUserId());
     LoginUserVO loginUserVO = new LoginUserVO();
     BeanUtil.copyProperties(user, loginUserVO);
+    loginUserVO.setIpAddress(ipRegion);
     log.info("注册成功：" + loginUserVO);
     saveUserAndToken(user, loginUserVO);
     return loginUserVO;
@@ -697,6 +725,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     User user = userMapper.selectById(userId);
     LoginUserVO loginUserVO1 = new LoginUserVO();
     BeanUtils.copyProperties(user, loginUserVO1);
+    String ipAddress = user.getIpAddress();
+    String ipRegion = IPUtil.getIpRegion(ipAddress);
+    loginUserVO1.setIpAddress(ipRegion);
     String interestTag = user.getInterestTag();
     if (StringUtils.isNotBlank(interestTag)) {
       List<String> list = JSONUtil.toList(interestTag, String.class);

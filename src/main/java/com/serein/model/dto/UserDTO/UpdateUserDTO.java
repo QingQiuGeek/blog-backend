@@ -36,7 +36,7 @@ public class UpdateUserDTO implements Serializable {
    */
   private String profiles;
 
-//  /**
+  //  /**
 //   * 预留字段，兴趣标签
 //   */
   private String interestTag;

@@ -7,9 +7,9 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.TagsMapper;
-import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.dto.TagDTO.TagDTO;
 import com.serein.model.entity.Tags;
+import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.vo.TagVO.TagVO;
 import com.serein.service.TagsService;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
   @Override
   public List<TagVO> getRandomTags() {
     List<Tags> tagList = tagsMapper.getRandomTags();
-    log.info("getRandomTags tagList：{}",tagList);
+    log.info("getRandomTags tagList：{}", tagList);
     List<TagVO> tagVOList = getTagVOList(tagList);
     return tagVOList;
   }
@@ -95,7 +95,7 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
               .gt(startTime != null, Tags::getCreateTime, startTime)
       );
     } catch (Exception e) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.DB_FAIL);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DB_FAIL);
     }
     List<Tags> records = page.getRecords();
     long total = page.getTotal();

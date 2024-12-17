@@ -10,37 +10,39 @@ import lombok.Data;
 
 /**
  * 标签表
+ *
  * @TableName tags
  */
-@TableName(value ="tags")
+@TableName(value = "tags")
 @Data
 public class Tags implements Serializable {
-    /**
-     * 标签id
-     */
-    @TableId(type = IdType.AUTO)
-    private Long tagId;
 
-    /**
-     * 标签名
-     */
-    private String tagName;
+  /**
+   * 标签id
+   */
+  @TableId(type = IdType.AUTO)
+  private Long tagId;
 
-    /**
-     * 所属类别id
-     */
-    private Long categoryId;
+  /**
+   * 标签名
+   */
+  private String tagName;
 
-    /**
-     * 创建时间
-     */
-    private Date createTime;
+  /**
+   * 所属类别id
+   */
+  private Long categoryId;
 
-    /**
-     * 修改时间
-     */
-    private Date updateTime;
+  /**
+   * 创建时间
+   */
+  private Date createTime;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+  /**
+   * 修改时间
+   */
+  private Date updateTime;
+
+  @TableField(exist = false)
+  private static final long serialVersionUID = 1L;
 }

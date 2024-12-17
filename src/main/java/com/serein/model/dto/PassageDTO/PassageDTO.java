@@ -37,7 +37,6 @@ public class PassageDTO implements Serializable {
    */
   private String summary;
 
-
 //  /**
 //   * 文章标签
 //   */
@@ -46,7 +45,7 @@ public class PassageDTO implements Serializable {
   /**
    * 文章标签id
    */
-  private Map<Long,String> ptagsMap;
+  private Map<Long, String> ptagsMap;
 
   @TableField(exist = false)
   private static final long serialVersionUID = 1L;

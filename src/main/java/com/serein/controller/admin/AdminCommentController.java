@@ -33,7 +33,7 @@ public class AdminCommentController {
    * */
   @PostMapping("/getComments/")
   public BaseResponse<Page<List<CommentVO>>> getComments(@RequestBody
-      AdminCommentPageRequest adminCommentPageRequest) {
+  AdminCommentPageRequest adminCommentPageRequest) {
     Page<List<CommentVO>> commentVOList = commentService.getComments(adminCommentPageRequest);
     return ResultUtil.success(commentVOList);
   }

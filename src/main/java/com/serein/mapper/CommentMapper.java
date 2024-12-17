@@ -2,7 +2,6 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Comment;
-import io.swagger.annotations.Authorization;
 import java.util.List;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
@@ -22,8 +21,9 @@ public interface CommentMapper extends BaseMapper<Comment> {
   void insertComment(Comment comment);
 
 
-  List<Comment> selectCommentsByCursor(@Param("passageId") Long passageId, @Param("authorId") Long authorId, @Param("pageSize") Integer pageSize,
-     @Param("lastCommentId") Long lastCommentId);
+  List<Comment> selectCommentsByCursor(@Param("passageId") Long passageId,
+      @Param("authorId") Long authorId, @Param("pageSize") Integer pageSize,
+      @Param("lastCommentId") Long lastCommentId);
 
   @Delete("delete from blog.comment where passageId=#{passageId}")
   boolean deleteByPassageId(Long passageId);

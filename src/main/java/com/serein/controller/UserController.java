@@ -136,7 +136,8 @@ public class UserController {
 
   /**
    * 根据uid获取用户的信息，一般用于查询用户主页或者文章作者信息
-   *TODO 该方法和 getUserInfoData重复
+   * TODO 该方法和 getUserInfoData重复
+   *
    * @return
    */
   @GetMapping("/getUserInfo/{uid}")
@@ -149,7 +150,8 @@ public class UserController {
    * 我的粉丝，list.size是粉丝数量
    * */
   @PostMapping("/myFollowers")
-  public BaseResponse<Page<List<UserVO>>> myFollowers(@RequestBody QueryPageRequest queryPageRequest) {
+  public BaseResponse<Page<List<UserVO>>> myFollowers(
+      @RequestBody QueryPageRequest queryPageRequest) {
     Page<List<UserVO>> userVOS = userService.myFollowers(queryPageRequest);
     return ResultUtil.success(userVOS);
   }
@@ -185,7 +187,8 @@ public class UserController {
    * 我的收藏博客列表
    * */
   @PostMapping("/myCollect")
-  public BaseResponse<Page<List<PassageInfoVO>>> myCollectPassage(@RequestBody QueryPageRequest queryPageRequest) {
+  public BaseResponse<Page<List<PassageInfoVO>>> myCollectPassage(
+      @RequestBody QueryPageRequest queryPageRequest) {
     Page<List<PassageInfoVO>> passageVOList = userService.myCollectPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
@@ -194,7 +197,8 @@ public class UserController {
    * 我的点赞博客列表
    * */
   @PostMapping("/myThumb")
-  public BaseResponse<Page<List<PassageInfoVO>>> myThumbPassage(@RequestBody QueryPageRequest queryPageRequest) {
+  public BaseResponse<Page<List<PassageInfoVO>>> myThumbPassage(
+      @RequestBody QueryPageRequest queryPageRequest) {
     Page<List<PassageInfoVO>> passageVOList = userService.myThumbPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
@@ -203,7 +207,8 @@ public class UserController {
    * 我的文章，list.size即为我的文章数量
    * */
   @PostMapping("/myPassages")
-  public BaseResponse<Page<List<PassageInfoVO>>> myPassages(@RequestBody QueryPageRequest queryPageRequest) {
+  public BaseResponse<Page<List<PassageInfoVO>>> myPassages(
+      @RequestBody QueryPageRequest queryPageRequest) {
     Page<List<PassageInfoVO>> passageVOList = userService.myPassage(queryPageRequest);
     return ResultUtil.success(passageVOList);
   }
@@ -212,7 +217,8 @@ public class UserController {
    * 我的消息，用户对我的文章的评论即为我的消息
    * */
   @PostMapping("/myMessage")
-  public BaseResponse<Page<List<CommentVO>>> myMessage(@RequestBody QueryPageRequest queryPageRequest) {
+  public BaseResponse<Page<List<CommentVO>>> myMessage(
+      @RequestBody QueryPageRequest queryPageRequest) {
     Page<List<CommentVO>> commentVOList = userService.myMessage(queryPageRequest);
     return ResultUtil.success(commentVOList);
   }

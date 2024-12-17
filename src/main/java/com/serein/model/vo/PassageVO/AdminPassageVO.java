@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -52,7 +51,7 @@ public class AdminPassageVO implements Serializable {
   /**
    * long是标签id，value是标签名
    */
-  private Map<Long,String> pTagsMap;
+  private Map<Long, String> pTagsMap;
 
   /**
    * 浏览量

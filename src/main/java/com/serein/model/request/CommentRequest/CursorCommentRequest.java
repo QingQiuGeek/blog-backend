@@ -15,7 +15,7 @@ public class CursorCommentRequest {
   private Long authorId;
   private Long passageId;
   private Long lastCommentId;
-  private Integer pageSize=10;
+  private Integer pageSize = 10;
 
 
 }

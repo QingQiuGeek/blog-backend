@@ -1,9 +1,9 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.dto.TagDTO.TagDTO;
 import com.serein.model.entity.Tags;
+import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.service.TagsService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
@@ -31,51 +31,50 @@ public class AdminTagController {
   TagsService tagsService;
 
   /**
-   *
    * @param adminTagPageRequest
    * @return
    * @description 获取管理页的标签列表
    */
   @PostMapping("/getTags")
-  public BaseResponse<Page<List<Tags>>> getAdminTags(@RequestBody AdminTagPageRequest adminTagPageRequest){
-    Page<List<Tags>> tagMap=tagsService.getAdminTags(adminTagPageRequest);
+  public BaseResponse<Page<List<Tags>>> getAdminTags(
+      @RequestBody AdminTagPageRequest adminTagPageRequest) {
+    Page<List<Tags>> tagMap = tagsService.getAdminTags(adminTagPageRequest);
     return ResultUtil.success(tagMap);
   }
 
   /**
-   * @description 返回标签id
    * @param addTagDTO
    * @return
+   * @description 返回标签id
    */
   @PostMapping("/addTag")
-  public BaseResponse<Long> addTag(@RequestBody TagDTO addTagDTO){
-    Long tagId=tagsService.addTag(addTagDTO);
+  public BaseResponse<Long> addTag(@RequestBody TagDTO addTagDTO) {
+    Long tagId = tagsService.addTag(addTagDTO);
     return ResultUtil.success(tagId);
   }
 
   /**
-   * @description 更新标签
    * @param updateTagDTO
    * @return
+   * @description 更新标签
    */
   @PostMapping("/updateTag")
-  public BaseResponse<Boolean> updateTag(@RequestBody  TagDTO updateTagDTO){
-    boolean b=tagsService.updateTag(updateTagDTO);
+  public BaseResponse<Boolean> updateTag(@RequestBody TagDTO updateTagDTO) {
+    boolean b = tagsService.updateTag(updateTagDTO);
     return ResultUtil.success(b);
   }
 
 
   /**
-   * @description 根据id删除标签
    * @param tagId
    * @return
+   * @description 根据id删除标签
    */
   @PutMapping("/delete/{tagId}")
-  public BaseResponse<Boolean> deleteTag(@PathVariable Long tagId){
-    boolean b=tagsService.deleteTag(tagId);
+  public BaseResponse<Boolean> deleteTag(@PathVariable Long tagId) {
+    boolean b = tagsService.deleteTag(tagId);
     return ResultUtil.success(b);
   }
 
-  
 
 }

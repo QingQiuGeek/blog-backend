@@ -1,9 +1,9 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.model.dto.CategoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
+import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
@@ -33,52 +33,50 @@ public class AdminCategoryController {
 
   /**
    * 获取管理页的类别列表
+   *
    * @param adminCategoryPageRequest
    * @return
    */
   @PostMapping("/getCategories")
-  public BaseResponse<Page<List<Category>>> getAdminCategories(@RequestBody AdminCategoryPageRequest adminCategoryPageRequest){
-    Page<List<Category>> categoryMap=categoryService.getAdminCategories(adminCategoryPageRequest);
+  public BaseResponse<Page<List<Category>>> getAdminCategories(
+      @RequestBody AdminCategoryPageRequest adminCategoryPageRequest) {
+    Page<List<Category>> categoryMap = categoryService.getAdminCategories(adminCategoryPageRequest);
     return ResultUtil.success(categoryMap);
   }
 
   /**
-   * @description 返回类别id
    * @param addCategoryDTO
    * @return
+   * @description 返回类别id
    */
   @PostMapping("/addCategory")
-  public BaseResponse<Long> addCategory(@RequestBody CategoryDTO addCategoryDTO){
-    Long categoryId=categoryService.addCategory(addCategoryDTO);
+  public BaseResponse<Long> addCategory(@RequestBody CategoryDTO addCategoryDTO) {
+    Long categoryId = categoryService.addCategory(addCategoryDTO);
     return ResultUtil.success(categoryId);
   }
 
   /**
-   * @description 更新类别
    * @param updateCategoryDTO
    * @return
+   * @description 更新类别
    */
   @PostMapping("/updateCategory")
-  public BaseResponse<Boolean> updateCategory(@RequestBody  CategoryDTO updateCategoryDTO){
-    boolean b=categoryService.updateCategory(updateCategoryDTO);
+  public BaseResponse<Boolean> updateCategory(@RequestBody CategoryDTO updateCategoryDTO) {
+    boolean b = categoryService.updateCategory(updateCategoryDTO);
     return ResultUtil.success(b);
   }
 
 
   /**
-   * @description 根据id删除类别
    * @param categoryId
    * @return
+   * @description 根据id删除类别
    */
   @PutMapping("/delete/{categoryId}")
-  public BaseResponse<Boolean> deleteCategory(@PathVariable Long categoryId){
-    boolean b=categoryService.deleteCategory(categoryId);
+  public BaseResponse<Boolean> deleteCategory(@PathVariable Long categoryId) {
+    boolean b = categoryService.deleteCategory(categoryId);
     return ResultUtil.success(b);
   }
-
-
-
-
 
 
 }

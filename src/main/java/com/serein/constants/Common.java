@@ -9,7 +9,7 @@ package com.serein.constants;
 
 public interface Common {
 
-//  A:\IDEA\blog\src\main\resources\suploadImg
+  //  A:\IDEA\blog\src\main\resources\suploadImg
   String IMG_UPLOAD_DIR = "A:/IDEA/blog/src/main/resources/uploadImg/";
 
   //限制可上传的图片大小
@@ -23,9 +23,10 @@ public interface Common {
   Long PAGE_SIZE = 10L;
 
   //前端category页随机抽取的标签数量
-  Integer TAGS_NUM=50;
+  Integer TAGS_NUM = 50;
   String LOGIN_TOKEN_KEY = "Blog:login:token:";
 
+  String PASSAGE_HOME_KEY = "Blog:passage:home:";
   String PASSAGE_THUMB_KEY = "Blog:passage:thumb:";
 
   String PASSAGE_COLLECT_KEY = "Blog:passage:collect:";

@@ -2,12 +2,12 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.PassageDTO.AddPassageDTO;
 import com.serein.model.dto.PassageDTO.SearchPassageDTO;
 import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface PassageService extends IService<Passage> {
 
-  Page<List<PassageInfoVO>> getIndexPassageList(QueryPageRequest queryPageRequest);
+  Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest);
 
   List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO);
 

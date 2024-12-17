@@ -48,16 +48,16 @@ public class FullSyncPassageToES implements CommandLineRunner {
     }
     List<PassageESDTO> passageESDTOList = postList.stream()
         .map(passage -> {
-              PassageVO passageVO = new PassageVO();
-              BeanUtils.copyProperties(passage, passageVO);
-              String tagsId = passage.getTagsId();
-              if (StringUtils.isNotBlank(tagsId)) {
-                Map<Long, String> tagMap = passageServiceImpl.getTagStrList(tagsId);
-                passageVO.setPTagsMap(tagMap);
-                return PassageESDTO.objToDto(passageVO);
-              }
-              return PassageESDTO.objToDto(passageVO);
-            })
+          PassageVO passageVO = new PassageVO();
+          BeanUtils.copyProperties(passage, passageVO);
+          String tagsId = passage.getTagsId();
+          if (StringUtils.isNotBlank(tagsId)) {
+            Map<Long, String> tagMap = passageServiceImpl.getTagStrList(tagsId);
+            passageVO.setPTagsMap(tagMap);
+            return PassageESDTO.objToDto(passageVO);
+          }
+          return PassageESDTO.objToDto(passageVO);
+        })
         .collect(Collectors.toList());
     final int pageSize = 500;
     int total = passageESDTOList.size();

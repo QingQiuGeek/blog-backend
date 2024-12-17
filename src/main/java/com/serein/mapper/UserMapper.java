@@ -6,6 +6,7 @@ import com.serein.model.vo.CommentVO.CommentUserInfoVO;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * @author 懒大王Smile
@@ -19,6 +20,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   List<CommentUserInfoVO> getCommentUserInfoByUserIdList(
       @Param("commentUserIdList") List<Long> commentUserIdList);
+
+  @Update("update blog.user set ipAddress = #{ipAddress} where userId = #{userId}")
+  void updateIpAddress(String ipAddress, Long userId);
 }
 
 

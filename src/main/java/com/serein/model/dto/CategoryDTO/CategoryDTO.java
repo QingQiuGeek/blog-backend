@@ -1,7 +1,6 @@
 package com.serein.model.dto.CategoryDTO;
 
 import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
 
 /**

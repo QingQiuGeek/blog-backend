@@ -1,36 +1,36 @@
 package com.serein.model.dto.TagDTO;
 
 import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
 
 
 @Data
 public class TagDTO implements Serializable {
-    /**
-     * 标签id
-     */
-    private Long tagId;
 
-    /**
-     * 标签名
-     */
-    private String tagName;
+  /**
+   * 标签id
+   */
+  private Long tagId;
 
-    /**
-     * 所属类别id
-     */
-    private Long categoryId;
+  /**
+   * 标签名
+   */
+  private String tagName;
 
-    /**
-     * 创建时间
-     */
-    private Long createTime;
+  /**
+   * 所属类别id
+   */
+  private Long categoryId;
 
-    /**
-     * 修改时间
-     */
-    private Long updateTime;
+  /**
+   * 创建时间
+   */
+  private Long createTime;
 
-    private static final long serialVersionUID = 1L;
+  /**
+   * 修改时间
+   */
+  private Long updateTime;
+
+  private static final long serialVersionUID = 1L;
 }

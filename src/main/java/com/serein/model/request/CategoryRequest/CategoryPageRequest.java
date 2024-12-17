@@ -1,6 +1,5 @@
 package com.serein.model.request.CategoryRequest;
 
-import java.util.Date;
 import lombok.Data;
 
 /**

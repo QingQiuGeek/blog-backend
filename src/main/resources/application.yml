@@ -25,20 +25,28 @@ spring:
     username: root
     password: '#252012'
     driver-class-name: com.mysql.cj.jdbc.Driver
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      min-idle: 3
-      max-active: 6
-      max-wait: 60000
-      initial-size: 3
-#      druid的web监控
-      stat-view-servlet:
-        enabled: true                   # 启用StatViewServlet
-        url-pattern: /druid/* # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
-        reset-enable: false              # 不允许清空统计数据,重新计算
-        login-username: root # 配置监控页面访问密码
-        login-password: 123
-        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 6
+      minimum-idle: 3
+      jdbc-url: jdbc:mysql://localhost:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
+      username: root
+      password: '#252012'
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  #    type: com.alibaba.druid.pool.DruidDataSource
+#    druid:
+#      min-idle: 3
+#      max-active: 6
+#      max-wait: 60000
+#      initial-size: 3
+##      druid的web监控
+#      stat-view-servlet:
+#        enabled: true                   # 启用StatViewServlet
+#        url-pattern: /druid/* # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
+#        reset-enable: false              # 不允许清空统计数据,重新计算
+#        login-username: root # 配置监控页面访问密码
+#        login-password: 123
+#        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
 
   redis:
     host: 192.168.2.129

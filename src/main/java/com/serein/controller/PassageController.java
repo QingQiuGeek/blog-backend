@@ -39,7 +39,6 @@ public class PassageController {
   PassageService passageService;
 
 
-
   /*
    * top7 爆款文章
    * */
@@ -74,7 +73,7 @@ public class PassageController {
   @PostMapping("/homePassageList")
   public BaseResponse<Page<List<PassageInfoVO>>> getHomePassageList(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<PassageInfoVO>> newPassageList = passageService.getIndexPassageList(queryPageRequest);
+    Page<List<PassageInfoVO>> newPassageList = passageService.getHomePassageList(queryPageRequest);
     return ResultUtil.success(newPassageList);
   }
 
@@ -109,6 +108,7 @@ public class PassageController {
 
   /**
    * 根据用户id搜索文章列表 todo 分页查询
+   *
    * @param uid
    * @return
    */
@@ -173,14 +173,15 @@ public class PassageController {
 
   /**
    * 根据文章id删除文章
-   *todo 删除了文章还要删除评论，收藏、点赞等，删除数据库和redis
+   * todo 删除了文章还要删除评论，收藏、点赞等，删除数据库和redis
+   *
    * @param passageId
    * @return
    */
   @DeleteMapping("/delete/{passageId}")
   public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId) {
-    boolean b=passageService.deleteByPassageId(passageId);
-   return ResultUtil.success(b);
+    boolean b = passageService.deleteByPassageId(passageId);
+    return ResultUtil.success(b);
   }
 
 

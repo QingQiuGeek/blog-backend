@@ -5,11 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @Author:懒大王Smile
@@ -76,8 +73,7 @@ public class PassageVO implements Serializable {
   /*
    * 标签列表
    * */
-  private Map<Long,String> pTagsMap;
-
+  private Map<Long, String> pTagsMap;
 
 
   /**

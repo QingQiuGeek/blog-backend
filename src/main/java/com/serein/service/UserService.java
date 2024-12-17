@@ -2,11 +2,11 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.request.UserRequest.AdminUserQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.UserDTO.AddUserDTO;
 import com.serein.model.dto.UserDTO.UpdateUserDTO;
 import com.serein.model.entity.User;
+import com.serein.model.request.UserRequest.AdminUserQueryPageRequest;
 import com.serein.model.request.UserRequest.LoginRequest;
 import com.serein.model.request.UserRequest.RegisterCodeRequest;
 import com.serein.model.request.UserRequest.RegisterRequest;
@@ -49,7 +49,7 @@ public interface UserService extends IService<User> {
 
   Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest);
 
-  Page<List<PassageInfoVO>>  myThumbPassage(QueryPageRequest queryPageRequest);
+  Page<List<PassageInfoVO>> myThumbPassage(QueryPageRequest queryPageRequest);
 
   Page<List<PassageInfoVO>> myPassage(QueryPageRequest queryPageRequest);
 

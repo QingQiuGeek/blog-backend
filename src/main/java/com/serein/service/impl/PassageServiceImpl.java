@@ -16,7 +16,6 @@ import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
 import com.serein.model.dto.PassageDTO.AddPassageDTO;
@@ -28,6 +27,7 @@ import com.serein.model.entity.Passage;
 import com.serein.model.entity.Tags;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
+import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
@@ -91,7 +91,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   CommentMapper commentMapper;
 
   @Override
-  public Page<List<PassageInfoVO>> getIndexPassageList(QueryPageRequest queryPageRequest) {
+  public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
     //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度

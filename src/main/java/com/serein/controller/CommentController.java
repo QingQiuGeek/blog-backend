@@ -9,12 +9,8 @@ import com.serein.service.CommentService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,13 +41,14 @@ public class CommentController {
 
 
   /**
-   * @description 通过游标获取评论
    * @param cursorCommentRequest
    * @return
+   * @description 通过游标获取评论
    */
   @PostMapping("/getCommentByCursor")
 //  BaseResponse<Map<Long,List<CommentVO>>>
-  public BaseResponse<Page<List<CommentVO>>> getCommentByCursor(@RequestBody CursorCommentRequest cursorCommentRequest) {
+  public BaseResponse<Page<List<CommentVO>>> getCommentByCursor(
+      @RequestBody CursorCommentRequest cursorCommentRequest) {
     Page<List<CommentVO>> commentVOList = commentService.getCommentByCursor(cursorCommentRequest);
     return ResultUtil.success(commentVOList);
   }

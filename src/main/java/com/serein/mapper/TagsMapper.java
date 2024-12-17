@@ -2,17 +2,15 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Tags;
-import com.serein.model.vo.TagVO.TagVO;
 import java.util.List;
 import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Select;
 
 /**
-* @author 懒大王Smile
-* @description 针对表【tags(标签表)】的数据库操作Mapper
-* @createDate 2024-12-03 18:38:58
-* @Entity generator.domain.Tags
-*/
+ * @author 懒大王Smile
+ * @description 针对表【tags(标签表)】的数据库操作Mapper
+ * @createDate 2024-12-03 18:38:58
+ * @Entity generator.domain.Tags
+ */
 public interface TagsMapper extends BaseMapper<Tags> {
 
 

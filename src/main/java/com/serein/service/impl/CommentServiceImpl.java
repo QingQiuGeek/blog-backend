@@ -99,7 +99,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
 
     List<Comment> comments = commentMapper.selectCommentsByCursor(passageId, authorId,
         pageSize, lastCommentId);
-    if(comments.isEmpty()){
+    if (comments.isEmpty()) {
       //当查完最后一批评论时，就无法再查出来数据了
       page.setTotal(0);
       page.setRecords(Collections.emptyList());

@@ -28,14 +28,14 @@ public class CategoryController {
   CategoryService categoryService;
 
   /**
-   *
    * @param categoryPageRequest
    * @return
    * @Description: 获取分类专栏页面的类别
    */
   @PostMapping("/getCategories")
-  public BaseResponse<Page<List<CategoryVO>>> getCategories(@RequestBody CategoryPageRequest categoryPageRequest){
-    Page<List<CategoryVO>> categoryMap=categoryService.getCategories(categoryPageRequest);
+  public BaseResponse<Page<List<CategoryVO>>> getCategories(
+      @RequestBody CategoryPageRequest categoryPageRequest) {
+    Page<List<CategoryVO>> categoryMap = categoryService.getCategories(categoryPageRequest);
     return ResultUtil.success(categoryMap);
   }
 
