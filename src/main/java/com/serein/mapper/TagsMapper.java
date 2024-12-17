@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Tags;
 import java.util.List;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @author 懒大王Smile
@@ -22,6 +23,9 @@ public interface TagsMapper extends BaseMapper<Tags> {
   void insertTag(Tags tags);
 
   boolean updateTag(Tags tag);
+
+  @Select("select categoryId,tagName,tagId from blog.tags ")
+  List<Tags> getAllTags();
 }
 
 

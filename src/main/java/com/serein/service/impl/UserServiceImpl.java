@@ -24,6 +24,7 @@ import com.serein.exception.BusinessException;
 import com.serein.exception.ExecutionRejectHandler;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
+import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserFollowMapper;
 import com.serein.mapper.UserMapper;
@@ -34,6 +35,7 @@ import com.serein.model.dto.UserDTO.AddUserDTO;
 import com.serein.model.dto.UserDTO.UpdateUserDTO;
 import com.serein.model.entity.Comment;
 import com.serein.model.entity.Passage;
+import com.serein.model.entity.Tags;
 import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserFollow;
@@ -129,6 +131,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Autowired
   CommentMapper commentMapper;
+
+  @Autowired
+  TagsMapper tagsMapper;
 
   @Bean
   public ThreadPoolTaskExecutor taskExecutor() {
@@ -314,9 +319,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     if (byId != null) {
       UserVO userVO = new UserVO();
       BeanUtil.copyProperties(byId, userVO);
+      String ipRegion = IPUtil.getIpRegion(byId.getIpAddress());
+      userVO.setIpAddress(ipRegion);
       String interestTag = byId.getInterestTag();
       if (StringUtils.isNotBlank(interestTag)) {
-        userVO.setInterestTag(JSONUtil.toList(interestTag, String.class));
+        List<Long> tagIdList = JSONUtil.toList(interestTag, Long.class);
+        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+        userVO.setInterestTag(tagNameList);
       }
       //查询该用户粉丝数量
       int followerNum = userFollowMapper.getFollowerNum(uid);
@@ -325,6 +335,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (loginUserVO == null) {
         return userVO;
       }
+
       Long loginUserId = loginUserVO.getUserId();
       List<UserVO> userVOS = new ArrayList<>();
       userVOS.add(userVO);
@@ -353,8 +364,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
   /**
-   * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量 //TODO 需要传入用户id，其他用户也要用该接口，复用
-   *
+   * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量
    * @return
    */
   @Override
@@ -574,6 +584,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     LoginUserVO loginUserVO = new LoginUserVO();
     BeanUtil.copyProperties(queryUser, loginUserVO);
     loginUserVO.setIpAddress(ipRegion);
+    List<Long> tagIdList = JSONUtil.toList(queryUser.getInterestTag(), Long.class);
+    List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+    List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+    loginUserVO.setInterestTag(tagNameList);
     saveUserAndToken(queryUser, loginUserVO);
     log.info("loginUserVO：" + loginUserVO);
     log.info("登录线程：" + Thread.currentThread().getId());
@@ -760,8 +774,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     loginUserVO1.setIpAddress(ipRegion);
     String interestTag = user.getInterestTag();
     if (StringUtils.isNotBlank(interestTag)) {
-      List<String> list = JSONUtil.toList(interestTag, String.class);
-      loginUserVO1.setInterestTag(list);
+      List<Long> tagIdlist = JSONUtil.toList(interestTag, Long.class);
+      List<Tags> tags = tagsMapper.selectBatchIds(tagIdlist);
+      List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+      loginUserVO1.setInterestTag(tagNameList);
     }
     return loginUserVO1;
   }
@@ -821,8 +837,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       AdminUserVO adminUserVO = new AdminUserVO();
       BeanUtils.copyProperties(user, adminUserVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<String> list = JSONUtil.toList(user.getInterestTag(), String.class);
-        adminUserVO.setInterestTag(list);
+        List<Long> tagIdList = JSONUtil.toList(user.getInterestTag(), Long.class);
+        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+        adminUserVO.setInterestTag(tagNameList);
       }
       return adminUserVO;
     }).collect(Collectors.toList());
@@ -839,8 +857,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       UserVO userVO = new UserVO();
       BeanUtils.copyProperties(user, userVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<String> list = JSONUtil.toList(user.getInterestTag(), String.class);
-        userVO.setInterestTag(list);
+        List<Long> tagIdList = JSONUtil.toList(user.getInterestTag(), Long.class);
+        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+        userVO.setInterestTag(tagNameList);
       }
       return userVO;
     }).collect(Collectors.toList());

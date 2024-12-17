@@ -61,6 +61,7 @@ push到远程
  * 后端搜索接口 前端autoComplete组件
  * ES降级兜底 面试鸭
  * 增量失败 重试机制 guava retrying库
+ * 前端点赞收藏关注防抖lodash 配合后端rateLimiter
  * 事务 √
  * 接入站点统计baidu google 管理页数据管理引入Echarts等
  * 接入hotkey，实现缓存热文和黑名单IP拦截

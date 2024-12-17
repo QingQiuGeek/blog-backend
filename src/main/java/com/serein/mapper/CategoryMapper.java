@@ -2,7 +2,9 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Category;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @author 懒大王Smile
@@ -17,6 +19,9 @@ public interface CategoryMapper extends BaseMapper<Category> {
   void insertCategory(Category category);
 
   boolean updateCategory(Category category);
+
+  @Select("select categoryId,categoryName from blog.category")
+  List<Category> getAllCategories();
 }
 
 

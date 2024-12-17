@@ -10,14 +10,19 @@ import com.serein.mapper.CategoryMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.model.dto.CategoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
+import com.serein.model.entity.Tags;
 import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.model.request.CategoryRequest.CategoryPageRequest;
+import com.serein.model.vo.CategoryVO.CategoryAndTags;
 import com.serein.model.vo.CategoryVO.CategoryVO;
+import com.serein.model.vo.TagVO.TagVO;
 import com.serein.service.CategoryService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -125,6 +130,34 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+  }
+
+  @Override
+  public List<CategoryAndTags> getCategoriesAndTags() {
+    //获取所有category
+    List<Category> categoryList = categoryMapper.getAllCategories();
+    //获取所有tagsList
+    List<Tags> tagsList = tagsMapper.getAllTags();
+    //根据tag所属的categoryId分组
+    Map<Long, List<Tags>> categoryTagMap = tagsList.stream()
+        .collect(Collectors.groupingBy(Tags::getCategoryId));
+    // 封装成 CategoryAndTags 结构
+    List<CategoryAndTags> result = new ArrayList<>();
+    for (Category category : categoryList) {
+      CategoryAndTags categoryAndTags = new CategoryAndTags();
+      categoryAndTags.setCategoryId(category.getCategoryId());
+      categoryAndTags.setCategoryName(category.getCategoryName());
+      // 获取该类别下的标签
+      List<Tags> categoryTags = categoryTagMap.get(category.getCategoryId());
+      if (categoryTags != null) {
+        List<TagVO> tagVOList = categoryTags.stream()
+            .map(tag -> new TagVO(tag.getTagId(), tag.getTagName()))
+            .collect(Collectors.toList());
+        categoryAndTags.setTagVOList(tagVOList);
+        result.add(categoryAndTags);
+      }
+    }
+    return result;
   }
 
 

@@ -6,6 +6,7 @@ import com.serein.model.dto.CategoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
 import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.model.request.CategoryRequest.CategoryPageRequest;
+import com.serein.model.vo.CategoryVO.CategoryAndTags;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import java.util.List;
 
@@ -25,4 +26,6 @@ public interface CategoryService extends IService<Category> {
   boolean updateCategory(CategoryDTO updateCategoryDTO);
 
   boolean deleteCategory(Long categoryId);
+
+  List<CategoryAndTags> getCategoriesAndTags();
 }

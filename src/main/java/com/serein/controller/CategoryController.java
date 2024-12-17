@@ -2,12 +2,14 @@ package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.request.CategoryRequest.CategoryPageRequest;
+import com.serein.model.vo.CategoryVO.CategoryAndTags;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +39,12 @@ public class CategoryController {
       @RequestBody CategoryPageRequest categoryPageRequest) {
     Page<List<CategoryVO>> categoryMap = categoryService.getCategories(categoryPageRequest);
     return ResultUtil.success(categoryMap);
+  }
+
+  @GetMapping("/getCategoriesAndTags")
+  public BaseResponse<List<CategoryAndTags>> getCategoriesAndTags() {
+    List<CategoryAndTags> categoryAndTagsList = categoryService.getCategoriesAndTags();
+    return ResultUtil.success(categoryAndTagsList);
   }
 
 }

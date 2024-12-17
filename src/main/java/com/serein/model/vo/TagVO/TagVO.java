@@ -1,7 +1,9 @@
 package com.serein.model.vo.TagVO;
 
 import java.io.Serializable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 标签表
@@ -9,6 +11,8 @@ import lombok.Data;
  * @TableName tags
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TagVO implements Serializable {
 
   /**
