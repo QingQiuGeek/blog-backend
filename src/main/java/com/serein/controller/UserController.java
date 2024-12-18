@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 
 /**
@@ -124,6 +126,13 @@ public class UserController {
     Boolean aBoolean = userService.updateUser(updateUserDTO);
     return ResultUtil.success(aBoolean);
   }
+
+  @PostMapping("/uploadAvatar")
+  public BaseResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+    String avatarUrl = userService.uploadAvatar(file);
+    return ResultUtil.success(avatarUrl);
+  }
+
 
   /*
    * 关注用户

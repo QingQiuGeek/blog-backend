@@ -51,6 +51,7 @@ import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import com.serein.service.UserService;
+import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.MailUtil;
 import java.util.ArrayList;
@@ -80,6 +81,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author 懒大王Smile
@@ -427,6 +429,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     listPage.setTotal(page.getTotal());
     listPage.setRecords(Collections.singletonList(commentVOS));
     return listPage;
+  }
+
+  @Override
+  public String uploadAvatar(MultipartFile file) {
+    LoginUserVO loginUserVO = UserHolder.getUser();
+    if(loginUserVO==null){
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+    }
+    String avatarUrl = FileUtil.uploadImageLocal(file);
+    Long userId = loginUserVO.getUserId();
+    boolean b=userMapper.updateAvatar(userId,avatarUrl);
+    if(!b){
+      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
+    }
+    log.info("update avatarUrl：" + avatarUrl);
+    return avatarUrl;
   }
 
 
@@ -926,6 +944,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
   }
+
+
 }
 
 

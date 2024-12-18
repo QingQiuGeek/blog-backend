@@ -23,6 +23,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Update("update blog.user set ipAddress = #{ipAddress} where userId = #{userId}")
   void updateIpAddress(String ipAddress, Long userId);
+
+  @Update("update blog.user set avatarUrl=#{avatarUrl} where userId=#{userId}")
+  boolean updateAvatar( @Param("userId") Long userId,@Param("avatarUrl") String avatarUrl);
 }
 
 

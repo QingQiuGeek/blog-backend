@@ -18,6 +18,7 @@ import com.serein.model.vo.UserVO.UserInfoDataVO;
 import com.serein.model.vo.UserVO.UserVO;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author 懒大王Smile
@@ -68,4 +69,6 @@ public interface UserService extends IService<User> {
   UserInfoDataVO getUserInfoData();
 
   Page<List<CommentVO>> myMessage(QueryPageRequest queryPageRequest);
+
+  String uploadAvatar(MultipartFile file);
 }
