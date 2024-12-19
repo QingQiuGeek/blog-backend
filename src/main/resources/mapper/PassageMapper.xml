@@ -13,7 +13,6 @@
 		<result property="content" column="content" jdbcType="VARCHAR"/>
 		<result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
 		<result property="summary" column="summary" jdbcType="VARCHAR"/>
-		<result property="tagsId" column="tagsId" jdbcType="VARCHAR"/>
 		<result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
 		<result property="commentNum" column="commentNum" jdbcType="INTEGER"/>
 		<result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
@@ -26,18 +25,27 @@
 	</resultMap>
 
 	<sql id="Base_Column_List">
-		passageId,authorId,authorName,avatarUrl,
+    passageId,authorId,authorName,avatarUrl,
         title,content,thumbnail,
-        summary,tagsId,
+        summary,
         viewNum,commentNum,thumbNum,
         collectNum,createTime,updateTime,
         accessTime,status,isDelete
-	</sql>
+  </sql>
 	<update id="updateViewNum">
 		update blog.passage set viewNum=viewNum+1 where passageId=#{passageId};
 	</update>
 	<!--把未删除且审核通过的文章查询出来同步到 es  -->
 	<select id="listPassageWithNODelete" resultType="com.serein.model.entity.Passage">
-		select * from blog.passage where updateTime>=#{minutesAgoDate} and isDelete=1 and status=2
+		select title,content,summary,passageId,authorName from blog.passage where updateTime>=#{minutesAgoDate} and isDelete=1 and status=2
 	</select>
+
+	<select id="selectOtherPassageByUserId" resultType="com.serein.model.entity.Passage">
+    select passageId, title, authorId
+    from blog.passage
+    where authorId = #{userId}
+      and passage.status = 2
+    order by passage.accessTime desc
+    limit 10
+  </select>
 </mapper>

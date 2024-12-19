@@ -60,10 +60,6 @@ public class Passage implements Serializable {
    */
   private String summary;
 
-  /**
-   * 文章的标签id(json数组)
-   */
-  private String tagsId;
 
   /**
    * 浏览量

@@ -1,8 +1,6 @@
 package com.serein.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -11,8 +9,10 @@ import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
+import com.serein.mapper.CategoryMapper;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
+import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserThumbsMapper;
@@ -21,19 +21,21 @@ import com.serein.model.UserHolder;
 import com.serein.model.dto.PassageDTO.AddPassageDTO;
 import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
-import com.serein.model.dto.PassageDTO.SearchPassageDTO;
 import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.Tags;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
 import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
+import com.serein.model.request.SearchPassageRequest;
 import com.serein.model.vo.PassageVO.AdminPassageVO;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageTitleVO;
 import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.service.PassageService;
+import com.serein.service.PassageTagService;
 import com.serein.util.FileUtil;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,10 +47,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -85,10 +91,18 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   PassageMapper passageMapper;
 
   @Autowired
+  PassageTagMapper passageTagMapper;
+
+  @Autowired
+  PassageTagService passageTagService;
+  @Autowired
   TagsMapper tagsMapper;
 
   @Autowired
   CommentMapper commentMapper;
+
+  @Autowired
+  CategoryMapper categoryMapper;
 
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
@@ -101,7 +115,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .orderByDesc(Passage::getAccessTime).
             select(Passage::getPassageId, Passage::getTitle, Passage::getViewNum,
                 Passage::getAuthorId, Passage::getAuthorName, Passage::getAvatarUrl,
-                Passage::getThumbnail, Passage::getSummary, Passage::getTagsId,
+                Passage::getThumbnail, Passage::getSummary,
                 Passage::getCommentNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAccessTime));
     //当前页的数据
@@ -129,20 +143,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           PassageInfoVO passageInfoVO = new PassageInfoVO();
           BeanUtil.copyProperties(passage, passageInfoVO);
           isThumbCollect(passageInfoVO);
-          String tagsId = passage.getTagsId();
-          if (StringUtils.isNotBlank(tagsId)) {
-            log.info("tagsId：" + tagsId);
-            Map<Long, String> tagStrList = getTagStrList(tagsId);
-//            passageInfoVO.setPTags(tagStrList);
+          List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
+              passage.getPassageId());
+          List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
+              .collect(Collectors.toList());
+          if (!tagIdList.isEmpty()) {
+            log.info("tagsId：" + tagIdList);
+            Map<Long, String> tagStrList = getTagMaps(tagIdList);
             passageInfoVO.setPTagsMap(tagStrList);
           }
-//          if (!StringUtils.isBlank(passage.getPTags())) {
-//            //把数据库中string类型的json转换成list<String>
-//            List<String> pTagList = JSONUtil.toList(passage.getPTags(), String.class);
-//            passageInfoVO.setPTags(pTagList);
-//            //判断当前用户是否点赞、收藏
-//          }
-          log.info("passageInfoVO：" + passageInfoVO.toString());
+          log.info("passageInfoVO：" + passageInfoVO);
           return passageInfoVO;
         }
     ).collect(Collectors.toList());
@@ -151,25 +161,21 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   /**
-   * @param tagsId 入参json类型的id数组
+   * @param tagIdList
    * @return key=tagId，value=tagName
    * @Description: 根据json格式的字符串id获取标签列表
    */
-  public Map<Long, String> getTagStrList(String tagsId) {
-    List<Long> tagsIdlist = JSONUtil.toList(tagsId, Long.class);
-    log.info("tagsIdlist：" + tagsIdlist);
+  public Map<Long, String> getTagMaps(List<Long> tagIdList) {
+    log.info("tagsIdlist：" + tagIdList);
     HashMap<Long, String> map = new HashMap<>();
-    tagsIdlist.forEach(tagId -> {
+    tagIdList.forEach(tagId -> {
       Tags tags = tagsMapper.selectById(tagId);
       if (tags != null) {
         String tagName = tags.getTagName();
         map.put(tagId, tagName);
       }
     });
-//    List<Tags> tags = tagsMapper.selectBatchIds(tagsIdlist);
     log.info("tagsMap：" + map);
-//    List<String> tagStrList = tags.stream().map(Tags::getTagName)
-//        .collect(Collectors.toList());
     return map;
   }
 
@@ -200,71 +206,152 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     passageInfoVO.setIsCollect(score2 != null);
   }
 
-  //todo es搜索优化是否要passageInfoVO
-  @Override
-  public List<PassageInfoVO> searchFromESByText(SearchPassageDTO searchPassageDTO) {
-    String searchText = searchPassageDTO.getSearchText();
-    List<String> pTags = searchPassageDTO.getPTags();
 
+  @Override
+  public Page<List<PassageInfoVO>> searchPassageFromES(SearchPassageRequest searchPassageRequest) {
+    String searchText = searchPassageRequest.getSearchText();
+    if (StringUtils.isBlank(searchText)) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    // 构造ES分页查询条件
+    Pageable pageable = PageRequest.of(searchPassageRequest.getCurrentPage(),
+        searchPassageRequest.getPageSize());
     //拼接查询条件
     BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
     if (StringUtils.isNotBlank(searchText)) {
       boolQueryBuilder.should(QueryBuilders.matchQuery("title", searchText));
       boolQueryBuilder.should(QueryBuilders.matchQuery("content", searchText));
       boolQueryBuilder.should(QueryBuilders.matchQuery("summary", searchText));
+      boolQueryBuilder.should(QueryBuilders.termQuery("authorName", searchText));
+      boolQueryBuilder.should(QueryBuilders.matchQuery("tagStr", searchText));
+
       //确保至少有1个“should”条件需要匹配。
       boolQueryBuilder.minimumShouldMatch(1);
     }
-    if (CollUtil.isNotEmpty(pTags)) {
-
-      /** term：tags查询使用精确匹配，而上面的title、content、summary是analyzed搜索分析
-       用于精确匹配，适合未分析（not analyzed）字段或关键词字段。
-       直接查找与查询完全匹配的值，不会对输入进行分析。*/
-      BoolQueryBuilder tagBoolQueryBuilder = QueryBuilders.boolQuery();
-      for (String pTag : pTags) {
-        tagBoolQueryBuilder.should(QueryBuilders.termQuery("pTags", pTag));
-      }
-      tagBoolQueryBuilder.minimumShouldMatch(1);
-      boolQueryBuilder.filter(tagBoolQueryBuilder);
-    }
     // 构造查询
+    SearchRequest searchRequest = new SearchRequest("passage_v2"); // 指定索引名称
     NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder)
+        .withPageable(pageable)
         .build();
+    log.info("ES查询语句:{}",searchQuery.getQuery().toString());
     SearchHits<PassageESDTO> searchHits = elasticsearchRestTemplate.search(searchQuery,
         PassageESDTO.class);
-
     List<Passage> resourceList = new ArrayList<>();
-    //从根据ES结果数据库查询
-    if (searchHits.hasSearchHits()) {
-      List<SearchHit<PassageESDTO>> searchHitList = searchHits.getSearchHits();
-      List<Long> passageIdList = searchHitList.stream()
-          .map(searchHit -> searchHit.getContent().getPassageId()).collect(Collectors.toList());
-      List<Passage> passageList = baseMapper.selectBatchIds(passageIdList);
-      if (passageList != null) {
-        //从es中查出的数据在数据库中也要存在，否则就是无效数据
-        //核对es和数据库中的数据，根据id检查es中是否有失效的数据
-        Map<Long, List<Passage>> idPassageMap = passageList.stream()
-            .collect(Collectors.groupingBy(Passage::getPassageId));
-        passageIdList.forEach(passageId -> {
-          if (idPassageMap.containsKey(passageId)) {
-            resourceList.add(idPassageMap.get(passageId).get(0));
-          } else {
-            // 从 es 清空 db 已删除的数据
-            String delete = elasticsearchRestTemplate.delete(String.valueOf(passageId),
-                PassageESDTO.class);
-            log.info("Delete outdated passage on ES:  {}", delete);
-          }
-        });
-      }
+    List<SearchHit<PassageESDTO>> searchHitList = searchHits.getSearchHits();
+    if (searchHitList.isEmpty()) {
+      Page<List<PassageInfoVO>> passageInfoVOPage = new Page<>();
+      passageInfoVOPage.setRecords(Collections.singletonList(Collections.emptyList()));
+      passageInfoVOPage.setTotal(0);
+      return passageInfoVOPage;
     }
-    return getPassageInfoVOList(resourceList);
+    List<Long> passageIdList = searchHitList.stream()
+        .map(searchHit -> searchHit.getContent().getPassageId()).collect(Collectors.toList());
+    List<Passage> passageList = baseMapper.selectBatchIds(passageIdList);
+    if (passageList != null) {
+      //从es中查出的数据在数据库中也要存在，否则就是无效数据
+      //核对es和数据库中的数据，根据id检查es中是否有失效的数据
+      Map<Long, List<Passage>> idPassageMap = passageList.stream()
+          .collect(Collectors.groupingBy(Passage::getPassageId));
+      passageIdList.forEach(passageId -> {
+        if (idPassageMap.containsKey(passageId)) {
+          resourceList.add(idPassageMap.get(passageId).get(0));
+        } else {
+          // 从 es 清空 db 已删除的数据
+          String delete = elasticsearchRestTemplate.delete(String.valueOf(passageId),
+              PassageESDTO.class);
+          log.info("Delete outdated passage on ES:  {}", delete);
+        }
+      });
+    }
+    List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(resourceList);
+    Page<List<PassageInfoVO>> listPage = new Page<List<PassageInfoVO>>(
+        searchPassageRequest.getCurrentPage(),
+        searchPassageRequest.getPageSize()).setTotal(resourceList.size())
+        .setRecords(Collections.singletonList(passageInfoVOList));
+
+    return listPage;
+  }
+
+
+  @Override
+  public Page<List<PassageInfoVO>> searchPassageByCategory(
+      SearchPassageRequest searchPassageRequest) {
+    Long categoryId = searchPassageRequest.getId();
+    if (categoryId == null) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    //从tags查找满足categoryId的tag
+    List<Tags> tags = tagsMapper.selectList(
+        new LambdaQueryWrapper<Tags>().eq(Tags::getCategoryId, categoryId));
+    Page<List<PassageInfoVO>> passageInfoVOPage = new Page<>();
+    if (tags.isEmpty()) {
+      passageInfoVOPage.setTotal(0);
+      passageInfoVOPage.setRecords(Collections.emptyList());
+      return passageInfoVOPage;
+    }
+    //获取tag的所有tagIdList，用tagIdList从passage_tag表查找满足的passageId
+    List<Long> tagsIdlist = tags.stream().map(Tags::getTagId).collect(Collectors.toList());
+    Integer pageSize = searchPassageRequest.getPageSize();
+    Integer currentPage = searchPassageRequest.getCurrentPage();
+    Page<PassageTag> passageTagPage = passageTagMapper.selectPage(new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<PassageTag>().in(PassageTag::getTagId, tagsIdlist)
+            .orderByDesc(PassageTag::getCreateTime));
+    if (passageTagPage.getTotal() == 0) {
+      passageInfoVOPage.setTotal(0);
+      passageInfoVOPage.setRecords(Collections.emptyList());
+      return passageInfoVOPage;
+    }
+    List<PassageTag> passageTagList = passageTagPage.getRecords();
+    List<Long> passageIdList = passageTagList.stream().map(PassageTag::getPassageId)
+        .collect(Collectors.toList());
+    List<Passage> passageList = listByIds(passageIdList);
+    if (passageList.isEmpty()) {
+      passageInfoVOPage.setTotal(0);
+      passageInfoVOPage.setRecords(Collections.emptyList());
+      return passageInfoVOPage;
+    }
+    List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passageList);
+    passageInfoVOPage.setTotal(passageTagPage.getTotal());
+    passageInfoVOPage.setRecords(Collections.singletonList(passageInfoVOList));
+    return passageInfoVOPage;
+  }
+
+
+  @Override
+  public Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest) {
+    Long tagId = searchPassageRequest.getId();
+    if (tagId == null) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    Integer pageSize = searchPassageRequest.getPageSize();
+    Integer currentPage = searchPassageRequest.getCurrentPage();
+    Page<PassageTag> passageTagPage = passageTagMapper.selectPage(new Page<>(currentPage, pageSize),
+        new LambdaQueryWrapper<PassageTag>().eq(PassageTag::getTagId, tagId)
+            .orderByDesc(PassageTag::getCreateTime));
+    Page<List<PassageInfoVO>> passageInfoVOPage = new Page<>();
+    if (passageTagPage.getTotal() == 0) {
+      passageInfoVOPage.setTotal(0);
+      passageInfoVOPage.setRecords(Collections.emptyList());
+      return passageInfoVOPage;
+    }
+    List<PassageTag> passageTagList = passageTagPage.getRecords();
+    List<Long> passageIdList = passageTagList.stream().map(PassageTag::getPassageId)
+        .collect(Collectors.toList());
+    List<Passage> passageList = listByIds(passageIdList);
+    if (passageList.isEmpty()) {
+      passageInfoVOPage.setTotal(0);
+      passageInfoVOPage.setRecords(Collections.emptyList());
+      return passageInfoVOPage;
+    }
+    List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passageList);
+    passageInfoVOPage.setTotal(passageTagPage.getTotal());
+    passageInfoVOPage.setRecords(Collections.singletonList(passageInfoVOList));
+    return passageInfoVOPage;
   }
 
   @Override
   public List<PassageTitleVO> getPassageByUserId(Long userId) {
-    LambdaQueryWrapper<Passage> passageQueryWrapper = new LambdaQueryWrapper<>();
-    passageQueryWrapper.eq(Passage::getAuthorId, userId);
-    List<Passage> list = this.list(passageQueryWrapper);
+    List<Passage> list = passageMapper.selectOtherPassageByUserId(userId);
     if (list.isEmpty()) {
       return Collections.emptyList();
     }
@@ -277,6 +364,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
+  //todo 测试
+  @Transactional
   @Override
   public Long addPassage(AddPassageDTO addPassageDTO) {
     Passage passage = getPassage(addPassageDTO);
@@ -284,10 +373,20 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     //前期默认已发布
     passage.setStatus(2);
     boolean save = this.save(passage);
-    if (save) {
-      return passage.getPassageId();
+    Long newPassageId = passage.getPassageId();
+    if (newPassageId == null) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+    Map<Long, String> tags = addPassageDTO.getPtagsMap();
+    if (tags == null) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+    }
+    Set<Long> tagIds = tags.keySet();
+    boolean b = passageTagMapper.insertPassageTags(tagIds, newPassageId);
+    if (!b) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+    }
+    return newPassageId;
   }
 
   @Override
@@ -303,15 +402,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   public Passage getPassage(PassageDTO passageDTO) {
     Passage passage = new Passage();
-    //把list<String>标签转换成json
     BeanUtil.copyProperties(passageDTO, passage);
     if (passageDTO.getClass() == UpdatePassageDTO.class) {
       passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
-    }
-    Map<Long, String> tags = passageDTO.getPtagsMap();
-    if (tags != null) {
-      Set<Long> longs = tags.keySet();
-      passage.setTagsId(JSONUtil.toJsonStr(longs));
     }
     passage.setAuthorId(UserHolder.getUser().getUserId());
     passage.setAuthorName(UserHolder.getUser().getUserName());
@@ -337,7 +430,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     String key = Common.PASSAGE_THUMB_KEY + passageId;
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
-      boolean b=passageMapper.addThumbNum(passageId);
+      boolean b = passageMapper.addThumbNum(passageId);
       //插入用户点赞表
       UserThumbs userThumbs = UserThumbs.builder().userId(userId).passageId(passageId).build();
       int insert = userThumbsMapper.insert(userThumbs);
@@ -355,7 +448,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       int delete = userThumbsMapper.delete(queryWrapper);
       if (b && delete == 1) {
         Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
-        if(remove!=1){
+        if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -386,7 +479,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
       // todo 事务一致性
-      Boolean b=passageMapper.addCollectNum(passageId);
+      Boolean b = passageMapper.addCollectNum(passageId);
       //先插入mysql用户收藏表
       UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
           .build();
@@ -395,14 +488,14 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         //写入redis
         Boolean add = stringRedisTemplate.opsForZSet()
             .add(key, userId.toString(), System.currentTimeMillis());
-        if(Boolean.FALSE.equals(add)){
-          throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.REDIS_UPDATE_ERROR);
+        if (Boolean.FALSE.equals(add)) {
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
     } else {
-      boolean b=passageMapper.subCollectNum(passageId);
+      boolean b = passageMapper.subCollectNum(passageId);
       //删除用户收藏表
       LambdaQueryWrapper<UserCollects> queryWrapper = new LambdaQueryWrapper<>();
       queryWrapper.eq(UserCollects::getUserId, userId).eq(UserCollects::getPassageId, passageId);
@@ -410,8 +503,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 //            userCollectsMapper.deleteById(userCollects);
       if (b && delete == 1) {
         Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
-        if(remove!=1){
-          throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.REDIS_UPDATE_ERROR);
+        if (remove != 1) {
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
@@ -423,7 +516,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   /**
    * @return
-   * @Description: 从 mysql 查询浏览量量前 10 的博客
+   * @Description:
    */
   @Override
   public List<PassageTitleVO> getTopPassages() {
@@ -440,7 +533,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       passageTitleVOS.add(passageTitleVO);
     });
     return passageTitleVOS;
-    // 返回查询的记录
   }
 
   @Override
@@ -454,7 +546,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public String uploadPassageCover(MultipartFile img) {
     String imgUrl = FileUtil.uploadImageLocal(img);
-    //todo 写入数据库
     log.info("img url：" + imgUrl);
     return imgUrl;
   }
@@ -486,7 +577,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .eq(passageId != null, Passage::getPassageId, passageId)
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
             .like(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
-            .select(Passage::getPassageId, Passage::getTagsId, Passage::getStatus,
+            .select(Passage::getPassageId, Passage::getStatus,
                 Passage::getTitle,
                 Passage::getAuthorName, Passage::getAccessTime, Passage::getCommentNum,
                 Passage::getViewNum, Passage::getCollectNum, Passage::getThumbNum,
@@ -515,10 +606,13 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return records.stream().map(passage -> {
       AdminPassageVO adminPassageVO = new AdminPassageVO();
       BeanUtils.copyProperties(passage, adminPassageVO);
-      String tagsId = passage.getTagsId();
-      if (StringUtils.isNotBlank(tagsId)) {
-        Map<Long, String> tagStrList = getTagStrList(tagsId);
-        adminPassageVO.setPTagsMap(tagStrList);
+      List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
+          passage.getPassageId());
+      List<Long> tagIdlist = passageTags.stream().map(PassageTag::getTagId)
+          .collect(Collectors.toList());
+      if (!tagIdlist.isEmpty()) {
+        Map<Long, String> tagMaps = getTagMaps(tagIdlist);
+        adminPassageVO.setPTagsMap(tagMaps);
       }
       return adminPassageVO;
     }).collect(Collectors.toList());
@@ -526,7 +620,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public Boolean rejectPassage(Long passageId) {
-
     LambdaUpdateWrapper<Passage> passageQueryWrapper = new LambdaUpdateWrapper<>();
     passageQueryWrapper.eq(Passage::getPassageId, passageId).set(Passage::getStatus, 3);
     boolean b = this.update(passageQueryWrapper);
@@ -550,12 +643,19 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
+  /**
+   * 删除文章
+   *
+   * @param passageId
+   * @return
+   */
   @Override
   @Transactional
   public boolean deleteByPassageId(Long passageId) {
     boolean b1 = removeById(passageId);
     boolean b2 = commentMapper.deleteByPassageId(passageId);
-    if (b1 && b2) {
+    boolean b3 = passageTagMapper.deleteByPassageId(passageId);
+    if (b1 && b2 && b3) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

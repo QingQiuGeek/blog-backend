@@ -17,6 +17,7 @@ import com.serein.util.JwtHelper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,12 +91,21 @@ class BlogApplicationTests {
     list.add("b");
     list.add("c");
     list.add("d");
+
     System.out.println("List<String>：" + list);
     String jsonStr1 = JSONUtil.toJsonStr(list);
     System.out.println("List<String>转换成json：" + jsonStr1);
     JSONArray objects = JSONUtil.parseArray(jsonStr1);
     List<String> list1 = JSONUtil.toList(objects, String.class);
     System.out.println("Json转换成List<String>：" + list1);
+
+    HashSet<Integer> set = new HashSet<>();
+    set.add(1);
+    set.add(2);
+    set.add(3);
+    String jsonStr = JSONUtil.toJsonStr(set);
+    System.out.println("setJSON："+jsonStr);
+
   }
 
   @Test

@@ -1,10 +1,16 @@
 package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONUtil;
 import com.serein.esdao.PassageESDao;
 import com.serein.mapper.PassageMapper;
+import com.serein.mapper.PassageTagMapper;
+import com.serein.mapper.TagsMapper;
+import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
+import com.serein.model.entity.PassageTag;
+import com.serein.model.entity.Tags;
 import com.serein.model.vo.PassageVO.PassageVO;
 import com.serein.service.impl.PassageServiceImpl;
 import java.util.Date;
@@ -16,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile
@@ -23,7 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  * @Time: 22:27
  * @Description: 增量同步文章到ES
  */
-//@Component
+@Component
 @Slf4j
 public class IncSyncPassageToES {
 
@@ -34,13 +41,16 @@ public class IncSyncPassageToES {
   private PassageESDao passageESDao;
 
   @Resource
-  private PassageServiceImpl passageServiceImpl;
+  PassageTagMapper passageTagMapper;
 
-  //单位分钟
-  private static final int AGO_MINUTES = 600;
+  @Resource
+  TagsMapper tagsMapper;
 
-  //单位分钟
-  private static final int RATE_MINUTES = 5;
+  //单位分钟，同步多久前的文章
+  private static final int AGO_MINUTES = 3;
+
+  //单位分钟，每三分钟同步一次三分钟之前的数据
+  private static final int RATE_MINUTES = 3;
 
   @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
   public void run() {
@@ -48,20 +58,23 @@ public class IncSyncPassageToES {
     Date minutesAgoDate = new Date(new Date().getTime() - AGO_MINUTES * 60 * 1000L);
     List<Passage> passageList = passageMapper.listPassageWithNODelete(minutesAgoDate);
     if (CollUtil.isEmpty(passageList)) {
-      log.info("No find new add passage in {}minutes", AGO_MINUTES * 60 * 1000L);
+      log.info("No find new add passage in {} minutes", AGO_MINUTES * 60 * 1000L);
       return;
     }
     List<PassageESDTO> passageESDTOList = passageList.stream()
         .map(passage -> {
-          PassageVO passageVO = new PassageVO();
-          BeanUtils.copyProperties(passage, passageVO);
-          String tagsId = passage.getTagsId();
-          if (StringUtils.isNotBlank(tagsId)) {
-            Map<Long, String> tagMap = passageServiceImpl.getTagStrList(tagsId);
-            passageVO.setPTagsMap(tagMap);
-            return PassageESDTO.objToDto(passageVO);
-          }
-          return PassageESDTO.objToDto(passageVO);
+          PassageESDTO passageESDTO = new PassageESDTO();
+          BeanUtils.copyProperties(passage, passageESDTO);
+          List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
+              passage.getPassageId());
+          List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
+              .collect(Collectors.toList());
+          List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+          List<String> tagNameList = tags.stream().map(Tags::getTagName)
+              .collect(Collectors.toList());
+          String jsonStr = JSONUtil.toJsonStr(tagNameList);
+          passageESDTO.setTagStr(jsonStr);
+          return passageESDTO;
         })
         .collect(Collectors.toList());
     //每个批次处理的项目数

@@ -37,7 +37,7 @@ public interface PassageMapper extends BaseMapper<Passage> {
   String getAuthorAvatar(Long authorId);
 
 
-  @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary,tagsId from blog.passage where passageId=#{passageId}")
+  @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary from blog.passage where passageId=#{passageId}")
   Passage getPassageInfo(Long passageId);
 
 
@@ -63,6 +63,10 @@ public interface PassageMapper extends BaseMapper<Passage> {
   boolean subThumbNum(Long passageId);
 
 
+  List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
+
+  @Select("select content,title,summary,authorName,passageId from blog.passage")
+  List<Passage> selectPassageESData();
 }
 
 

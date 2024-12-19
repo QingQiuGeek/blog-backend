@@ -51,7 +51,7 @@ public class InterceptorsConfig extends WebMvcConfigurationSupport {
             "/passage/topCollects",
             "/passage/content/{uid}/{pid}",
             "/passage/homePassageList",
-            "/passage/search/text",
+            "/passage/search",
             "/passage/passageInfo/{pid}",
             "/passage/topPassages",
             "/comment/getCommentByCursor",

@@ -1,10 +1,14 @@
 package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.constants.ErrorCode;
+import com.serein.constants.ErrorInfo;
+import com.serein.constants.SearchType;
+import com.serein.exception.BusinessException;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.dto.PassageDTO.AddPassageDTO;
-import com.serein.model.dto.PassageDTO.SearchPassageDTO;
 import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
+import com.serein.model.request.SearchPassageRequest;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageTitleVO;
@@ -84,11 +88,29 @@ public class PassageController {
    * @param
    * @return
    */
-  @PostMapping("/search/text")
-  public BaseResponse<List<PassageInfoVO>> searchFromESByText(
-      @RequestBody SearchPassageDTO searchPassageDTO) {
-    List<PassageInfoVO> passageVOList = passageService.searchFromESByText(searchPassageDTO);
-    return ResultUtil.success(passageVOList);
+  @PostMapping("/search")
+  public BaseResponse<Page<List<PassageInfoVO>>> searchPassage(
+      @RequestBody SearchPassageRequest searchPassageRequest) {
+    String searchType = searchPassageRequest.getSearchType();
+    if (searchType.isBlank()) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    Page<List<PassageInfoVO>> listPage = new Page<>();
+    switch (searchType) {
+      //根据类别搜索，查数据库
+      case SearchType.CATEGORY:
+        listPage = passageService.searchPassageByCategory(searchPassageRequest);
+        break;
+      //根据标签搜索，查数据库
+      case SearchType.TAG:
+        listPage = passageService.searchPassageByTag(searchPassageRequest);
+        break;
+      //根据文本搜索，查ES
+      case SearchType.SEARCH:
+        listPage = passageService.searchPassageFromES(searchPassageRequest);
+        break;
+    }
+    return ResultUtil.success(listPage);
   }
 
 
@@ -107,7 +129,7 @@ public class PassageController {
   }
 
   /**
-   * 根据用户id搜索文章列表 todo 分页查询
+   * 根据用户id搜索文章列表
    *
    * @param uid
    * @return

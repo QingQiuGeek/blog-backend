@@ -1,16 +1,27 @@
-//PUT passage_v1
+
+//{
+//  "_index" : "passage_v1",表名
+//  "_type" : "_doc",表类型
+//  "_id" : "1849451260663562241",数据库文章ID，在这里也作为ES的id
+//  "_score" : 1.0,
+//  "_source" : {
+//    "_class" : "com.serein.model.dto.passageDTO.PassageESDTO",
+//    "passageId" : 1849451260663562241,
+//    "authorName" : "王五",
+//    "title" : "心理学的奥秘",
+//    "content" : "心理学能够解读人类行为...",
+//    "summary" : "心理学",
+//  }
+//}
+
+//ES建表语句
+PUT passage_v1
 {
   "aliases": {
     "passage": {}
   },
   "mappings": {
     "properties": {
-      "passageId": {
-        "type": "keyword"
-      },
-      "authorId": {
-        "type": "keyword"
-      },
       "authorName": {
         "type": "keyword"
       },
@@ -46,9 +57,6 @@
             "ignore_above": 256
           }
         }
-      },
-      "pTags": {
-        "type": "keyword"
       }
     }
   }
