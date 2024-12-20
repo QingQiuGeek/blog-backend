@@ -6,13 +6,9 @@ import com.serein.mapper.TagsMapper;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.Tags;
-import com.serein.model.vo.PassageVO.PassageVO;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
@@ -74,8 +70,9 @@ public class PassageESDTO implements Serializable {
   private String tagStr;
 
 
-  private static final long serialVersionUID = 1L;
 
+
+  private static final long serialVersionUID = 1L;
 
 
 }

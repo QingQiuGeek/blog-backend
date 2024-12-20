@@ -65,7 +65,7 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
 
-  @Select("select content,title,summary,authorName,passageId from blog.passage")
+  @Select("select content,title,summary,authorName,passageId from blog.passage where status=2 and isDelete=1")
   List<Passage> selectPassageESData();
 }
 

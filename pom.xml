@@ -42,6 +42,12 @@
       <version>3.18.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.rholder</groupId>
+      <artifactId>guava-retrying</artifactId>
+      <version>2.0.0</version>
+    </dependency>
+
     <!--  ip属地查询-->
     <dependency>
       <groupId>org.lionsoul</groupId>
@@ -77,7 +83,6 @@
     <!--            <groupId>org.springframework.boot</groupId>-->
     <!--            <artifactId>spring-boot-starter-freemarker</artifactId>-->
     <!--        </dependency>-->
-
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>

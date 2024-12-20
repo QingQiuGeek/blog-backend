@@ -68,8 +68,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="PassageTag" />
-                  <option name="tableName" value="passage_tag" />
+                  <option name="className" value="EsSyncFailRecord" />
+                  <option name="tableName" value="es_sync_fail_record" />
                 </TableUIInfo>
               </list>
             </option>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.serein.mapper.EsSyncFailRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.serein.model.entity.EsSyncFailRecord">
+            <result property="passageId" column="passageId" jdbcType="BIGINT"/>
+            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        passageId,createTime
+    </sql>
+</mapper>

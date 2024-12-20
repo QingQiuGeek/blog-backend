@@ -58,13 +58,13 @@ push到远程
    * 博客详情页的目录功能
  * 用户可以修改用户信息，头像、标签、用户名编辑 修改功能,用弹框modal实现 √
  * 短信异步 √
- * 后端搜索接口 前端autoComplete组件
- * ES降级兜底 面试鸭
- * 增量失败 重试机制 guava retrying库
- * 前端点赞收藏关注防抖lodash
+ * 后端搜索接口 前端autoComplete组件 √
+ * ES降级兜底 面试鸭  
+ * 增量失败 重试机制 guava retrying库 √
+ * 前端点赞收藏关注防抖lodash √
  * 接入hotkey，实现缓存热文和黑名单IP拦截
  * 事务 √
- * 接入站点统计baidu google 管理页数据管理引入Echarts等
+ * 接入站点统计baidu google 管理页数据管理引入Echarts等 
  * IP地址解析 √
  * RBAC
  * 登录时检查账户是否禁用 √
@@ -157,8 +157,8 @@ token保存到redis，拦截器校验token，通过则从redis取出token，若�
 * passage表  categoryID  pTags(json数组)
 * category表 cTags(json数组) 不需要category-tag
 * 用户创作时，为文章选定cTags，cTags内容直接作为pTags
-* mysql向es迁移文章时只迁移审核通过且没有删除的文章，增量同步、全量同步！！！
-* 用户可以根据文章ptags搜索文章
+* mysql向es迁移文章时只迁移审核通过且没有删除的文章，增量同步、全量同步！！！√
+* 用户可以根据文章ptags搜索文章 √
 
 
   

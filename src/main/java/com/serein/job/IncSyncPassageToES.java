@@ -2,24 +2,26 @@ package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.serein.esdao.PassageESDao;
+import com.serein.mapper.EsSyncFailRecordMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
-import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
+import com.serein.model.entity.EsSyncFailRecord;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.Tags;
-import com.serein.model.vo.PassageVO.PassageVO;
-import com.serein.service.impl.PassageServiceImpl;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -38,13 +40,7 @@ public class IncSyncPassageToES {
   private PassageMapper passageMapper;
 
   @Resource
-  private PassageESDao passageESDao;
-
-  @Resource
-  PassageTagMapper passageTagMapper;
-
-  @Resource
-  TagsMapper tagsMapper;
+  private SyncDataToES syncDataToES;
 
   //单位分钟，同步多久前的文章
   private static final int AGO_MINUTES = 3;
@@ -61,33 +57,15 @@ public class IncSyncPassageToES {
       log.info("No find new add passage in {} minutes", AGO_MINUTES * 60 * 1000L);
       return;
     }
-    List<PassageESDTO> passageESDTOList = passageList.stream()
-        .map(passage -> {
-          PassageESDTO passageESDTO = new PassageESDTO();
-          BeanUtils.copyProperties(passage, passageESDTO);
-          List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
-              passage.getPassageId());
-          List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
-              .collect(Collectors.toList());
-          List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-          List<String> tagNameList = tags.stream().map(Tags::getTagName)
-              .collect(Collectors.toList());
-          String jsonStr = JSONUtil.toJsonStr(tagNameList);
-          passageESDTO.setTagStr(jsonStr);
-          return passageESDTO;
-        })
-        .collect(Collectors.toList());
+
+    List<PassageESDTO> passageESDTOList = syncDataToES.objToESDto(passageList);
+
     //每个批次处理的项目数
     final int pageSize = 50;
     int total = passageESDTOList.size();
     log.info("IncSyncPassageToES start, total {}", total);
-    for (int i = 0; i < total; i += pageSize) {
-      //计算当前批次的结束索引，确保不会超过总数。
-      int end = Math.min(i + pageSize, total);
-      log.info("sync from index {} to {}", i, end);
-      //subList获取需要处理的列表部分。
-      passageESDao.saveAll(passageESDTOList.subList(i, end));
-    }
+    syncDataToES.syncDataToES(total, pageSize, passageESDTOList);
+
     log.info("IncSyncPassageTOES end, total {}", total);
   }
 }
