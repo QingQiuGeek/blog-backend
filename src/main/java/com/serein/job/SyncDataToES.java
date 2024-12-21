@@ -41,9 +41,9 @@ public class SyncDataToES {
   @Resource
   private PassageESDao passageESDao;
 
-  public static final int retryNum = 3;
+  public  final int retryNum = 3;
 
-  public static final int retryWaitTime = 3;
+  public  final int retryWaitTime = 3;
 
   // 创建一个retryer实例，最多重试3次，每次等待2秒
   Retryer<Void> retryer = RetryerBuilder.<Void>newBuilder()

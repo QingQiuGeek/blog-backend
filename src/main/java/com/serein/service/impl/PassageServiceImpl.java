@@ -9,11 +9,13 @@ import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
+import com.serein.constants.OperationPassageType;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.CategoryMapper;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.PassageTagMapper;
+import com.serein.mapper.PassageTimePublishMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserMapper;
@@ -24,6 +26,7 @@ import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
+import com.serein.model.entity.PassageTimePublish;
 import com.serein.model.entity.Tags;
 import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
@@ -78,6 +81,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Autowired
   ElasticsearchRestTemplate elasticsearchRestTemplate;
 
+  @Autowired
+  private PassageTimePublishMapper passageTimePublishMapper;
   @Autowired
   StringRedisTemplate stringRedisTemplate;
 
@@ -377,28 +382,32 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
-  //todo 测试
   @Transactional
   @Override
   public Long addPassage(PassageDTO addPassageDTO) {
     Passage passage = getPassage(addPassageDTO);
-    //status 0草稿  1待审核 2已发布
-    //前期默认已发布
-    passage.setStatus(2);
-    //保存文章
     passageMapper.insertPassage(passage);
     Long newPassageId = passage.getPassageId();
     if (newPassageId == null) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+    }
+    if (addPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
+      PassageTimePublish passageTimePublish = new PassageTimePublish();
+      passageTimePublish.setPassageId(newPassageId);
+      passageTimePublish.setPublishTime(new Date(addPassageDTO.getPublishTime()));
+      int insert = passageTimePublishMapper.insert(passageTimePublish);
+      if(insert!=1){
+        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+      }
     }
     List<Long> tagIdList = addPassageDTO.getTagIdList();
     if (tagIdList == null) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     //保存文章标签
     boolean b = passageTagMapper.insertPassageTags(tagIdList, newPassageId);
     if (!b) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     return passage.getPassageId();
   }
@@ -407,17 +416,26 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public Long updatePassage(PassageDTO updatePassageDTO) {
     Passage passage = getPassage(updatePassageDTO);
     //更新文章时，审核通过时间在数据库中自动更新
-    boolean b1 = this.updateById(passage);
+    int b1 = passageMapper.updatePassage(passage);
+    if (updatePassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
+      PassageTimePublish passageTimePublish = new PassageTimePublish();
+      passageTimePublish.setPassageId(Long.valueOf(updatePassageDTO.getPassageId()));
+      passageTimePublish.setPublishTime(new Date(updatePassageDTO.getPublishTime()));
+      int insert = passageTimePublishMapper.insert(passageTimePublish);
+      if(insert!=1){
+        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+      }
+    }
     List<Long> tagIdList = updatePassageDTO.getTagIdList();
     if (tagIdList == null) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     //更新passage_tag之前要删除老的数据
     passageTagMapper.deleteTagByPassageId(passage.getPassageId());
     //保存文章标签
     boolean b2 = passageTagMapper.insertPassageTags(tagIdList, passage.getPassageId());
-    if (!b1 && !b2) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+    if (b1 != 1 && !b2) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     return passage.getPassageId();
   }
@@ -425,10 +443,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public Passage getPassage(PassageDTO passageDTO) {
     Passage passage = new Passage();
     BeanUtil.copyProperties(passageDTO, passage);
-//    if (passageDTO.getClass() == UpdatePassageDTO.class) {
-//      passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
-//    }
-    //前端传过来的passageId是string类型
     if (passageDTO.getPassageId() != null) {
       passage.setPassageId(Long.valueOf(passageDTO.getPassageId()));
     }
@@ -437,6 +451,19 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     passage.setAuthorId(loginUserVO.getUserId());
+    int type = passageDTO.getType();
+    switch (type) {
+      case OperationPassageType.SAVE:
+        passage.setStatus(0);
+        break;
+      case OperationPassageType.PUBLISH:
+        passage.setStatus(2);
+        break;
+      case OperationPassageType.TIME_PUBLISH:
+        //定时发布就先作为草稿保存，等定时任务修改status
+        passage.setStatus(0);
+        break;
+    }
     return passage;
   }
 
@@ -571,7 +598,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
     //判断是否是hotip
     IPUtil.isHotIp();
-
     //浏览量+1
     passageMapper.updateViewNum(pid);
     PassageContentVO passageContent;

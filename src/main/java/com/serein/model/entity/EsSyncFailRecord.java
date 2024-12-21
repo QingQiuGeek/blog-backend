@@ -18,6 +18,7 @@ public class EsSyncFailRecord implements Serializable {
     /**
      * 同步失败的文章id
      */
+    @TableId(type = IdType.AUTO)
     private Long passageId;
 
     /**

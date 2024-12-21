@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableAsync
  @EnableTransactionManagement //开启注解方式的事务管理
 //开启定时任务增量同步
-// @EnableScheduling
+ @EnableScheduling
 // 如果mapper层已经使用了@Mapper注解，那么这里就没有必要使用mapperScan了
 // @MapperScan("com.serein.mapper")
 public class BlogApplication {

@@ -30,7 +30,6 @@
         collectNum,createTime,updateTime,
         accessTime,status,isDelete
   </sql>
-  <!--	REPLACE INTO 有主键则更新，无主键则插入-->
   <insert id="insertPassage" useGeneratedKeys="true" keyProperty="passageId">
     insert into blog.passage (authorId, title, content, thumbnail, summary, status)
     values (#{authorId}, #{title}, #{content}, #{thumbnail}, #{summary}, #{status})

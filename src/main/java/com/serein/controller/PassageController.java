@@ -3,6 +3,7 @@ package com.serein.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
+import com.serein.constants.OperationPassageType;
 import com.serein.constants.SearchType;
 import com.serein.exception.BusinessException;
 import com.serein.model.QueryPageRequest;
@@ -157,21 +158,26 @@ public class PassageController {
   }
 
   /**
-   * 添加文章
+   * 文章状态status 0草稿  1待审核  2已发布  3驳回
+   * <p>
+   * 文章操作type 0初次保存和修改  2立刻发布  4定时发布
    *
    * @param passageDTO
    * @return
    */
-  @PostMapping("/add")
+  @PostMapping("/save")
   public BaseResponse<String> addPassage(@RequestBody PassageDTO passageDTO) {
-    Long passageId;
+    Long passageId = null;
+//    有passageId说明就是更新，那么就进行更新
     if (StringUtils.isNotBlank(passageDTO.getPassageId())) {
-      passageId = passageService.updatePassage(passageDTO);
-      return ResultUtil.success(passageId.toString());
+        passageId = passageService.updatePassage(passageDTO);
+        return ResultUtil.success(passageId.toString());
     }
+    //没有passageId那么就是初次保存、立刻发布、定时发布，具体哪个根据type判断
     passageId = passageService.addPassage(passageDTO);
     return ResultUtil.success(passageId.toString());
   }
+
 
   /**
    * 添加文章封面

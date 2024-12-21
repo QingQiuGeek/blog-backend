@@ -34,9 +34,8 @@ public interface PassageMapper extends BaseMapper<Passage> {
   PassageContentVO getPassageContentByPid(@Param("uid") Long uid, @Param("pid") Long pid);
 
 
-  @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary from blog.passage where passageId=#{passageId}")
+  @Select("select passageId,authorId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary from blog.passage where passageId=#{passageId}")
   Passage getPassageInfo(Long passageId);
-
 
   @Select("select count(*) from blog.user_thumbs where userId=#{uid}")
   Integer getThumbNum(Long uid);
@@ -59,7 +58,6 @@ public interface PassageMapper extends BaseMapper<Passage> {
   @Update("update blog.passage set thumbNum=thumbNum-1 where passageId=#{passageId}")
   boolean subThumbNum(Long passageId);
 
-
   List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
 
   @Select("select content,title,summary,passageId from blog.passage where status=2 and isDelete=1")
@@ -67,7 +65,10 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   void insertPassage(Passage passage);
 
-  void updatePassage(Passage passage);
+  int updatePassage(Passage passage);
+
+  @Update("update blog.passage set status=2 where passageId=#{passageId}")
+  int publishPassage(Long passageId);
 }
 
 

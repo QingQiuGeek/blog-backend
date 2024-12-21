@@ -23,7 +23,7 @@ public interface UserMapper extends BaseMapper<User> {
       @Param("commentUserIdList") List<Long> commentUserIdList);
 
   @Update("update blog.user set ipAddress = #{ipAddress} where userId = #{userId}")
-  void updateIpAddress(String ipAddress, Long userId);
+  void updateIpAddress(@Param("ipAddress") String ipAddress,@Param("userId") Long userId);
 
   @Update("update blog.user set avatarUrl=#{avatarUrl} where userId=#{userId}")
   boolean updateAvatar( @Param("userId") Long userId,@Param("avatarUrl") String avatarUrl);

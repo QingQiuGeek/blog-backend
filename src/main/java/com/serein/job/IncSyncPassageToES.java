@@ -43,11 +43,12 @@ public class IncSyncPassageToES {
   private SyncDataToES syncDataToES;
 
   //单位分钟，同步多久前的文章
-  private static final int AGO_MINUTES = 3;
+  private  final int AGO_MINUTES = 3;
 
   //单位分钟，每三分钟同步一次三分钟之前的数据
-  private static final int RATE_MINUTES = 3;
+  private  final int RATE_MINUTES = 3;
 
+  //todo 开启定时任务
 //  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
   public void run() {
     // 查询近 5 分钟内的数据

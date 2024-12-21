@@ -2,6 +2,7 @@ package com.serein.model.dto.PassageDTO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -20,6 +21,12 @@ public class PassageDTO implements Serializable {
 
 
   private String passageId;
+
+//  文章操作 0初次保存和修改  2立刻发布  4定时发布
+  private int type;
+
+  //定时发布的时间
+  private Long publishTime;
 
   /**
    * 文章标题
