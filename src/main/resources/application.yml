@@ -119,4 +119,11 @@ oss:
 #jwt:
 #  token:
 #    tokenExpiration: 10 #有效时间,单位分钟
-#    tokenSignKey: 'SEREINSMILE'  #当前程序签名秘钥 自定义
+
+#java -jar worker-0.0.4-SNAPSHOT.jar --etcd.server=127.0.0.1:2379
+hotkey:
+  push-period: 60
+  app-name: blog
+  etcd-server: http://localhost:2379
+#  hoeKey默认存在本地缓存，这里我就存在redis
+  caffeine-size: 1000

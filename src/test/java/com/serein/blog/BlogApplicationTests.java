@@ -197,9 +197,21 @@ class BlogApplicationTests {
     UserVO userVO = new UserVO();
     userVO.setMail("3343@qq.com");
     userVO.setUserName("tom");
-    Map<String, Object> map = BeanUtil.beanToMap(userVO, String.valueOf(new HashMap<>()));
+    Map<String, Object> map = BeanUtil.beanToMap(userVO);
+    Map<String, String> stringMap = new HashMap<>();
+    // 遍历原始 map，将所有值转换为字符串
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      // 如果值是 Long 类型，转换为字符串
+      if (value instanceof Long) {
+        stringMap.put(key, value.toString());
+      } else {
+        stringMap.put(key, String.valueOf(value));  // 对于其他类型，直接转换为字符串
+      }
+    }
     String tokenKey = Common.LOGIN_TOKEN_KEY + token;
-    stringRedisTemplate.opsForHash().putAll(tokenKey, map);
+    stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
 //        stringRedisTemplate.opsForValue().set(tokenKey,"userVO");
 //        String s = stringRedisTemplate.opsForValue().get(Common.LOGIN_TOKEN_KEY+token);
     //userVO

@@ -10,6 +10,14 @@ package com.serein.constants;
 public interface Common {
 
   //  A:\IDEA\blog\src\main\resources\suploadImg
+
+  String HOT_PASSAGE_KEY="hotPassage";
+
+  String HOT_IP_KEY="hotIp";
+
+  Long HOT_PASSAGE_DURATION=60L;
+
+
   String IMG_UPLOAD_DIR = "A:/IDEA/blog/src/main/resources/uploadImg/";
 
   //限制可上传的图片大小

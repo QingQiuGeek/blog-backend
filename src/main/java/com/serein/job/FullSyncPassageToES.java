@@ -43,7 +43,7 @@ public class FullSyncPassageToES implements CommandLineRunner {
     }
     List<PassageESDTO> passageESDTOList = syncDataToES.objToESDto(postList);
 
-    final int pageSize = 500;
+    final int pageSize = 5;
     int total = passageESDTOList.size();
     log.info("FullSyncPassageTOES start, total {}", total);
     syncDataToES.syncDataToES(total, pageSize, passageESDTOList);

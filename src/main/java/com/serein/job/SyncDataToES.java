@@ -42,26 +42,29 @@ public class SyncDataToES {
 
   public static final int retryWaitTime = 3;
 
+  // 创建一个retryer实例，最多重试3次，每次等待2秒
+  Retryer<Void> retryer = RetryerBuilder.<Void>newBuilder()
+      .retryIfExceptionOfType(Exception.class)
+      // 如果是Exception类型异常则进行重试
+      .withWaitStrategy(WaitStrategies.fixedWait(retryWaitTime, TimeUnit.SECONDS))
+      // 每次等待2秒
+      .withStopStrategy(StopStrategies.stopAfterAttempt(retryNum))
+      // 最多重试3次
+      .build();
   public void syncDataToES(int total, int pageSize, List<PassageESDTO> passageESDTOList) {
-
-    // 创建一个retryer实例，最多重试3次，每次等待2秒
-    Retryer<Void> retryer = RetryerBuilder.<Void>newBuilder()
-        .retryIfExceptionOfType(Exception.class)
-        // 如果是Exception类型异常则进行重试
-        .withWaitStrategy(WaitStrategies.fixedWait(retryWaitTime, TimeUnit.SECONDS))
-        // 每次等待2秒
-        .withStopStrategy(StopStrategies.stopAfterAttempt(retryNum))
-        // 最多重试3次
-        .build();
-    for (int i = 0; i < total; i += pageSize) {
+    for (int i = 1; i <= total; i += pageSize) {
       int end = Math.min(i + pageSize, total);
       log.info("sync from {} to {}", i, end);
       try {
         int finalI = i;
         retryer.call(() -> {
           try {
-            log.info("同步文章ID:{}", passageESDTOList.get(finalI).getPassageId());
-            passageESDao.saveAll(passageESDTOList.subList(finalI, end));
+            List<PassageESDTO> passageESDTOS = passageESDTOList.subList(finalI, end);
+            passageESDTOS.forEach(passageESDTO -> {
+              log.info("同步文章:{}",passageESDTO.getPassageId());
+            });
+            passageESDao.saveAll(passageESDTOS);
+            log.info("该批次同步文章成功");
             return null;
           } catch (Exception e) {
             log.error("同步失败，进行重试", e);

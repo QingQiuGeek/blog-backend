@@ -1,5 +1,10 @@
 package com.serein.util;
 
+import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
+import com.serein.constants.Common;
+import com.serein.constants.ErrorCode;
+import com.serein.constants.ErrorInfo;
+import com.serein.exception.BusinessException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -10,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * @Author:懒大王Smile
@@ -154,5 +161,22 @@ public class IPUtil {
 
   }
 
+
+  /**
+   * 对于请求次数多的ip，进行限流
+   */
+  public static void isHotIp() {
+    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (requestAttributes == null) {
+      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
+    }
+    HttpServletRequest request = requestAttributes.getRequest();
+    String hotIpKey = Common.HOT_IP_KEY + IPUtil.getIpAddr(request);
+    boolean hotIP = JdHotKeyStore.isHotKey(hotIpKey);
+    if (hotIP) {
+      //对于请求次数多的ip，进行限流
+      throw new BusinessException(ErrorCode.SYSTEM_BUSY, ErrorInfo.SYSTEM_BUSY);
+    }
+  }
 }
 

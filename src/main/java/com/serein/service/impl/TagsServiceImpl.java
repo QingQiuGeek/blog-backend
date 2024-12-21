@@ -12,6 +12,7 @@ import com.serein.model.entity.Tags;
 import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.vo.TagVO.TagVO;
 import com.serein.service.TagsService;
+import com.serein.util.IPUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -37,6 +38,7 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
 
   @Override
   public List<TagVO> getRandomTags() {
+    IPUtil.isHotIp();
     List<Tags> tagList = tagsMapper.getRandomTags();
     log.info("getRandomTags tagList：{}", tagList);
     List<TagVO> tagVOList = getTagVOList(tagList);

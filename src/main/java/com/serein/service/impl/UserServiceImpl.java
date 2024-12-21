@@ -325,7 +325,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       userVO.setIpAddress(ipRegion);
       String interestTag = byId.getInterestTag();
       if (StringUtils.isNotBlank(interestTag)) {
-        List<Long> tagIdList = JSONUtil.toList(interestTag, Long.class);
+        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(interestTag), Long.class);
         List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         userVO.setInterestTag(tagNameList);
@@ -602,7 +602,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     LoginUserVO loginUserVO = new LoginUserVO();
     BeanUtil.copyProperties(queryUser, loginUserVO);
     loginUserVO.setIpAddress(ipRegion);
-    List<Long> tagIdList = JSONUtil.toList(queryUser.getInterestTag(), Long.class);
+    List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(queryUser.getInterestTag()), Long.class);
     List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
     List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
     loginUserVO.setInterestTag(tagNameList);
@@ -622,18 +622,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     //UserHolder.saveUser(loginUserVO);
     if (!StringUtils.isBlank(user.getInterestTag())) {
       //把数据库中string类型的json转换成list<String>
-      List<String> pTagList = JSONUtil.toList(user.getInterestTag(), String.class);
+      List<String> pTagList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), String.class);
       loginUserVO.setInterestTag(pTagList);
     }
     String token = UUID.randomUUID(true).toString(false);
     //以LOGIN_TOKEN_KEY+userid为key，loginUserVO为值序列化存到redis
     log.info(loginUserVO.getUserId() + "用户的token: " + token);
     loginUserVO.setToken(token);
-    Map<String, Object> map = BeanUtil.beanToMap(loginUserVO, new HashMap<>(),
-        CopyOptions.create().setIgnoreNullValue(true)
-            .setFieldValueEditor((name, value) -> value.toString()));
+
+
+    Map<String, Object> map = BeanUtil.beanToMap(loginUserVO, false,true);
+    Map<String, String> stringMap = new HashMap<>();
+    // 遍历原始 map，将所有值转换为字符串
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      // 如果值是 Long 类型，转换为字符串
+      if (value instanceof Long) {
+        stringMap.put(key, value.toString());
+      } else {
+        stringMap.put(key, String.valueOf(value));  // 对于其他类型，直接转换为字符串
+      }
+    }
     String tokenKey = Common.LOGIN_TOKEN_KEY + token;
-    stringRedisTemplate.opsForHash().putAll(tokenKey, map);
+    stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
     stringRedisTemplate.expire(tokenKey, Common.LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
     //  String token = jwtHelper.createToken(loginUserVO.getUserId());
     //设置token有效期10min，用户进行操作时会刷新redis的token有效期
@@ -792,7 +804,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     loginUserVO1.setIpAddress(ipRegion);
     String interestTag = user.getInterestTag();
     if (StringUtils.isNotBlank(interestTag)) {
-      List<Long> tagIdlist = JSONUtil.toList(interestTag, Long.class);
+      List<Long> tagIdlist = JSONUtil.toList(JSONUtil.parseArray(interestTag), Long.class);
       List<Tags> tags = tagsMapper.selectBatchIds(tagIdlist);
       List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
       loginUserVO1.setInterestTag(tagNameList);
@@ -855,7 +867,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       AdminUserVO adminUserVO = new AdminUserVO();
       BeanUtils.copyProperties(user, adminUserVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<Long> tagIdList = JSONUtil.toList(user.getInterestTag(), Long.class);
+        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), Long.class);
         List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         adminUserVO.setInterestTag(tagNameList);
@@ -875,7 +887,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       UserVO userVO = new UserVO();
       BeanUtils.copyProperties(user, userVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<Long> tagIdList = JSONUtil.toList(user.getInterestTag(), Long.class);
+        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), Long.class);
         List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         userVO.setInterestTag(tagNameList);

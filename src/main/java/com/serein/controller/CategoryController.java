@@ -41,6 +41,11 @@ public class CategoryController {
     return ResultUtil.success(categoryMap);
   }
 
+
+  /**
+   * 修改个人标签和文章标签
+   * @return
+   */
   @GetMapping("/getCategoriesAndTags")
   public BaseResponse<List<CategoryAndTags>> getCategoriesAndTags() {
     List<CategoryAndTags> categoryAndTagsList = categoryService.getCategoriesAndTags();

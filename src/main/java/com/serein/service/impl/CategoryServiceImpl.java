@@ -17,6 +17,8 @@ import com.serein.model.vo.CategoryVO.CategoryAndTags;
 import com.serein.model.vo.CategoryVO.CategoryVO;
 import com.serein.model.vo.TagVO.TagVO;
 import com.serein.service.CategoryService;
+import com.serein.service.PassageService;
+import com.serein.util.IPUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -41,13 +43,17 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     implements CategoryService {
 
   @Autowired
-  CategoryMapper categoryMapper;
+  private CategoryMapper categoryMapper;
 
   @Autowired
-  TagsMapper tagsMapper;
+  private TagsMapper tagsMapper;
+
+  @Autowired
+  private PassageService passageService;
 
   @Override
   public Page<List<CategoryVO>> getCategories(CategoryPageRequest categoryPageRequest) {
+    IPUtil.isHotIp();
     int currentPage = categoryPageRequest.getCurrentPage();
     int pageSize = categoryPageRequest.getPageSize();
     Page<Category> categoryPage = new Page<>(currentPage, pageSize);
@@ -72,7 +78,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     Long categoryId = adminCategoryPageRequest.getCategoryId();
     Date endTime = adminCategoryPageRequest.getEndTime();
     Date startTime = adminCategoryPageRequest.getStartTime();
-
     Page<Category> categoryPage = new Page<>(currentPage, pageSize);
     Page<Category> page = page(categoryPage,
         new LambdaQueryWrapper<Category>().orderByDesc(Category::getUpdateTime)

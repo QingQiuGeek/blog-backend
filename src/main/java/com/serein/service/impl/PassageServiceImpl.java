@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
@@ -37,6 +38,7 @@ import com.serein.model.vo.UserVO.LoginUserVO;
 import com.serein.service.PassageService;
 import com.serein.service.PassageTagService;
 import com.serein.util.FileUtil;
+import com.serein.util.IPUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -50,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -106,6 +107,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
+    //判断刷子用户
+    IPUtil.isHotIp();
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
     //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
@@ -233,7 +236,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder)
         .withPageable(pageable)
         .build();
-    log.info("ES查询语句:{}",searchQuery.getQuery().toString());
+    log.info("ES查询语句:{}", searchQuery.getQuery().toString());
     SearchHits<PassageESDTO> searchHits = elasticsearchRestTemplate.search(searchQuery,
         PassageESDTO.class);
     List<Passage> resourceList = new ArrayList<>();
@@ -351,6 +354,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public List<PassageTitleVO> getPassageByUserId(Long userId) {
+    if (userId == null) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    IPUtil.isHotIp();
+
     List<Passage> list = passageMapper.selectOtherPassageByUserId(userId);
     if (list.isEmpty()) {
       return Collections.emptyList();
@@ -478,7 +486,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
-      // todo 事务一致性
       Boolean b = passageMapper.addCollectNum(passageId);
       //先插入mysql用户收藏表
       UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
@@ -515,12 +522,15 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
 
   /**
+   * todo top10
+   *
    * @return
    * @Description:
    */
   @Override
   public List<PassageTitleVO> getTopPassages() {
     //根据viewNum降序获取前10
+    IPUtil.isHotIp();
     Page<Passage> page = new Page<>(1, 10);
     LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
     queryWrapper.orderByDesc(Passage::getViewNum);
@@ -537,10 +547,66 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public PassageContentVO getPassageContentByPassageId(Long uid, Long pid) {
+    if (pid == null) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    //判断是否是hotip
+    IPUtil.isHotIp();
+
     //浏览量+1
     passageMapper.updateViewNum(pid);
-    return passageMapper.getPassageContentByPid(uid, pid);
+    PassageContentVO passageContent;
+    String hotKey = Common.HOT_PASSAGE_KEY + pid;
+    Object hotPassage = JdHotKeyStore.getValue(hotKey);
+    if (hotPassage == null) {
+      passageContent = passageMapper.getPassageContentByPid(uid, pid);
+      JdHotKeyStore.smartSet(hotKey, passageContent);
+      return passageContent;
+    }
+    return (PassageContentVO) hotPassage;
 
+//    return  passageContent;
+    //使用缓存好的value即可
+//    boolean isHot = JdHotKeyStore.isHotKey(hotKey);
+//    //获取hotKey并上报etcd统计次数
+//    if (isHot) {
+//      //是hotKey就从redis取出来
+//      Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(hotKey);
+//      if (!map.isEmpty()) {
+//        passageContent = BeanUtil.fillBeanWithMap(map, new PassageContentVO(), false);
+//        log.info("{}", passageContent);
+//        return passageContent;
+//      }
+//    }
+//    log.info("no hot key");
+//    passageContent = passageMapper.getPassageContentByPid(uid, pid);
+//    //刚才已经上报过一次，这里再判断，是hotKey就保存在redis
+//    boolean isHot2 = JdHotKeyStore.isHotKey(hotKey);
+//    if (isHot2) {
+//      Map<String, String> stringMap = getStringMap(passageContent);
+//      stringRedisTemplate.opsForHash().putAll(hotKey, stringMap);
+//      stringRedisTemplate.expire(hotKey, Common.HOT_PASSAGE_DURATION, TimeUnit.MINUTES);
+//    }
+//    return passageContent;
+  }
+
+
+  private static Map<String, String> getStringMap(PassageContentVO passageContent) {
+    Map<String, Object> map = BeanUtil.beanToMap(passageContent, false, true);
+    Map<String, String> stringMap = new HashMap<>();
+    // 遍历原始 map，将所有值转换为字符串
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      // 如果值是 Long 类型，转换为字符串
+      if (value instanceof Long) {
+        stringMap.put(key, value.toString());
+      } else {
+        stringMap.put(key, String.valueOf(value));
+        // 对于其他类型，直接转换为字符串
+      }
+    }
+    return stringMap;
   }
 
   @Override
@@ -559,6 +625,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public Page<List<AdminPassageVO>> getPassageList(
       AdminPassageQueryPageRequest adminPassageQueryPageRequest) {
+    IPUtil.isHotIp();
     Long passageId = adminPassageQueryPageRequest.getPassageId();
     int currentPage = adminPassageQueryPageRequest.getCurrentPage();
     int pageSize = adminPassageQueryPageRequest.getPageSize();

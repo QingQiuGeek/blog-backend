@@ -14,6 +14,7 @@ import com.serein.model.vo.PassageVO.PassageInfoVO;
 import com.serein.model.vo.PassageVO.PassageTitleVO;
 import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
+import com.serein.util.IPUtil;
 import com.serein.util.ResultUtil;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,13 +85,14 @@ public class PassageController {
 
   /**
    * 搜索文章
-   *
+   *todo hotkey
    * @param
    * @return
    */
   @PostMapping("/search")
   public BaseResponse<Page<List<PassageInfoVO>>> searchPassage(
       @RequestBody SearchPassageRequest searchPassageRequest) {
+    IPUtil.isHotIp();
     String searchType = searchPassageRequest.getSearchType();
     if (searchType.isBlank()) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
@@ -116,7 +118,7 @@ public class PassageController {
 
   /**
    * 根据文章id搜索文章Content
-   *
+   *todo hotkey 限流
    * @param pid
    * @return
    */
@@ -129,8 +131,7 @@ public class PassageController {
   }
 
   /**
-   * 根据用户id搜索文章列表
-   *
+   * 根据用户id搜索文章列表，获取用户其他文章
    * @param uid
    * @return
    */
@@ -140,15 +141,10 @@ public class PassageController {
     return ResultUtil.success(PassageTitleVOList);
   }
 
-  /*
-  * 获取文章信息 collectNum,
-   viewNum,
-   commentNum,
-   thumbNum,
-   isCollect,
-   isThumb,
-   accessTime
-   title,summary这些数据在主页已经存在，那么传给passageDetails复用
+  /**
+   * 文章详情页 获取文章点赞收藏等信息
+   * @param pid
+   * @return
    */
   @GetMapping("/passageInfo/{pid}")
   public BaseResponse<PassageInfoVO> getPassageInfo(@PathVariable String pid) {

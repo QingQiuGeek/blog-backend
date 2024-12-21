@@ -42,9 +42,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
   @Autowired
-  PassageService passageService;
+  private PassageService passageService;
+
   @Autowired
-  UserService userService;
+  private UserService userService;
 
 
   /**
