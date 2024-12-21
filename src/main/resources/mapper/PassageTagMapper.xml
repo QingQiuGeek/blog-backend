@@ -15,10 +15,10 @@
         id,passageId,tagId,
         createTime
     </sql>
-  <insert id="insertPassageTags" parameterType="map">
-    INSERT INTO blog.passage_tag (passageId, tagId)
+  <insert id="insertPassageTags" parameterType="list">
+    INSERT INTO blog.passage_tag (passageId, tagId) values
     <foreach collection="tagIds" item="tagId" separator=",">
-      VALUES (#{newPassageId}, #{tagId})
+       (#{newPassageId}, #{tagId})
     </foreach>
   </insert>
 

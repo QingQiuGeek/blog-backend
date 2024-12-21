@@ -6,6 +6,7 @@ import com.serein.model.vo.CommentVO.CommentUserInfoVO;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 /**
@@ -26,6 +27,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Update("update blog.user set avatarUrl=#{avatarUrl} where userId=#{userId}")
   boolean updateAvatar( @Param("userId") Long userId,@Param("avatarUrl") String avatarUrl);
+
+  @Select("select avatarUrl,userName from blog.user where userId=#{userId}")
+  User getAuthorInfo(Long userId);
 }
 
 

@@ -172,11 +172,12 @@ public class IPUtil {
     }
     HttpServletRequest request = requestAttributes.getRequest();
     String hotIpKey = Common.HOT_IP_KEY + IPUtil.getIpAddr(request);
-    boolean hotIP = JdHotKeyStore.isHotKey(hotIpKey);
-    if (hotIP) {
-      //对于请求次数多的ip，进行限流
-      throw new BusinessException(ErrorCode.SYSTEM_BUSY, ErrorInfo.SYSTEM_BUSY);
-    }
+
+//    boolean hotIP = JdHotKeyStore.isHotKey(hotIpKey);
+//    if (hotIP) {
+//      //对于请求次数多的ip，进行限流
+//      throw new BusinessException(ErrorCode.SYSTEM_BUSY, ErrorInfo.SYSTEM_BUSY);
+//    }
   }
 }
 

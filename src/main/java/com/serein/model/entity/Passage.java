@@ -30,15 +30,6 @@ public class Passage implements Serializable {
    */
   private Long authorId;
 
-  /**
-   * 作者名，逻辑关联用户表
-   */
-  private String authorName;
-
-  /**
-   * 头像URL
-   */
-  private String avatarUrl;
 
   /**
    * 文章标题

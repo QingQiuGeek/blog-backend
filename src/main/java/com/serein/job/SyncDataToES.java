@@ -9,17 +9,20 @@ import com.serein.esdao.PassageESDao;
 import com.serein.mapper.EsSyncFailRecordMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
+import com.serein.mapper.UserMapper;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
 import com.serein.model.entity.EsSyncFailRecord;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.Tags;
+import com.serein.model.entity.User;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,7 +33,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Slf4j
-@Component
+//@Component
 public class SyncDataToES {
   @Resource
   EsSyncFailRecordMapper esSyncFailRecordMapper;
@@ -51,6 +54,7 @@ public class SyncDataToES {
       .withStopStrategy(StopStrategies.stopAfterAttempt(retryNum))
       // 最多重试3次
       .build();
+
   public void syncDataToES(int total, int pageSize, List<PassageESDTO> passageESDTOList) {
     for (int i = 1; i <= total; i += pageSize) {
       int end = Math.min(i + pageSize, total);
@@ -86,6 +90,9 @@ public class SyncDataToES {
 
 
   @Resource
+  UserMapper userMapper;
+
+  @Resource
   PassageTagMapper passageTagMapper;
 
   @Resource
@@ -107,6 +114,8 @@ public class SyncDataToES {
             String jsonStr = JSONUtil.toJsonStr(tagNameList);
             passageESDTO.setTagStr(jsonStr);
           }
+          User authorInfo = userMapper.getAuthorInfo(passage.getPassageId());
+          passageESDTO.setAuthorName(authorInfo.getUserName());
           return passageESDTO;
         })
         .collect(Collectors.toList());

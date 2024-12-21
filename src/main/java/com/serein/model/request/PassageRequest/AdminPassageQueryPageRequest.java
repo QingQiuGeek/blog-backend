@@ -16,7 +16,6 @@ public class AdminPassageQueryPageRequest {
   //默认的页码和页大小
   private int currentPage = 1;
   private int pageSize = 10;
-  private String authorName;
   private String title;
   private Long authorId;
   private Long passageId;

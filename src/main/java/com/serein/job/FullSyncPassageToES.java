@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
  * Boot 应用启动后，会自动调用所有实现了 CommandLineRunner 接口的类的 run 方法。 因此，FullSyncPassageToES 中的 run 方法会在应用启动时执行。
  */
 
-// todo 取消注释开启任务
-@Component
+//取消注释开启任务
+//@Component
 @Slf4j
 public class FullSyncPassageToES implements CommandLineRunner {
 
@@ -42,7 +42,6 @@ public class FullSyncPassageToES implements CommandLineRunner {
       return;
     }
     List<PassageESDTO> passageESDTOList = syncDataToES.objToESDto(postList);
-
     final int pageSize = 5;
     int total = passageESDTOList.size();
     log.info("FullSyncPassageTOES start, total {}", total);

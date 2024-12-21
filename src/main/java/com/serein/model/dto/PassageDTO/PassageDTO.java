@@ -2,6 +2,7 @@ package com.serein.model.dto.PassageDTO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class PassageDTO implements Serializable {
+
+
+  private String passageId;
 
   /**
    * 文章标题
@@ -37,15 +41,10 @@ public class PassageDTO implements Serializable {
    */
   private String summary;
 
-//  /**
-//   * 文章标签
-//   */
-//  private List<String> pTags;
-
   /**
    * 文章标签id
    */
-  private Map<Long, String> ptagsMap;
+  private List<Long> tagIdList;
 
   @TableField(exist = false)
   private static final long serialVersionUID = 1L;

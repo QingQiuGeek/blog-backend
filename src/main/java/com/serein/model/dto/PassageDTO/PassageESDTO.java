@@ -61,16 +61,12 @@ public class PassageESDTO implements Serializable {
    */
   private String content;
 
-
   /**
    * 内容摘要
    */
   private String summary;
 
   private String tagStr;
-
-
-
 
   private static final long serialVersionUID = 1L;
 

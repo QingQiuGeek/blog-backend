@@ -16,10 +16,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class UpdatePassageDTO extends PassageDTO implements Serializable {
 
-  /**
-   * 文章id 更新或添加文章时，需要把该属性复制给passage实体类，这样才能add后返回passageId、根据id更新文章
-   */
-  private String passageId;
 
   @TableField(exist = false)
   private static final long serialVersionUID = 1L;

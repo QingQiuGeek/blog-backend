@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * @Time: 22:27
  * @Description: 增量同步文章到ES
  */
-@Component
+//@Component
 @Slf4j
 public class IncSyncPassageToES {
 
@@ -48,11 +48,12 @@ public class IncSyncPassageToES {
   //单位分钟，每三分钟同步一次三分钟之前的数据
   private static final int RATE_MINUTES = 3;
 
-  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
+//  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
   public void run() {
     // 查询近 5 分钟内的数据
     Date minutesAgoDate = new Date(new Date().getTime() - AGO_MINUTES * 60 * 1000L);
-    List<Passage> passageList = passageMapper.listPassageWithNODelete(minutesAgoDate);
+    List<Passage> passageList = passageMapper.asyncPassageToEs(minutesAgoDate);
+
     if (CollUtil.isEmpty(passageList)) {
       log.info("No find new add passage in {} minutes", AGO_MINUTES * 60 * 1000L);
       return;

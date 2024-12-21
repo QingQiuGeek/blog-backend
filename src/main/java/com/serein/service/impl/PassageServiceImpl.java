@@ -16,16 +16,16 @@ import com.serein.mapper.PassageMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
+import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
 import com.serein.model.QueryPageRequest;
 import com.serein.model.UserHolder;
-import com.serein.model.dto.PassageDTO.AddPassageDTO;
 import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.dto.PassageDTO.PassageESDTO;
-import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.Tags;
+import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
 import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
@@ -45,7 +45,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -95,6 +94,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   PassageTagMapper passageTagMapper;
 
   @Autowired
+  UserMapper userMapper;
+
+  @Autowired
   PassageTagService passageTagService;
   @Autowired
   TagsMapper tagsMapper;
@@ -117,7 +119,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         new LambdaQueryWrapper<Passage>().eq(Passage::getStatus, 2)
             .orderByDesc(Passage::getAccessTime).
             select(Passage::getPassageId, Passage::getTitle, Passage::getViewNum,
-                Passage::getAuthorId, Passage::getAuthorName, Passage::getAvatarUrl,
+                Passage::getAuthorId,
                 Passage::getThumbnail, Passage::getSummary,
                 Passage::getCommentNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAccessTime));
@@ -146,6 +148,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           PassageInfoVO passageInfoVO = new PassageInfoVO();
           BeanUtil.copyProperties(passage, passageInfoVO);
           isThumbCollect(passageInfoVO);
+          User user = userMapper.getAuthorInfo(passage.getAuthorId());
+          passageInfoVO.setAuthorName(user.getUserName());
+          passageInfoVO.setAvatarUrl(user.getAvatarUrl());
           List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
               passage.getPassageId());
           List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
@@ -375,49 +380,63 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   //todo 测试
   @Transactional
   @Override
-  public Long addPassage(AddPassageDTO addPassageDTO) {
+  public Long addPassage(PassageDTO addPassageDTO) {
     Passage passage = getPassage(addPassageDTO);
     //status 0草稿  1待审核 2已发布
     //前期默认已发布
     passage.setStatus(2);
-    boolean save = this.save(passage);
+    //保存文章
+    passageMapper.insertPassage(passage);
     Long newPassageId = passage.getPassageId();
     if (newPassageId == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
     }
-    Map<Long, String> tags = addPassageDTO.getPtagsMap();
-    if (tags == null) {
+    List<Long> tagIdList = addPassageDTO.getTagIdList();
+    if (tagIdList == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
     }
-    Set<Long> tagIds = tags.keySet();
-    boolean b = passageTagMapper.insertPassageTags(tagIds, newPassageId);
+    //保存文章标签
+    boolean b = passageTagMapper.insertPassageTags(tagIdList, newPassageId);
     if (!b) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
     }
-    return newPassageId;
+    return passage.getPassageId();
   }
 
   @Override
-  public Boolean updatePassage(UpdatePassageDTO updatePassageDTO) {
+  public Long updatePassage(PassageDTO updatePassageDTO) {
     Passage passage = getPassage(updatePassageDTO);
     //更新文章时，审核通过时间在数据库中自动更新
-    boolean b = this.updateById(passage);
-    if (b) {
-      return true;
+    boolean b1 = this.updateById(passage);
+    List<Long> tagIdList = updatePassageDTO.getTagIdList();
+    if (tagIdList == null) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
     }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+    //更新passage_tag之前要删除老的数据
+    passageTagMapper.deleteTagByPassageId(passage.getPassageId());
+    //保存文章标签
+    boolean b2 = passageTagMapper.insertPassageTags(tagIdList, passage.getPassageId());
+    if (!b1 && !b2) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.RELEASED_ERROR);
+    }
+    return passage.getPassageId();
   }
 
   public Passage getPassage(PassageDTO passageDTO) {
     Passage passage = new Passage();
     BeanUtil.copyProperties(passageDTO, passage);
-    if (passageDTO.getClass() == UpdatePassageDTO.class) {
-      passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
+//    if (passageDTO.getClass() == UpdatePassageDTO.class) {
+//      passage.setPassageId(Long.valueOf(((UpdatePassageDTO) passageDTO).getPassageId()));
+//    }
+    //前端传过来的passageId是string类型
+    if (passageDTO.getPassageId() != null) {
+      passage.setPassageId(Long.valueOf(passageDTO.getPassageId()));
     }
-    passage.setAuthorId(UserHolder.getUser().getUserId());
-    passage.setAuthorName(UserHolder.getUser().getUserName());
-    String authorAvatar = passageMapper.getAuthorAvatar(passage.getAuthorId());
-    passage.setAvatarUrl(authorAvatar);
+    LoginUserVO loginUserVO = UserHolder.getUser();
+    if (loginUserVO == null) {
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
+    }
+    passage.setAuthorId(loginUserVO.getUserId());
     return passage;
   }
 
@@ -633,7 +652,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Long authorId = adminPassageQueryPageRequest.getAuthorId();
     Date endTime = adminPassageQueryPageRequest.getEndTime();
     Date startTime = adminPassageQueryPageRequest.getStartTime();
-    String authorName = adminPassageQueryPageRequest.getAuthorName();
 
     Page<Passage> passagePage = new Page<>(currentPage, pageSize);
     Page<Passage> pageDesc = page(passagePage,
@@ -643,10 +661,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .eq(authorId != null, Passage::getAuthorId, authorId)
             .eq(passageId != null, Passage::getPassageId, passageId)
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
-            .like(StringUtils.isNotBlank(authorName), Passage::getAuthorName, authorName)
             .select(Passage::getPassageId, Passage::getStatus,
                 Passage::getTitle,
-                Passage::getAuthorName, Passage::getAccessTime, Passage::getCommentNum,
+                Passage::getAccessTime, Passage::getCommentNum,
                 Passage::getViewNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAuthorId)
     );

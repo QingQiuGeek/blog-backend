@@ -21,12 +21,14 @@ public interface PassageTagMapper extends BaseMapper<PassageTag> {
   @Delete("delete from blog.passage_tag where passageId=#{passageId}")
   boolean deleteByPassageId(Long passageId);
 
-  boolean insertPassageTags(@Param("tagIds") Set<Long> tagIds, @Param("newPassageId") Long newPassageId);
+  boolean insertPassageTags(@Param("tagIds") List<Long> tagIds, @Param("newPassageId") Long newPassageId);
 
   @Select("select tagId from blog.passage_tag where passageId=#{passageId}")
   List<PassageTag> selectTagIdByPassageId(Long passageId);
 
 
+  @Delete("delete from blog.passage_tag where passageId=#{passageId}")
+  void deleteTagByPassageId(Long passageId);
 }
 
 

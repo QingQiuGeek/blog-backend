@@ -19,7 +19,7 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface PassageMapper extends BaseMapper<Passage> {
 
-  List<Passage> listPassageWithNODelete(Date minutesAgoDate);
+  List<Passage> asyncPassageToEs(Date minutesAgoDate);
 
   //根据uid查询该用户收藏的文章数量
   @Select("select count(*) from blog.user_collects where userId=#{uid}")
@@ -32,9 +32,6 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   @Select("select content from blog.passage where passageId=#{pid} and authorId=#{uid}")
   PassageContentVO getPassageContentByPid(@Param("uid") Long uid, @Param("pid") Long pid);
-
-  @Select("select  avatarUrl from blog.user where userId =#{authorId}")
-  String getAuthorAvatar(Long authorId);
 
 
   @Select("select passageId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary from blog.passage where passageId=#{passageId}")
@@ -65,8 +62,12 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
 
-  @Select("select content,title,summary,authorName,passageId from blog.passage where status=2 and isDelete=1")
+  @Select("select content,title,summary,passageId from blog.passage where status=2 and isDelete=1")
   List<Passage> selectPassageESData();
+
+  void insertPassage(Passage passage);
+
+  void updatePassage(Passage passage);
 }
 
 

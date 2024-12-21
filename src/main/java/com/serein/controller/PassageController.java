@@ -6,8 +6,7 @@ import com.serein.constants.ErrorInfo;
 import com.serein.constants.SearchType;
 import com.serein.exception.BusinessException;
 import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.PassageDTO.AddPassageDTO;
-import com.serein.model.dto.PassageDTO.UpdatePassageDTO;
+import com.serein.model.dto.PassageDTO.PassageDTO;
 import com.serein.model.request.SearchPassageRequest;
 import com.serein.model.vo.PassageVO.PassageContentVO;
 import com.serein.model.vo.PassageVO.PassageInfoVO;
@@ -17,6 +16,7 @@ import com.serein.util.BaseResponse;
 import com.serein.util.IPUtil;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +85,8 @@ public class PassageController {
 
   /**
    * 搜索文章
-   *todo hotkey
+   * todo hotkey
+   *
    * @param
    * @return
    */
@@ -118,7 +119,8 @@ public class PassageController {
 
   /**
    * 根据文章id搜索文章Content
-   *todo hotkey 限流
+   * todo hotkey 限流
+   *
    * @param pid
    * @return
    */
@@ -132,6 +134,7 @@ public class PassageController {
 
   /**
    * 根据用户id搜索文章列表，获取用户其他文章
+   *
    * @param uid
    * @return
    */
@@ -143,6 +146,7 @@ public class PassageController {
 
   /**
    * 文章详情页 获取文章点赞收藏等信息
+   *
    * @param pid
    * @return
    */
@@ -155,13 +159,18 @@ public class PassageController {
   /**
    * 添加文章
    *
-   * @param addpassageDTO
+   * @param passageDTO
    * @return
    */
   @PostMapping("/add")
-  public BaseResponse<Long> addPassage(@RequestBody AddPassageDTO addpassageDTO) {
-    Long passageId = passageService.addPassage(addpassageDTO);
-    return ResultUtil.success(passageId);
+  public BaseResponse<String> addPassage(@RequestBody PassageDTO passageDTO) {
+    Long passageId;
+    if (StringUtils.isNotBlank(passageDTO.getPassageId())) {
+      passageId = passageService.updatePassage(passageDTO);
+      return ResultUtil.success(passageId.toString());
+    }
+    passageId = passageService.addPassage(passageDTO);
+    return ResultUtil.success(passageId.toString());
   }
 
   /**
@@ -210,9 +219,9 @@ public class PassageController {
    * @return
    */
   @PostMapping("/update")
-  public BaseResponse<Boolean> updateByPassageId(@RequestBody UpdatePassageDTO updatePassageDTO) {
-    Boolean aBoolean = passageService.updatePassage(updatePassageDTO);
-    return ResultUtil.success(aBoolean);
+  public BaseResponse<String> updateByPassageId(@RequestBody PassageDTO updatePassageDTO) {
+    Long passageId = passageService.updatePassage(updatePassageDTO);
+    return ResultUtil.success(passageId.toString());
   }
 
 }

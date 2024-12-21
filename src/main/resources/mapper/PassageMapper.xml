@@ -1,30 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.serein.mapper.PassageMapper">
 
-	<resultMap id="BaseResultMap" type="com.serein.model.entity.Passage">
-		<id property="passageId" column="passageId" jdbcType="BIGINT"/>
-		<result property="authorId" column="authorId" jdbcType="BIGINT"/>
-		<result property="authorName" column="authorName" jdbcType="VARCHAR"/>
-		<result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
-		<result property="title" column="title" jdbcType="VARCHAR"/>
-		<result property="content" column="content" jdbcType="VARCHAR"/>
-		<result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
-		<result property="summary" column="summary" jdbcType="VARCHAR"/>
-		<result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
-		<result property="commentNum" column="commentNum" jdbcType="INTEGER"/>
-		<result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
-		<result property="collectNum" column="collectNum" jdbcType="INTEGER"/>
-		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-		<result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-		<result property="accessTime" column="accessTime" jdbcType="TIMESTAMP"/>
-		<result property="status" column="status" jdbcType="TINYINT"/>
-		<result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-	</resultMap>
+  <resultMap id="BaseResultMap" type="com.serein.model.entity.Passage">
+    <id property="passageId" column="passageId" jdbcType="BIGINT"/>
+    <result property="authorId" column="authorId" jdbcType="BIGINT"/>
+    <result property="title" column="title" jdbcType="VARCHAR"/>
+    <result property="content" column="content" jdbcType="VARCHAR"/>
+    <result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
+    <result property="summary" column="summary" jdbcType="VARCHAR"/>
+    <result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
+    <result property="commentNum" column="commentNum" jdbcType="INTEGER"/>
+    <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
+    <result property="collectNum" column="collectNum" jdbcType="INTEGER"/>
+    <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+    <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+    <result property="accessTime" column="accessTime" jdbcType="TIMESTAMP"/>
+    <result property="status" column="status" jdbcType="TINYINT"/>
+    <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+  </resultMap>
 
-	<sql id="Base_Column_List">
+  <sql id="Base_Column_List">
     passageId,authorId,authorName,avatarUrl,
         title,content,thumbnail,
         summary,
@@ -32,20 +30,40 @@
         collectNum,createTime,updateTime,
         accessTime,status,isDelete
   </sql>
-	<update id="updateViewNum">
-		update blog.passage set viewNum=viewNum+1 where passageId=#{passageId};
-	</update>
-	<!--把未删除且审核通过的文章查询出来同步到 es  -->
-	<select id="listPassageWithNODelete" resultType="com.serein.model.entity.Passage">
-		select title,content,summary,passageId,authorName from blog.passage where updateTime>=#{minutesAgoDate} and isDelete=1 and status=2
-	</select>
+  <!--	REPLACE INTO 有主键则更新，无主键则插入-->
+  <insert id="insertPassage" useGeneratedKeys="true" keyProperty="passageId">
+    insert into blog.passage (authorId, title, content, thumbnail, summary, status)
+    values (#{authorId}, #{title}, #{content}, #{thumbnail}, #{summary}, #{status})
+  </insert>
+  <update id="updateViewNum">
+    update blog.passage
+    set viewNum=viewNum + 1
+    where passageId = #{passageId};
+  </update>
+  <update id="updatePassage">
+    update blog.passage
+    set title=#{title},
+        content= #{content},
+        thumbnail=#{thumbnail},
+        summary=#{summary},
+        status=#{status}
+    where passageId = #{passageId}
+  </update>
+  <!--把未删除且审核通过的文章查询出来同步到 es  -->
+  <select id="asyncPassageToEs" resultType="com.serein.model.entity.Passage">
+    select title, content, summary, passageId
+    from blog.passage
+    where updateTime >= #{minutesAgoDate}
+      and isDelete = 1
+      and status = 2
+  </select>
 
-	<select id="selectOtherPassageByUserId" resultType="com.serein.model.entity.Passage">
-		select passageId, title, authorId
-		from blog.passage
-		where authorId = #{userId}
-			and passage.status = 2
-		order by passage.accessTime desc
-		limit 10
-	</select>
+  <select id="selectOtherPassageByUserId" resultType="com.serein.model.entity.Passage">
+    select passageId, title, authorId
+    from blog.passage
+    where authorId = #{userId}
+      and passage.status = 2
+    order by passage.accessTime desc
+    limit 10
+  </select>
 </mapper>

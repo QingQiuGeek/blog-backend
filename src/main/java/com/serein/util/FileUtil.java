@@ -117,6 +117,7 @@ public class FileUtil {
     String originalFilename = image.getOriginalFilename();
     log.info("originalFilename：" + originalFilename);
     checkImageType(originalFilename);
+    log.info("image Size{}："+image.getSize());
     //已经在yaml文件配置了 max-file-size: 2MB，不需要checkSize
 //    checkFileSize(image.getSize());
     try {
