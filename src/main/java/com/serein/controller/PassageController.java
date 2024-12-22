@@ -16,6 +16,7 @@ import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
 import com.serein.util.IPUtil;
 import com.serein.util.ResultUtil;
+import io.swagger.models.auth.In;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,8 +141,8 @@ public class PassageController {
    * @return
    */
   @GetMapping("/otherPassages/{uid}")
-  public BaseResponse<List<PassageTitleVO>> getPassageByUserId(@PathVariable Long uid) {
-    List<PassageTitleVO> PassageTitleVOList = passageService.getPassageByUserId(uid);
+  public BaseResponse<List<PassageTitleVO>> getOtherPassagesByUserId(@PathVariable Long uid) {
+    List<PassageTitleVO> PassageTitleVOList = passageService.getOtherPassagesByUserId(uid);
     return ResultUtil.success(PassageTitleVOList);
   }
 
@@ -205,7 +206,7 @@ public class PassageController {
 
 
   /**
-   * 根据文章id删除文章
+   * 根据文章id删除文章,管理和用户公用
    * todo 删除了文章还要删除评论，收藏、点赞等，删除数据库和redis
    *
    * @param passageId
@@ -214,6 +215,18 @@ public class PassageController {
   @DeleteMapping("/delete/{passageId}")
   public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId) {
     boolean b = passageService.deleteByPassageId(passageId);
+    return ResultUtil.success(b);
+  }
+
+
+  /**
+   * 返回文章私密状态 0私密 1公开
+   * @param passageId
+   * @return
+   */
+  @GetMapping("/setPrivate/{passageId}")
+  public BaseResponse<Boolean> setPassagePrivate(@PathVariable Long passageId){
+    boolean b=passageService.setPassagePrivate(passageId);
     return ResultUtil.success(b);
   }
 

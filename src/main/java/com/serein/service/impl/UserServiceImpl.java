@@ -8,7 +8,6 @@ import static com.serein.constants.Common.USER_FOLLOW_KEY;
 import static com.serein.constants.Common.USER_REGISTER_CODE_KEY;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.json.JSONUtil;
@@ -184,7 +183,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //再更新redis
         Boolean add = stringRedisTemplate.opsForZSet()
             .add(key, userId.toString(), System.currentTimeMillis());
-        if(Boolean.FALSE.equals(add)){
+        if (Boolean.FALSE.equals(add)) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -198,7 +197,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       int delete = userFollowMapper.delete(queryWrapper);
       if (delete == 1) {
         Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
-        if(remove!=1){
+        if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -287,7 +286,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int pageSize = queryPageRequest.getPageSize();
     int currentPage = queryPageRequest.getCurrentPage();
     Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getToUserId, loginUserId));
+        new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getToUserId, loginUserId)
+            .orderByDesc(UserFollow::getFollowTime));
     List<UserFollow> records = userFollowPage.getRecords();
     if (CollUtil.isEmpty(records)) {
       Page<List<UserVO>> objectPage = new Page<>();
@@ -367,6 +367,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   /**
    * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量
+   *
    * @return
    */
   @Override
@@ -434,14 +435,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public String uploadAvatar(MultipartFile file) {
     LoginUserVO loginUserVO = UserHolder.getUser();
-    if(loginUserVO==null){
-      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+    if (loginUserVO == null) {
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     String avatarUrl = FileUtil.uploadImageLocal(file);
     Long userId = loginUserVO.getUserId();
-    boolean b=userMapper.updateAvatar(userId,avatarUrl);
-    if(!b){
-      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.UPDATE_ERROR);
+    boolean b = userMapper.updateAvatar(userId, avatarUrl);
+    if (!b) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
     }
     log.info("update avatarUrl：" + avatarUrl);
     return avatarUrl;
@@ -463,7 +464,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int currentPage = queryPageRequest.getCurrentPage();
     Page<UserCollects> userCollectsPage = userCollectsMapper.selectPage(
         new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<UserCollects>().eq(UserCollects::getUserId, userId));
+        new LambdaQueryWrapper<UserCollects>().eq(UserCollects::getUserId, userId)
+            .orderByDesc(UserCollects::getCollectTime));
     List<UserCollects> records = userCollectsPage.getRecords();
     if (CollUtil.isEmpty(records)) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
@@ -498,7 +500,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int pageSize = queryPageRequest.getPageSize();
 
     Page<UserThumbs> thumbsPage = userThumbsMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<UserThumbs>().eq(UserThumbs::getUserId, loginUserId));
+        new LambdaQueryWrapper<UserThumbs>().eq(UserThumbs::getUserId, loginUserId)
+            .orderByDesc(UserThumbs::getThumbTime));
 
     List<UserThumbs> records = thumbsPage.getRecords();
     if (CollUtil.isEmpty(records)) {
@@ -530,11 +533,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       return objectPage;
     }
     Long loginUserId = loginUserVO.getUserId();
-
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
     Page<Passage> passagePage = passageMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId));
+        new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId)
+            .orderByDesc(Passage::getCreateTime));
     List<Passage> records = passagePage.getRecords();
     if (CollUtil.isEmpty(records)) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
@@ -602,7 +605,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     LoginUserVO loginUserVO = new LoginUserVO();
     BeanUtil.copyProperties(queryUser, loginUserVO);
     loginUserVO.setIpAddress(ipRegion);
-    List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(queryUser.getInterestTag()), Long.class);
+    List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(queryUser.getInterestTag()),
+        Long.class);
     List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
     List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
     loginUserVO.setInterestTag(tagNameList);
@@ -622,7 +626,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     //UserHolder.saveUser(loginUserVO);
     if (!StringUtils.isBlank(user.getInterestTag())) {
       //把数据库中string类型的json转换成list<String>
-      List<String> pTagList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), String.class);
+      List<String> pTagList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
+          String.class);
       loginUserVO.setInterestTag(pTagList);
     }
     String token = UUID.randomUUID(true).toString(false);
@@ -630,8 +635,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     log.info(loginUserVO.getUserId() + "用户的token: " + token);
     loginUserVO.setToken(token);
 
-
-    Map<String, Object> map = BeanUtil.beanToMap(loginUserVO, false,true);
+    Map<String, Object> map = BeanUtil.beanToMap(loginUserVO, false, true);
     Map<String, String> stringMap = new HashMap<>();
     // 遍历原始 map，将所有值转换为字符串
     for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -867,7 +871,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       AdminUserVO adminUserVO = new AdminUserVO();
       BeanUtils.copyProperties(user, adminUserVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), Long.class);
+        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
+            Long.class);
         List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         adminUserVO.setInterestTag(tagNameList);
@@ -887,7 +892,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       UserVO userVO = new UserVO();
       BeanUtils.copyProperties(user, userVO);
       if (StringUtils.isNotBlank(user.getInterestTag())) {
-        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()), Long.class);
+        List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
+            Long.class);
         List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         userVO.setInterestTag(tagNameList);

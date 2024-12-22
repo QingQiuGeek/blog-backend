@@ -26,7 +26,7 @@ public interface PassageService extends IService<Passage> {
 
   Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest);
 
-  List<PassageTitleVO> getPassageByUserId(Long userId);
+  List<PassageTitleVO> getOtherPassagesByUserId(Long userId);
 
   Long addPassage(PassageDTO addPassageDTO);
 
@@ -62,4 +62,5 @@ public interface PassageService extends IService<Passage> {
 
   Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest);
 
+  boolean setPassagePrivate(Long passageId);
 }

@@ -26,7 +26,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
       @Param("lastCommentId") Long lastCommentId);
 
   @Delete("delete from blog.comment where passageId=#{passageId}")
-  boolean deleteByPassageId(Long passageId);
+  void deleteByPassageId(Long passageId);
 
 }
 

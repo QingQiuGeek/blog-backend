@@ -19,6 +19,7 @@
     <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
     <result property="accessTime" column="accessTime" jdbcType="TIMESTAMP"/>
     <result property="status" column="status" jdbcType="TINYINT"/>
+    <result property="isPrivate" column="isPrivate" jdbcType="TINYINT"/>
     <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
   </resultMap>
 
@@ -55,13 +56,14 @@
     where updateTime >= #{minutesAgoDate}
       and isDelete = 1
       and status = 2
+      and isPrivate = 1
   </select>
 
   <select id="selectOtherPassageByUserId" resultType="com.serein.model.entity.Passage">
     select passageId, title, authorId
     from blog.passage
     where authorId = #{userId}
-      and passage.status = 2
+      and passage.status = 2 and passage.isPrivate=1
     order by passage.accessTime desc
     limit 10
   </select>

@@ -87,6 +87,11 @@ public class PassageInfoVO implements Serializable {
   private Integer commentNum;
 
   /**
+   * 是否私密
+   */
+  private Integer isPrivate;
+
+  /**
    * 点赞数量
    */
   private Integer thumbNum;

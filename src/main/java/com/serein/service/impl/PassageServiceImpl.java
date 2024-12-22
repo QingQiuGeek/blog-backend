@@ -79,38 +79,38 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     implements PassageService {
 
   @Autowired
-  ElasticsearchRestTemplate elasticsearchRestTemplate;
+  private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
   @Autowired
   private PassageTimePublishMapper passageTimePublishMapper;
   @Autowired
-  StringRedisTemplate stringRedisTemplate;
+  private StringRedisTemplate stringRedisTemplate;
 
   @Autowired
-  UserThumbsMapper userThumbsMapper;
+  private UserThumbsMapper userThumbsMapper;
 
   @Autowired
-  UserCollectsMapper userCollectsMapper;
+  private UserCollectsMapper userCollectsMapper;
 
   @Autowired
-  PassageMapper passageMapper;
+  private PassageMapper passageMapper;
 
   @Autowired
-  PassageTagMapper passageTagMapper;
+  private PassageTagMapper passageTagMapper;
 
   @Autowired
-  UserMapper userMapper;
+  private UserMapper userMapper;
 
   @Autowired
-  PassageTagService passageTagService;
+  private PassageTagService passageTagService;
   @Autowired
-  TagsMapper tagsMapper;
+  private TagsMapper tagsMapper;
 
   @Autowired
-  CommentMapper commentMapper;
+  private CommentMapper commentMapper;
 
   @Autowired
-  CategoryMapper categoryMapper;
+  private CategoryMapper categoryMapper;
 
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
@@ -121,7 +121,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     //首页加载文章列表时，不加载content，减少数据传输压力，提高加载速度
     Page<Passage> passagePage = new Page<>(currentPage, pageSize);
     Page<Passage> pageDesc = page(passagePage,
-        new LambdaQueryWrapper<Passage>().eq(Passage::getStatus, 2)
+        new LambdaQueryWrapper<Passage>().eq(Passage::getStatus, 2).eq(Passage::getIsPrivate, 1)
             .orderByDesc(Passage::getAccessTime).
             select(Passage::getPassageId, Passage::getTitle, Passage::getViewNum,
                 Passage::getAuthorId,
@@ -237,7 +237,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       boolQueryBuilder.should(QueryBuilders.matchQuery("summary", searchText));
       boolQueryBuilder.should(QueryBuilders.termQuery("authorName", searchText));
       boolQueryBuilder.should(QueryBuilders.matchQuery("tagStr", searchText));
-
       //确保至少有1个“should”条件需要匹配。
       boolQueryBuilder.minimumShouldMatch(1);
     }
@@ -259,7 +258,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
     List<Long> passageIdList = searchHitList.stream()
         .map(searchHit -> searchHit.getContent().getPassageId()).collect(Collectors.toList());
-    List<Passage> passageList = baseMapper.selectBatchIds(passageIdList);
+    List<Passage> passageList = passageMapper.selectList(
+        new LambdaQueryWrapper<Passage>().eq(Passage::getIsPrivate, 1)
+            .in(Passage::getPassageId, passageIdList));
     if (passageList != null) {
       //从es中查出的数据在数据库中也要存在，否则就是无效数据
       //核对es和数据库中的数据，根据id检查es中是否有失效的数据
@@ -317,7 +318,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     List<PassageTag> passageTagList = passageTagPage.getRecords();
     List<Long> passageIdList = passageTagList.stream().map(PassageTag::getPassageId)
         .collect(Collectors.toList());
-    List<Passage> passageList = listByIds(passageIdList);
+//    List<Passage> passageList = listByIds(passageIdList);
+    List<Passage> passageList = list(
+        new LambdaQueryWrapper<Passage>().in(Passage::getPassageId, passageIdList)
+            .eq(Passage::getIsPrivate, 1));
     if (passageList.isEmpty()) {
       passageInfoVOPage.setTotal(0);
       passageInfoVOPage.setRecords(Collections.emptyList());
@@ -350,7 +354,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     List<PassageTag> passageTagList = passageTagPage.getRecords();
     List<Long> passageIdList = passageTagList.stream().map(PassageTag::getPassageId)
         .collect(Collectors.toList());
-    List<Passage> passageList = listByIds(passageIdList);
+    List<Passage> passageList = list(
+        new LambdaQueryWrapper<Passage>().in(Passage::getPassageId, passageIdList)
+            .eq(Passage::getIsPrivate, 1));
+//    List<Passage> passageList = listByIds(passageIdList);
     if (passageList.isEmpty()) {
       passageInfoVOPage.setTotal(0);
       passageInfoVOPage.setRecords(Collections.emptyList());
@@ -363,12 +370,20 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Override
-  public List<PassageTitleVO> getPassageByUserId(Long userId) {
+  public boolean setPassagePrivate(Long passageId) {
+    boolean b = passageMapper.setPassagePrivate(passageId);
+    if (!b) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.OPERATION_ERROR);
+    }
+    return true;
+  }
+
+  @Override
+  public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
     IPUtil.isHotIp();
-
     List<Passage> list = passageMapper.selectOtherPassageByUserId(userId);
     if (list.isEmpty()) {
       return Collections.emptyList();
@@ -396,8 +411,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       passageTimePublish.setPassageId(newPassageId);
       passageTimePublish.setPublishTime(new Date(addPassageDTO.getPublishTime()));
       int insert = passageTimePublishMapper.insert(passageTimePublish);
-      if(insert!=1){
-        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+      if (insert != 1) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
       }
     }
     List<Long> tagIdList = addPassageDTO.getTagIdList();
@@ -422,8 +437,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       passageTimePublish.setPassageId(Long.valueOf(updatePassageDTO.getPassageId()));
       passageTimePublish.setPublishTime(new Date(updatePassageDTO.getPublishTime()));
       int insert = passageTimePublishMapper.insert(passageTimePublish);
-      if(insert!=1){
-        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+      if (insert != 1) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
       }
     }
     List<Long> tagIdList = updatePassageDTO.getTagIdList();
@@ -579,7 +594,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     IPUtil.isHotIp();
     Page<Passage> page = new Page<>(1, 10);
     LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.orderByDesc(Passage::getViewNum);
+    queryWrapper.orderByDesc(Passage::getViewNum).eq(Passage::getIsPrivate, 1);
     Page<Passage> passagePage = passageMapper.selectPage(page, queryWrapper);
     List<Passage> records = passagePage.getRecords();
     List<PassageTitleVO> passageTitleVOS = new ArrayList<>();
@@ -685,6 +700,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .gt(startTime != null, Passage::getCreateTime, startTime)
             .lt(endTime != null, Passage::getCreateTime, endTime)
             .eq(authorId != null, Passage::getAuthorId, authorId)
+            .eq(Passage::getIsPrivate, 1)
             .eq(passageId != null, Passage::getPassageId, passageId)
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
             .select(Passage::getPassageId, Passage::getStatus,
@@ -763,9 +779,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   public boolean deleteByPassageId(Long passageId) {
     boolean b1 = removeById(passageId);
-    boolean b2 = commentMapper.deleteByPassageId(passageId);
+    commentMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
-    if (b1 && b2 && b3) {
+    if (b1  && b3) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

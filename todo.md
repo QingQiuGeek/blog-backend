@@ -62,11 +62,15 @@ push到远程
  * 后端搜索接口 前端autoComplete组件 √
  * 增量失败 重试机制 guava retrying库 √
  * 前端点赞收藏关注防抖lodash √
- * 接入hotkey，实现缓存热文和黑名单IP拦截
+ * 接入hotkey，实现缓存热文和黑名单IP拦截√
  * 事务 √
  * 接入站点统计baidu google 管理页数据管理引入Echarts等 
  * IP地址解析 √
  * RBAC
+ * ai
+ * ES搜索优化
+ * 文章管理bug
+ * 定时发布redisson 延迟消息队列
  * 登录时检查账户是否禁用 √
  * 替换druid连接池 √
  * vx登录API

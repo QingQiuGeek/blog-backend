@@ -10,6 +10,8 @@ package com.serein.constants;
 public interface ErrorInfo {
 
   String FILE_TYPE_ERROR = "文件类型错误，请上传png文件";
+
+  String OPERATION_ERROR="操作失败";
   String ADD_ERROR = "添加失败";
 
   String SYSTEM_BUSY="系统繁忙，请稍后再试";

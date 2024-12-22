@@ -93,6 +93,11 @@ public class Passage implements Serializable {
   private Integer status;
 
   /**
+   * 是否私密
+   */
+  private Integer isPrivate;
+
+  /**
    * 0逻辑删除
    */
   @TableLogic
