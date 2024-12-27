@@ -32,6 +32,8 @@ public interface Common {
 
   //前端category页随机抽取的标签数量
   Integer TAGS_NUM = 50;
+
+  String TIME_PUBLISH_KEY="Blog:timePublish:";
   String LOGIN_TOKEN_KEY = "Blog:login:token:";
 
   String PASSAGE_HOME_KEY = "Blog:passage:home:";

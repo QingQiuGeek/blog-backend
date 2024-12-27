@@ -4,6 +4,7 @@ import com.serein.model.entity.PassageTimePublish;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import java.util.Date;
 import java.util.List;
+import org.apache.ibatis.annotations.Delete;
 
 /**
 * @author 懒大王Smile
@@ -14,6 +15,9 @@ import java.util.List;
 public interface PassageTimePublishMapper extends BaseMapper<PassageTimePublish> {
 
   List<PassageTimePublish> scanPublishPassage(Date minutesAgoDate);
+
+  @Delete("delete from blog.passage_time_publish where passageId=#{passageId}")
+  void deleteByPassageId(Long passageId);
 }
 
 

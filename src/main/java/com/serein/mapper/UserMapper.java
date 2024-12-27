@@ -2,7 +2,7 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.User;
-import com.serein.model.vo.CommentVO.CommentUserInfoVO;
+import com.serein.model.vo.commentVO.CommentUserInfoVO;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

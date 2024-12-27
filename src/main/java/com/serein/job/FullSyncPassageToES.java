@@ -3,15 +3,12 @@ package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
 import com.serein.mapper.PassageMapper;
-import com.serein.mapper.PassageTagMapper;
-import com.serein.mapper.TagsMapper;
-import com.serein.model.dto.PassageDTO.PassageESDTO;
+import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import java.util.List;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile

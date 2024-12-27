@@ -1,5 +1,7 @@
 package com.serein.service.impl;
 
+import static com.serein.constants.Common.TIME_PUBLISH_KEY;
+
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -20,10 +22,8 @@ import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.QueryPageRequest;
-import com.serein.model.UserHolder;
-import com.serein.model.dto.PassageDTO.PassageDTO;
-import com.serein.model.dto.PassageDTO.PassageESDTO;
+import com.serein.model.dto.passageDTO.PassageDTO;
+import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
 import com.serein.model.entity.PassageTimePublish;
@@ -32,28 +32,35 @@ import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserThumbs;
 import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
+import com.serein.model.request.QueryPageRequest;
 import com.serein.model.request.SearchPassageRequest;
-import com.serein.model.vo.PassageVO.AdminPassageVO;
-import com.serein.model.vo.PassageVO.PassageContentVO;
-import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageTitleVO;
-import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.model.vo.passageVO.AdminPassageVO;
+import com.serein.model.vo.passageVO.EditPassageVO;
+import com.serein.model.vo.passageVO.PassageContentVO;
+import com.serein.model.vo.passageVO.PassageInfoVO;
+import com.serein.model.vo.passageVO.PassageTitleVO;
+import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.service.PassageService;
 import com.serein.service.PassageTagService;
 import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
+import com.serein.util.UserHolder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.redisson.api.RBlockingDeque;
+import org.redisson.api.RDelayedQueue;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -111,6 +118,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Autowired
   private CategoryMapper categoryMapper;
+
+  @Autowired
+  private RedissonClient redissonClient;
 
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
@@ -379,6 +389,25 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Override
+  public EditPassageVO getEditPassageByPassageId(Long passageId) {
+    LoginUserVO user = UserHolder.getUser();
+    if (user == null) {
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
+    }
+    Passage passage = passageMapper.getEditPassageByPassageId(passageId, user.getUserId());
+    if (passage == null) {
+      throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_DB_DATA);
+    }
+    EditPassageVO editPassageVO = new EditPassageVO();
+    BeanUtils.copyProperties(passage, editPassageVO);
+    List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(passageId);
+    List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
+        .collect(Collectors.toList());
+    editPassageVO.setPTags(tagIdList);
+    return editPassageVO;
+  }
+
+  @Override
   public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
@@ -407,13 +436,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     if (addPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
-      PassageTimePublish passageTimePublish = new PassageTimePublish();
-      passageTimePublish.setPassageId(newPassageId);
-      passageTimePublish.setPublishTime(new Date(addPassageDTO.getPublishTime()));
-      int insert = passageTimePublishMapper.insert(passageTimePublish);
-      if (insert != 1) {
-        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
-      }
+      //添加任务到延迟队列
+      long delay = addPassageDTO.getPublishTime() - System.currentTimeMillis();
+      addDelayQueue(newPassageId, delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
+//      PassageTimePublish passageTimePublish = new PassageTimePublish();
+//      passageTimePublish.setPassageId(newPassageId);
+//      passageTimePublish.setPublishTime(new Date(addPassageDTO.getPublishTime()));
+//      int insert = passageTimePublishMapper.insert(passageTimePublish);
+//      if (insert != 1) {
+//        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
+//      }
     }
     List<Long> tagIdList = addPassageDTO.getTagIdList();
     if (tagIdList == null) {
@@ -455,11 +487,46 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passage.getPassageId();
   }
 
+  /**
+   * 向延迟队列中添加文章id
+   *
+   * @param passageId
+   * @param delay
+   * @param timeUnit
+   * @param queueKey
+   */
+  public void addDelayQueue(Long passageId, long delay, TimeUnit timeUnit, String queueKey) {
+    try {
+      RBlockingDeque<Object> blockingDeque = redissonClient.getBlockingDeque(queueKey);
+      RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+      //向延迟队列中添加任务
+      delayedQueue.offer(passageId, delay, timeUnit);
+      log.info("添加延时队列成功 队列键：{}，队列值：{}，延迟时间：{}", queueKey, passageId,
+          timeUnit.toSeconds(delay) + "秒");
+    } catch (Exception e) {
+      log.error("添加延时队列失败 {}", e.getMessage());
+      throw new RuntimeException("添加延时队列失败");
+    }
+  }
+
+  /**
+   * 从延迟队列中获取passageId
+   *
+   * @param queuekey
+   * @return
+   * @throws InterruptedException
+   */
+  public Long getDelayQueue(String queuekey) throws InterruptedException {
+    RBlockingDeque<Long> blockingDeque = redissonClient.getBlockingDeque(queuekey);
+    return blockingDeque.take();
+  }
+
   public Passage getPassage(PassageDTO passageDTO) {
     Passage passage = new Passage();
     BeanUtil.copyProperties(passageDTO, passage);
-    if (passageDTO.getPassageId() != null) {
-      passage.setPassageId(Long.valueOf(passageDTO.getPassageId()));
+    String passageId = passageDTO.getPassageId();
+    if (StringUtils.isNotBlank(passageId)) {
+      passage.setPassageId(Long.valueOf(passageId));
     }
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
@@ -758,12 +825,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public Boolean publishPassage(Long passageId) {
-    //todo 枚举
-    LambdaUpdateWrapper<Passage> passageQueryWrapper = new LambdaUpdateWrapper<>();
-    passageQueryWrapper.eq(Passage::getPassageId, passageId).set(Passage::getStatus, 2);
-    boolean b = this.update(passageQueryWrapper);
-    if (b) {
-      return b;
+    int i = passageMapper.publishPassage(passageId);
+    if (i != 0) {
+      return true;
     } else {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
     }
@@ -771,6 +835,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   /**
    * 删除文章
+   * todo redis删除
    *
    * @param passageId
    * @return
@@ -781,7 +846,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     boolean b1 = removeById(passageId);
     commentMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
-    if (b1  && b3) {
+    passageTimePublishMapper.deleteByPassageId(passageId);
+    if (b1 && b3) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

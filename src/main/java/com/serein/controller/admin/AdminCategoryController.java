@@ -1,7 +1,7 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.dto.CategoryDTO.CategoryDTO;
+import com.serein.model.dto.categoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
 import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
 import com.serein.service.CategoryService;

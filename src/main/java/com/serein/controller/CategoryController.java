@@ -2,8 +2,8 @@ package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.request.CategoryRequest.CategoryPageRequest;
-import com.serein.model.vo.CategoryVO.CategoryAndTags;
-import com.serein.model.vo.CategoryVO.CategoryVO;
+import com.serein.model.vo.categoryVO.CategoryAndTags;
+import com.serein.model.vo.categoryVO.CategoryVO;
 import com.serein.service.CategoryService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;

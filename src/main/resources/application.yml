@@ -47,7 +47,6 @@ spring:
 #        login-username: root # 配置监控页面访问密码
 #        login-password: 123
 #        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
-
   redis:
     host: 192.168.2.129
     port: 6379
@@ -65,6 +64,8 @@ spring:
     multipart:
       max-file-size: 2MB
       max-request-size: 10MB
+
+
 
 #  cache:
 #    使用redis缓存

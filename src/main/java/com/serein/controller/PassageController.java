@@ -3,20 +3,19 @@ package com.serein.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
-import com.serein.constants.OperationPassageType;
 import com.serein.constants.SearchType;
 import com.serein.exception.BusinessException;
-import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.PassageDTO.PassageDTO;
+import com.serein.model.request.QueryPageRequest;
+import com.serein.model.dto.passageDTO.PassageDTO;
 import com.serein.model.request.SearchPassageRequest;
-import com.serein.model.vo.PassageVO.PassageContentVO;
-import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.PassageVO.PassageTitleVO;
+import com.serein.model.vo.passageVO.EditPassageVO;
+import com.serein.model.vo.passageVO.PassageContentVO;
+import com.serein.model.vo.passageVO.PassageInfoVO;
+import com.serein.model.vo.passageVO.PassageTitleVO;
 import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
 import com.serein.util.IPUtil;
 import com.serein.util.ResultUtil;
-import io.swagger.models.auth.In;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +67,7 @@ public class PassageController {
    * 收藏文章
    * */
   @PutMapping("/collect/{passageId}")
-  public BaseResponse<Boolean> collectPassage(@PathVariable String passageId) {
+  public BaseResponse<Boolean>collectPassage(@PathVariable String passageId) {
     Boolean aBoolean = passageService.collectPassage(Long.valueOf(passageId));
     return ResultUtil.success(aBoolean);
   }
@@ -156,6 +155,17 @@ public class PassageController {
   public BaseResponse<PassageInfoVO> getPassageInfo(@PathVariable String pid) {
     PassageInfoVO passageInfo = passageService.getPassageInfoByPassageId(Long.valueOf(pid));
     return ResultUtil.success(passageInfo);
+  }
+
+  /**
+   * 获取文章的编辑内容，比如编辑器页面刷新，重新获取文章内容
+   * @param pid
+   * @return
+   */
+  @GetMapping("/editPassage/{pid}")
+  public BaseResponse<EditPassageVO> getEditPassage(@PathVariable String pid) {
+    EditPassageVO editPassageVO = passageService.getEditPassageByPassageId(Long.valueOf(pid));
+    return ResultUtil.success(editPassageVO);
   }
 
   /**

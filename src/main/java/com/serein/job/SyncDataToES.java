@@ -10,7 +10,7 @@ import com.serein.mapper.EsSyncFailRecordMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserMapper;
-import com.serein.model.dto.PassageDTO.PassageESDTO;
+import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.EsSyncFailRecord;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile

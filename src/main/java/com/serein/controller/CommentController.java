@@ -1,10 +1,10 @@
 package com.serein.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.dto.CommentDTO.CommentDTO;
-import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
+import com.serein.model.dto.commentDTO.CommentDTO;
+import com.serein.model.dto.commentDTO.DeleteCommentDTO;
 import com.serein.model.request.CommentRequest.CursorCommentRequest;
-import com.serein.model.vo.CommentVO.CommentVO;
+import com.serein.model.vo.commentVO.CommentVO;
 import com.serein.service.CommentService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;

@@ -3,10 +3,10 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.dto.TagDTO.TagDTO;
+import com.serein.model.dto.tagDTO.TagDTO;
 import com.serein.model.entity.Tags;
 import com.serein.model.request.TagRequest.AdminTagPageRequest;
-import com.serein.model.vo.TagVO.TagVO;
+import com.serein.model.vo.tagVO.TagVO;
 import java.util.List;
 
 /**

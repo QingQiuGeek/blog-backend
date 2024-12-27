@@ -2,7 +2,7 @@ package com.serein.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Passage;
-import com.serein.model.vo.PassageVO.PassageContentVO;
+import com.serein.model.vo.passageVO.PassageContentVO;
 import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
@@ -73,6 +73,10 @@ public interface PassageMapper extends BaseMapper<Passage> {
   //直接异或，相同为0，不同为1
   @Update("update blog.passage set isPrivate=isPrivate^1 where passageId=#{passageId}")
   boolean setPassagePrivate(Long passageId);
+
+  @Select("select title,content,summary,thumbnail,passageId from blog.passage where passageId=#{passageId} and authorId=#{authorId}")
+  Passage getEditPassageByPassageId(@Param("passageId") Long passageId,
+      @Param("authorId") Long authorId);
 }
 
 

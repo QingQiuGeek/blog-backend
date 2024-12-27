@@ -1,7 +1,7 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.dto.TagDTO.TagDTO;
+import com.serein.model.dto.tagDTO.TagDTO;
 import com.serein.model.entity.Tags;
 import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.service.TagsService;

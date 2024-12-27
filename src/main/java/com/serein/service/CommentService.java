@@ -2,12 +2,12 @@ package com.serein.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.serein.model.dto.CommentDTO.CommentDTO;
-import com.serein.model.dto.CommentDTO.DeleteCommentDTO;
+import com.serein.model.dto.commentDTO.CommentDTO;
+import com.serein.model.dto.commentDTO.DeleteCommentDTO;
 import com.serein.model.entity.Comment;
 import com.serein.model.request.CommentRequest.AdminCommentPageRequest;
 import com.serein.model.request.CommentRequest.CursorCommentRequest;
-import com.serein.model.vo.CommentVO.CommentVO;
+import com.serein.model.vo.commentVO.CommentVO;
 import java.util.List;
 
 /**

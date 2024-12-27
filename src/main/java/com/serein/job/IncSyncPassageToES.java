@@ -1,30 +1,13 @@
 package com.serein.job;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.json.JSONUtil;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
-import com.github.rholder.retry.WaitStrategies;
-import com.serein.esdao.PassageESDao;
-import com.serein.mapper.EsSyncFailRecordMapper;
 import com.serein.mapper.PassageMapper;
-import com.serein.mapper.PassageTagMapper;
-import com.serein.mapper.TagsMapper;
-import com.serein.model.dto.PassageDTO.PassageESDTO;
-import com.serein.model.entity.EsSyncFailRecord;
+import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
-import com.serein.model.entity.PassageTag;
-import com.serein.model.entity.Tags;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile

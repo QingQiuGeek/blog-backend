@@ -2,8 +2,8 @@ package com.serein.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.serein.constants.Common;
-import com.serein.model.UserHolder;
-import com.serein.model.vo.UserVO.LoginUserVO;
+import com.serein.util.UserHolder;
+import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.util.JwtHelper;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

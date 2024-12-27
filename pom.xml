@@ -31,11 +31,13 @@
       <artifactId>jjwt</artifactId>
       <version>0.9.1</version>
     </dependency>
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aspects</artifactId>
       <version>6.1.5</version>
     </dependency>
+
     <dependency>
       <groupId>com.aliyun.oss</groupId>
       <artifactId>aliyun-sdk-oss</artifactId>
@@ -100,19 +102,11 @@
       <version>3.2.0</version>
     </dependency>
 
+    <!--   引入redisson后和knife4j-openapi2-spring-boot-starter依赖冲突，添加WebMvcConfig配置类解决-->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-cache</artifactId>
-      <version>3.2.0</version>
-    </dependency>
-    <!--        <dependency>-->
-    <!--            <groupId>org.springframework.boot</groupId>-->
-    <!--            <artifactId>spring-boot-starter-freemarker</artifactId>-->
-    <!--        </dependency>-->
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.12.0</version>
+      <groupId>org.redisson</groupId>
+      <artifactId>redisson-spring-boot-starter</artifactId>
+      <version>3.17.7</version>
     </dependency>
 
     <dependency>
@@ -123,8 +117,27 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+      <version>3.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+
+    <!--    <dependency>-->
+    <!--      <groupId>com.github.xiaoymin</groupId>-->
+    <!--      <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>-->
+    <!--      <version>4.5.0</version>-->
+    <!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -135,6 +148,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

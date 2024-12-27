@@ -2,16 +2,16 @@ package com.serein.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.model.QueryPageRequest;
-import com.serein.model.dto.UserDTO.UpdateUserDTO;
+import com.serein.model.request.QueryPageRequest;
+import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.request.UserRequest.LoginRequest;
 import com.serein.model.request.UserRequest.RegisterCodeRequest;
 import com.serein.model.request.UserRequest.RegisterRequest;
-import com.serein.model.vo.CommentVO.CommentVO;
-import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.UserVO.LoginUserVO;
-import com.serein.model.vo.UserVO.UserInfoDataVO;
-import com.serein.model.vo.UserVO.UserVO;
+import com.serein.model.vo.commentVO.CommentVO;
+import com.serein.model.vo.passageVO.PassageInfoVO;
+import com.serein.model.vo.userVO.LoginUserVO;
+import com.serein.model.vo.userVO.UserInfoDataVO;
+import com.serein.model.vo.userVO.UserVO;
 import com.serein.service.PassageService;
 import com.serein.service.UserService;
 import com.serein.util.BaseResponse;

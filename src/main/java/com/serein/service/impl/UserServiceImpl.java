@@ -28,10 +28,8 @@ import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserFollowMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.QueryPageRequest;
-import com.serein.model.UserHolder;
-import com.serein.model.dto.UserDTO.AddUserDTO;
-import com.serein.model.dto.UserDTO.UpdateUserDTO;
+import com.serein.model.dto.userDTO.AddUserDTO;
+import com.serein.model.dto.userDTO.UpdateUserDTO;
 import com.serein.model.entity.Comment;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.Tags;
@@ -39,20 +37,22 @@ import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
 import com.serein.model.entity.UserFollow;
 import com.serein.model.entity.UserThumbs;
+import com.serein.model.request.QueryPageRequest;
 import com.serein.model.request.UserRequest.AdminUserQueryPageRequest;
 import com.serein.model.request.UserRequest.LoginRequest;
 import com.serein.model.request.UserRequest.RegisterCodeRequest;
 import com.serein.model.request.UserRequest.RegisterRequest;
-import com.serein.model.vo.CommentVO.CommentVO;
-import com.serein.model.vo.PassageVO.PassageInfoVO;
-import com.serein.model.vo.UserVO.AdminUserVO;
-import com.serein.model.vo.UserVO.LoginUserVO;
-import com.serein.model.vo.UserVO.UserInfoDataVO;
-import com.serein.model.vo.UserVO.UserVO;
+import com.serein.model.vo.commentVO.CommentVO;
+import com.serein.model.vo.passageVO.PassageInfoVO;
+import com.serein.model.vo.userVO.AdminUserVO;
+import com.serein.model.vo.userVO.LoginUserVO;
+import com.serein.model.vo.userVO.UserInfoDataVO;
+import com.serein.model.vo.userVO.UserVO;
 import com.serein.service.UserService;
 import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.MailUtil;
+import com.serein.util.UserHolder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -537,6 +537,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int pageSize = queryPageRequest.getPageSize();
     Page<Passage> passagePage = passageMapper.selectPage(new Page<>(currentPage, pageSize),
         new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId)
+            .select(Passage::getPassageId, Passage::getTitle, Passage::getContent,
+                Passage::getStatus, Passage::getCollectNum, Passage::getThumbNum,
+                Passage::getViewNum, Passage::getUpdateTime, Passage::getThumbnail,
+                Passage::getSummary,Passage::getAuthorId)
             .orderByDesc(Passage::getCreateTime));
     List<Passage> records = passagePage.getRecords();
     if (CollUtil.isEmpty(records)) {
@@ -586,6 +590,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
       }
     }
+
     ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (requestAttributes == null) {
       throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);

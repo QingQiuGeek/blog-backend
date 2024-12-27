@@ -3,7 +3,7 @@ package com.serein.interceptor;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
-import com.serein.model.UserHolder;
+import com.serein.util.UserHolder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;

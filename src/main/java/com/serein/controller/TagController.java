@@ -1,6 +1,6 @@
 package com.serein.controller;
 
-import com.serein.model.vo.TagVO.TagVO;
+import com.serein.model.vo.tagVO.TagVO;
 import com.serein.service.TagsService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
