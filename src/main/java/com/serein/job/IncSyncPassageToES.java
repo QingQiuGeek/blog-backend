@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile
@@ -15,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * @Time: 22:27
  * @Description: 增量同步文章到ES
  */
-//@Component
+@Component
 @Slf4j
 public class IncSyncPassageToES {
 
@@ -32,14 +34,14 @@ public class IncSyncPassageToES {
   private  final int RATE_MINUTES = 3;
 
   //todo 开启定时任务
-//  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
+  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
   public void run() {
     // 查询近 5 分钟内的数据
     Date minutesAgoDate = new Date(new Date().getTime() - AGO_MINUTES * 60 * 1000L);
     List<Passage> passageList = passageMapper.asyncPassageToEs(minutesAgoDate);
 
     if (CollUtil.isEmpty(passageList)) {
-      log.info("No find new add passage in {} minutes", AGO_MINUTES * 60 * 1000L);
+      log.info("No find new add passage in {} minutes", AGO_MINUTES);
       return;
     }
 

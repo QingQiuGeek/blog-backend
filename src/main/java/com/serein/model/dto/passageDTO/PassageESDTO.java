@@ -1,5 +1,6 @@
 package com.serein.model.dto.passageDTO;
 
+import com.serein.constants.Common;
 import java.io.Serializable;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -28,7 +29,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
     "desc" : "黑子的描述2"
   }
 }*/
-@Document(indexName = "passage_v2")
+@Document(indexName = Common.INDEX_NAME)
 @Data
 public class PassageESDTO implements Serializable {
 

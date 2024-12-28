@@ -9,7 +9,8 @@ package com.serein.constants;
 
 public interface Common {
 
-  //  A:\IDEA\blog\src\main\resources\suploadImg
+  String INDEX_NAME="passage_v2";
+
 
   String HOT_PASSAGE_KEY="hotPassage";
 
@@ -45,6 +46,7 @@ public interface Common {
   String USER_FOLLOW_KEY = "Blog:user:follow:";
 
   String USER_SIGNIN_KEY = "Blog:user:signin:";
+
 
   String USER_REGISTER_CODE_KEY = "Blog:user:registerCode:";
 

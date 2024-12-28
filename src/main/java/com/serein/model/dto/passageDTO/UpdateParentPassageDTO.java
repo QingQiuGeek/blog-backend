@@ -14,7 +14,8 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class AddPassageDTO extends PassageDTO implements Serializable {
+public class UpdateParentPassageDTO extends ParentPassageDTO implements Serializable {
+
 
   @TableField(exist = false)
   private static final long serialVersionUID = 1L;

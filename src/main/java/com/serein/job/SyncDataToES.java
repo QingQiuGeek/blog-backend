@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile
@@ -31,17 +32,18 @@ import org.springframework.beans.BeanUtils;
  */
 
 @Slf4j
-//@Component
+@Component
 public class SyncDataToES {
+
   @Resource
   EsSyncFailRecordMapper esSyncFailRecordMapper;
 
   @Resource
   private PassageESDao passageESDao;
 
-  public  final int retryNum = 3;
+  public final int retryNum = 3;
 
-  public  final int retryWaitTime = 3;
+  public final int retryWaitTime = 3;
 
   // 创建一个retryer实例，最多重试3次，每次等待2秒
   Retryer<Void> retryer = RetryerBuilder.<Void>newBuilder()
@@ -63,7 +65,7 @@ public class SyncDataToES {
           try {
             List<PassageESDTO> passageESDTOS = passageESDTOList.subList(finalI, end);
             passageESDTOS.forEach(passageESDTO -> {
-              log.info("同步文章:{}",passageESDTO.getPassageId());
+              log.info("同步文章:{}", passageESDTO.getPassageId());
             });
             passageESDao.saveAll(passageESDTOS);
             log.info("该批次同步文章成功");
@@ -112,7 +114,7 @@ public class SyncDataToES {
             String jsonStr = JSONUtil.toJsonStr(tagNameList);
             passageESDTO.setTagStr(jsonStr);
           }
-          User authorInfo = userMapper.getAuthorInfo(passage.getPassageId());
+          User authorInfo = userMapper.getAuthorInfo(passage.getAuthorId());
           passageESDTO.setAuthorName(authorInfo.getUserName());
           return passageESDTO;
         })

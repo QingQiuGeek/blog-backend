@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class PassageDTO implements Serializable {
+public class ParentPassageDTO implements Serializable {
 
 
   private String passageId;

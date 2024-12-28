@@ -6,7 +6,7 @@ import com.serein.constants.ErrorInfo;
 import com.serein.constants.SearchType;
 import com.serein.exception.BusinessException;
 import com.serein.model.request.QueryPageRequest;
-import com.serein.model.dto.passageDTO.PassageDTO;
+import com.serein.model.dto.passageDTO.ParentPassageDTO;
 import com.serein.model.request.SearchPassageRequest;
 import com.serein.model.vo.passageVO.EditPassageVO;
 import com.serein.model.vo.passageVO.PassageContentVO;
@@ -173,19 +173,19 @@ public class PassageController {
    * <p>
    * 文章操作type 0初次保存和修改  2立刻发布  4定时发布
    *
-   * @param passageDTO
+   * @param parentPassageDTO
    * @return
    */
   @PostMapping("/save")
-  public BaseResponse<String> addPassage(@RequestBody PassageDTO passageDTO) {
+  public BaseResponse<String> addPassage(@RequestBody ParentPassageDTO parentPassageDTO) {
     Long passageId = null;
 //    有passageId说明就是更新，那么就进行更新
-    if (StringUtils.isNotBlank(passageDTO.getPassageId())) {
-        passageId = passageService.updatePassage(passageDTO);
+    if (StringUtils.isNotBlank(parentPassageDTO.getPassageId())) {
+        passageId = passageService.updatePassage(parentPassageDTO);
         return ResultUtil.success(passageId.toString());
     }
     //没有passageId那么就是初次保存、立刻发布、定时发布，具体哪个根据type判断
-    passageId = passageService.addPassage(passageDTO);
+    passageId = passageService.addPassage(parentPassageDTO);
     return ResultUtil.success(passageId.toString());
   }
 
@@ -244,12 +244,12 @@ public class PassageController {
   /**
    * 用户可以更新自己的文章内容 根据文章id更新文章
    *
-   * @param updatePassageDTO
+   * @param updateParentPassageDTO
    * @return
    */
   @PostMapping("/update")
-  public BaseResponse<String> updateByPassageId(@RequestBody PassageDTO updatePassageDTO) {
-    Long passageId = passageService.updatePassage(updatePassageDTO);
+  public BaseResponse<String> updateByPassageId(@RequestBody ParentPassageDTO updateParentPassageDTO) {
+    Long passageId = passageService.updatePassage(updateParentPassageDTO);
     return ResultUtil.success(passageId.toString());
   }
 

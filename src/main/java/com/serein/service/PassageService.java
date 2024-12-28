@@ -3,7 +3,7 @@ package com.serein.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.serein.model.request.QueryPageRequest;
-import com.serein.model.dto.passageDTO.PassageDTO;
+import com.serein.model.dto.passageDTO.ParentPassageDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.request.SearchPassageRequest;
@@ -26,9 +26,9 @@ public interface PassageService extends IService<Passage> {
 
   List<PassageTitleVO> getOtherPassagesByUserId(Long userId);
 
-  Long addPassage(PassageDTO addPassageDTO);
+  Long addPassage(ParentPassageDTO addParentPassageDTO);
 
-  Long updatePassage(PassageDTO updatePassageDTO);
+  Long updatePassage(ParentPassageDTO updateParentPassageDTO);
 
   PassageInfoVO getPassageInfoByPassageId(Long passageId);
 

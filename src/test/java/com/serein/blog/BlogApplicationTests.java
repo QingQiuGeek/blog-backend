@@ -6,9 +6,9 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.serein.constants.Common;
 import com.serein.mapper.PassageMapper;
-import com.serein.model.dto.passageDTO.AddPassageDTO;
-import com.serein.model.dto.passageDTO.PassageDTO;
-import com.serein.model.dto.passageDTO.UpdatePassageDTO;
+import com.serein.model.dto.passageDTO.AddParentPassageDTO;
+import com.serein.model.dto.passageDTO.ParentPassageDTO;
+import com.serein.model.dto.passageDTO.UpdateParentPassageDTO;
 import com.serein.model.entity.User;
 import com.serein.model.vo.passageVO.PassageContentVO;
 import com.serein.model.vo.userVO.UserVO;
@@ -41,8 +41,8 @@ class BlogApplicationTests {
   @Autowired
   PassageMapper passageMapper;
 
-  AddPassageDTO addPassageDTO = new AddPassageDTO();
-  UpdatePassageDTO updatePassageDTO = new UpdatePassageDTO();
+  AddParentPassageDTO addPassageDTO = new AddParentPassageDTO();
+  UpdateParentPassageDTO updatePassageDTO = new UpdateParentPassageDTO();
 
   @Test
   void doClass() {
@@ -51,8 +51,8 @@ class BlogApplicationTests {
 
   }
 
-  void getDtoClass(PassageDTO passageDTO) {
-    System.out.println(passageDTO.getClass());
+  void getDtoClass(ParentPassageDTO parentPassageDTO) {
+    System.out.println(parentPassageDTO.getClass());
   }
 
   @Test
@@ -64,11 +64,11 @@ class BlogApplicationTests {
 
   @Test
   void dto() {
-    PassageDTO passageDTO = new PassageDTO();
-    passageDTO.setTitle("哈哈哈");
-    System.out.println(passageDTO.toString());
+    ParentPassageDTO parentPassageDTO = new ParentPassageDTO();
+    parentPassageDTO.setTitle("哈哈哈");
+    System.out.println(parentPassageDTO.toString());
 
-    AddPassageDTO addPassageDTO = new AddPassageDTO();
+    AddParentPassageDTO addPassageDTO = new AddParentPassageDTO();
     addPassageDTO.setContent("content");
     System.out.println(addPassageDTO.toString());
     System.out.println(addPassageDTO.getContent());

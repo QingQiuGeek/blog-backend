@@ -22,7 +22,7 @@ import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.mapper.UserThumbsMapper;
-import com.serein.model.dto.passageDTO.PassageDTO;
+import com.serein.model.dto.passageDTO.ParentPassageDTO;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
@@ -55,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.redisson.api.RBlockingDeque;
@@ -68,7 +67,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -240,24 +238,28 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Pageable pageable = PageRequest.of(searchPassageRequest.getCurrentPage(),
         searchPassageRequest.getPageSize());
     //拼接查询条件
-    BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+    NativeSearchQueryBuilder searchQuery = new NativeSearchQueryBuilder();
     if (StringUtils.isNotBlank(searchText)) {
-      boolQueryBuilder.should(QueryBuilders.matchQuery("title", searchText));
-      boolQueryBuilder.should(QueryBuilders.matchQuery("content", searchText));
-      boolQueryBuilder.should(QueryBuilders.matchQuery("summary", searchText));
-      boolQueryBuilder.should(QueryBuilders.termQuery("authorName", searchText));
-      boolQueryBuilder.should(QueryBuilders.matchQuery("tagStr", searchText));
-      //确保至少有1个“should”条件需要匹配。
-      boolQueryBuilder.minimumShouldMatch(1);
+//      // 构建 bool 查询
+      searchQuery.withQuery(QueryBuilders.boolQuery()
+          .should(QueryBuilders.matchQuery("title", searchText))
+          .should(QueryBuilders.matchQuery("content", searchText))
+          .should(QueryBuilders.matchQuery("summary", searchText))
+          .should(QueryBuilders.matchQuery("tagStr", searchText))
+          .should(QueryBuilders.matchQuery("authorName", searchText))
+      );
     }
-    // 构造查询
-    SearchRequest searchRequest = new SearchRequest("passage_v2"); // 指定索引名称
-    NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder)
-        .withPageable(pageable)
-        .build();
-    log.info("ES查询语句:{}", searchQuery.getQuery().toString());
-    SearchHits<PassageESDTO> searchHits = elasticsearchRestTemplate.search(searchQuery,
-        PassageESDTO.class);
+    log.info("ES查询语句:{}", searchQuery);
+    SearchHits<PassageESDTO> searchHits = null;
+
+    try {
+      searchHits = elasticsearchRestTemplate.search(searchQuery.build(),
+          PassageESDTO.class);
+    } catch (Exception e) {
+      log.error("ES查询出错{}", e);
+      throw new RuntimeException(e);
+    }
+
     List<Passage> resourceList = new ArrayList<>();
     List<SearchHit<PassageESDTO>> searchHitList = searchHits.getSearchHits();
     if (searchHitList.isEmpty()) {
@@ -428,16 +430,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Transactional
   @Override
-  public Long addPassage(PassageDTO addPassageDTO) {
-    Passage passage = getPassage(addPassageDTO);
+  public Long addPassage(ParentPassageDTO addParentPassageDTO) {
+    Passage passage = getPassage(addParentPassageDTO);
     passageMapper.insertPassage(passage);
     Long newPassageId = passage.getPassageId();
     if (newPassageId == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
-    if (addPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
+    if (addParentPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
       //添加任务到延迟队列
-      long delay = addPassageDTO.getPublishTime() - System.currentTimeMillis();
+      long delay = addParentPassageDTO.getPublishTime() - System.currentTimeMillis();
       addDelayQueue(newPassageId, delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
 //      PassageTimePublish passageTimePublish = new PassageTimePublish();
 //      passageTimePublish.setPassageId(newPassageId);
@@ -447,7 +449,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 //        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
 //      }
     }
-    List<Long> tagIdList = addPassageDTO.getTagIdList();
+    List<Long> tagIdList = addParentPassageDTO.getTagIdList();
     if (tagIdList == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
@@ -460,20 +462,20 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Override
-  public Long updatePassage(PassageDTO updatePassageDTO) {
-    Passage passage = getPassage(updatePassageDTO);
+  public Long updatePassage(ParentPassageDTO updateParentPassageDTO) {
+    Passage passage = getPassage(updateParentPassageDTO);
     //更新文章时，审核通过时间在数据库中自动更新
     int b1 = passageMapper.updatePassage(passage);
-    if (updatePassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
+    if (updateParentPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
       PassageTimePublish passageTimePublish = new PassageTimePublish();
-      passageTimePublish.setPassageId(Long.valueOf(updatePassageDTO.getPassageId()));
-      passageTimePublish.setPublishTime(new Date(updatePassageDTO.getPublishTime()));
+      passageTimePublish.setPassageId(Long.valueOf(updateParentPassageDTO.getPassageId()));
+      passageTimePublish.setPublishTime(new Date(updateParentPassageDTO.getPublishTime()));
       int insert = passageTimePublishMapper.insert(passageTimePublish);
       if (insert != 1) {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
       }
     }
-    List<Long> tagIdList = updatePassageDTO.getTagIdList();
+    List<Long> tagIdList = updateParentPassageDTO.getTagIdList();
     if (tagIdList == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
@@ -521,10 +523,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return blockingDeque.take();
   }
 
-  public Passage getPassage(PassageDTO passageDTO) {
+  public Passage getPassage(ParentPassageDTO parentPassageDTO) {
     Passage passage = new Passage();
-    BeanUtil.copyProperties(passageDTO, passage);
-    String passageId = passageDTO.getPassageId();
+    BeanUtil.copyProperties(parentPassageDTO, passage);
+    String passageId = parentPassageDTO.getPassageId();
     if (StringUtils.isNotBlank(passageId)) {
       passage.setPassageId(Long.valueOf(passageId));
     }
@@ -533,7 +535,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     passage.setAuthorId(loginUserVO.getUserId());
-    int type = passageDTO.getType();
+    int type = parentPassageDTO.getType();
     switch (type) {
       case OperationPassageType.SAVE:
         passage.setStatus(0);
