@@ -240,17 +240,4 @@ public class PassageController {
     return ResultUtil.success(b);
   }
 
-
-  /**
-   * 用户可以更新自己的文章内容 根据文章id更新文章
-   *
-   * @param updateParentPassageDTO
-   * @return
-   */
-  @PostMapping("/update")
-  public BaseResponse<String> updateByPassageId(@RequestBody ParentPassageDTO updateParentPassageDTO) {
-    Long passageId = passageService.updatePassage(updateParentPassageDTO);
-    return ResultUtil.success(passageId.toString());
-  }
-
 }

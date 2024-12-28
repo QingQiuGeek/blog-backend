@@ -13,11 +13,9 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.OperationPassageType;
 import com.serein.exception.BusinessException;
-import com.serein.mapper.CategoryMapper;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.PassageTagMapper;
-import com.serein.mapper.PassageTimePublishMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
 import com.serein.mapper.UserMapper;
@@ -26,7 +24,6 @@ import com.serein.model.dto.passageDTO.ParentPassageDTO;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
 import com.serein.model.entity.PassageTag;
-import com.serein.model.entity.PassageTimePublish;
 import com.serein.model.entity.Tags;
 import com.serein.model.entity.User;
 import com.serein.model.entity.UserCollects;
@@ -84,8 +81,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Autowired
   private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
-  @Autowired
-  private PassageTimePublishMapper passageTimePublishMapper;
+
   @Autowired
   private StringRedisTemplate stringRedisTemplate;
 
@@ -460,13 +456,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     //更新文章时，审核通过时间在数据库中自动更新
     int b1 = passageMapper.updatePassage(passage);
     if (updateParentPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
-      PassageTimePublish passageTimePublish = new PassageTimePublish();
-      passageTimePublish.setPassageId(Long.valueOf(updateParentPassageDTO.getPassageId()));
-      passageTimePublish.setPublishTime(new Date(updateParentPassageDTO.getPublishTime()));
-      int insert = passageTimePublishMapper.insert(passageTimePublish);
-      if (insert != 1) {
-        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
-      }
+      long delay = updateParentPassageDTO.getPublishTime() - System.currentTimeMillis();
+      addDelayQueue(Long.valueOf(updateParentPassageDTO.getPassageId()), delay,
+          TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
     }
     List<Long> tagIdList = updateParentPassageDTO.getTagIdList();
     if (tagIdList == null) {
@@ -841,7 +833,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     boolean b1 = removeById(passageId);
     commentMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
-    passageTimePublishMapper.deleteByPassageId(passageId);
     if (b1 && b3) {
       return true;
     }
