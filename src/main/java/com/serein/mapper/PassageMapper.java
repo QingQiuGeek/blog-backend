@@ -74,7 +74,7 @@ public interface PassageMapper extends BaseMapper<Passage> {
   @Update("update blog.passage set isPrivate=isPrivate^1 where passageId=#{passageId}")
   boolean setPassagePrivate(Long passageId);
 
-  @Select("select title,content,summary,thumbnail,passageId from blog.passage where passageId=#{passageId} and authorId=#{authorId}")
+  @Select("select title,content,summary,thumbnail,passageId,status from blog.passage where passageId=#{passageId} and authorId=#{authorId}")
   Passage getEditPassageByPassageId(@Param("passageId") Long passageId,
       @Param("authorId") Long authorId);
 }

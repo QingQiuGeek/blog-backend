@@ -539,8 +539,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId)
             .select(Passage::getPassageId, Passage::getTitle, Passage::getContent,
                 Passage::getStatus, Passage::getCollectNum, Passage::getThumbNum,
-                Passage::getViewNum, Passage::getUpdateTime, Passage::getThumbnail,
-                Passage::getSummary,Passage::getAuthorId)
+                Passage::getCommentNum, Passage::getIsPrivate,
+                Passage::getViewNum, Passage::getAccessTime, Passage::getThumbnail,
+                Passage::getSummary, Passage::getAuthorId)
             .orderByDesc(Passage::getCreateTime));
     List<Passage> records = passagePage.getRecords();
     if (CollUtil.isEmpty(records)) {

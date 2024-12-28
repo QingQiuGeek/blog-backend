@@ -47,5 +47,10 @@ public class EditPassageVO implements Serializable {
 
   private String content;
 
+  /**
+   * 状态
+   */
+  private int status;
+
   private static final long serialVersionUID = 1L;
 }

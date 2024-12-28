@@ -43,10 +43,13 @@
   <update id="updatePassage">
     update blog.passage
     set title=#{title},
-        content= #{content},
-        thumbnail=#{thumbnail},
-        summary=#{summary},
-        status=#{status}
+    content= #{content},
+    thumbnail=#{thumbnail},
+    summary=#{summary}
+    <if test="status != null">
+      ,status=#{status}
+    </if>
+
     where passageId = #{passageId}
   </update>
   <!--把未删除且审核通过的文章查询出来同步到 es  -->

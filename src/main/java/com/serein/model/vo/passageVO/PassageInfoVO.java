@@ -1,6 +1,7 @@
 package com.serein.model.vo.passageVO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.io.Serializable;
@@ -66,11 +67,6 @@ public class PassageInfoVO implements Serializable {
    */
   private String summary;
 
-  /*
-   * 标签列表 存到数据库的时候是json格式
-   * */
-//  private List<String> pTags;
-
   /**
    * long是标签id，value是标签名
    */
@@ -104,7 +100,7 @@ public class PassageInfoVO implements Serializable {
   private Integer collectNum;
 
   /**
-   * 审核通过时间
+   * 发布时间
    */
   private Date accessTime;
 

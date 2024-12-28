@@ -41,7 +41,6 @@ import com.serein.model.vo.passageVO.PassageInfoVO;
 import com.serein.model.vo.passageVO.PassageTitleVO;
 import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.service.PassageService;
-import com.serein.service.PassageTagService;
 import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.UserHolder;
@@ -55,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
@@ -107,15 +105,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   private UserMapper userMapper;
 
   @Autowired
-  private PassageTagService passageTagService;
-  @Autowired
   private TagsMapper tagsMapper;
 
   @Autowired
   private CommentMapper commentMapper;
-
-  @Autowired
-  private CategoryMapper categoryMapper;
 
   @Autowired
   private RedissonClient redissonClient;
@@ -538,7 +531,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     int type = parentPassageDTO.getType();
     switch (type) {
       case OperationPassageType.SAVE:
-        passage.setStatus(0);
+//        passage.setStatus(0);
         break;
       case OperationPassageType.PUBLISH:
         passage.setStatus(2);

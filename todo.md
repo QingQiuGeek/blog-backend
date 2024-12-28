@@ -68,9 +68,9 @@ push到远程
  * IP地址解析 √
  * RBAC
  * ai
- * ES搜索优化
+ * ES搜索优化 √
  * 文章管理bug
- * 定时发布redisson 延迟消息队列
+ * 定时发布redisson 延迟消息队列 √
  * 登录时检查账户是否禁用 √
  * 替换druid连接池 √
  * vx登录API
