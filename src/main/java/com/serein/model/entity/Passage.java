@@ -58,21 +58,6 @@ public class Passage implements Serializable {
   private Integer viewNum;
 
   /**
-   * 评论数量
-   */
-  private Integer commentNum;
-
-  /**
-   * 点赞数量
-   */
-  private Integer thumbNum;
-
-  /**
-   * 收藏数量
-   */
-  private Integer collectNum;
-
-  /**
    * 发布时间
    */
   private Date createTime;

@@ -67,5 +67,7 @@
       <option name="ADDITIONAL_TAGS" value="Author:,Date:,Time:,Description:,Author:懒大王Smile,TableName,description,createDate" />
     </inspection_tool>
     <inspection_tool class="MapOrSetKeyShouldOverrideHashCodeEquals" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SpringConfigurationProxyMethods" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="SpringTestingTransactionalInspection" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>

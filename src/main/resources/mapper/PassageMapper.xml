@@ -12,9 +12,6 @@
     <result property="thumbnail" column="thumbnail" jdbcType="VARCHAR"/>
     <result property="summary" column="summary" jdbcType="VARCHAR"/>
     <result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
-    <result property="commentNum" column="commentNum" jdbcType="INTEGER"/>
-    <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
-    <result property="collectNum" column="collectNum" jdbcType="INTEGER"/>
     <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
     <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
     <result property="accessTime" column="accessTime" jdbcType="TIMESTAMP"/>

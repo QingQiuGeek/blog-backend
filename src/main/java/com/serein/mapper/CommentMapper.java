@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @author 懒大王Smile
@@ -28,6 +29,8 @@ public interface CommentMapper extends BaseMapper<Comment> {
   @Delete("delete from blog.comment where passageId=#{passageId}")
   void deleteByPassageId(Long passageId);
 
+  @Select("select count(*) from blog.comment where passageId=#{passageId}")
+  int count(Long passageId);
 }
 
 

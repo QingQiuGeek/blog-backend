@@ -28,9 +28,6 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
   @Autowired
   StringRedisTemplate stringRedisTemplate;
 
-  @Autowired
-  JwtHelper jwtHelper;
-
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {

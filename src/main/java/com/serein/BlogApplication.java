@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author 懒大王Smile
  */
 @SpringBootApplication
-@EnableAsync
 @EnableTransactionManagement //开启注解方式的事务管理
 //开启定时任务增量同步
 @EnableScheduling

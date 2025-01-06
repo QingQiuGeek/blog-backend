@@ -1,5 +1,5 @@
-drop database if exists blog;
-create database blog;
+create database if not exists blog;
+
 use blog;
 
 create table category
@@ -9,32 +9,32 @@ create table category
     categoryName varchar(100)                       not null comment '类别名',
     createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间',
-    isDelete     tinyint  default 1                 not null comment '0逻辑删除'
-) comment '类别表';
-
-create table tags
-(
-    tagId   bigint auto_increment comment '标签id'
-        primary key,
-    categoryName varchar(50)                       not null comment '标签名',
-    categoryId bigint      not null   comment '所属类别id',
-    createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间'
-) comment '标签表';
+    isDelete     tinyint  default 1                 not null comment '0逻辑删除',
+    description  varchar(255)                       not null comment '类别描述'
+)
+    comment '类别表';
 
 create table comment
 (
     commentId       bigint auto_increment comment '评论id'
         primary key,
-    content         varchar(512)                       not null comment '评论的内容',
-    commentUserId   bigint                             not null comment '评论的用户id',
-    passageId       bigint                             not null comment '评论的文章id ',
-    toCommentId     bigint                             null comment '回复目标评论id',
-    toCommentUserId bigint                             not null comment '回复目标用户id',
-    commentTime     datetime default CURRENT_TIMESTAMP not null comment '评论时间',
-    isDelete        tinyint  default 1                 null comment '0逻辑删除'
+    content         varchar(512)      not null comment '评论的内容',
+    commentUserId   bigint            not null comment '评论的用户id',
+    passageId       bigint            not null comment '评论的文章id ',
+    authorId        bigint            not null comment '文章作者id',
+    toCommentId     bigint            null comment '回复目标评论id',
+    toCommentUserId bigint            null comment '回复目标用户id',
+    commentTime     datetime          not null comment '评论时间',
+    isDelete        tinyint default 1 null comment '0逻辑删除'
 )
     comment '评论表';
+
+create table es_sync_fail_record
+(
+    passageId  bigint                             not null comment '同步失败的文章id',
+    createTime datetime default CURRENT_TIMESTAMP not null
+)
+    comment 'mysql同步数据到ES失败记录表';
 
 create table letter
 (
@@ -53,53 +53,46 @@ create table passage
     passageId  bigint auto_increment comment '文章id'
         primary key,
     authorId   bigint                             not null comment '作者id,逻辑关联用户表',
-    authorName varchar(255)                       not null comment '作者名，逻辑关联用户表',
     title      varchar(255)                       not null comment '文章标题',
     content    text                               not null comment '文章内容',
     thumbnail  varchar(255)                       null comment '预览图URL',
     summary    varchar(512)                       not null comment '内容摘要',
-    categoryId tinyint  default 1                 not null comment '文章所属类别',
-    pTags      varchar(512)                       null comment '文章标签(json数组)',
     viewNum    int      default 0                 not null comment '浏览量',
-    commentNum int      default 0                 not null comment '评论数量',
-    thumbNum   int      default 0                 not null comment '点赞数量',
-    collectNum int      default 0                 not null comment '收藏数量',
     createTime datetime default CURRENT_TIMESTAMP not null comment '发布时间',
     updateTime datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间',
     accessTime datetime default (now())           null comment '审核通过时间',
-    status     tinyint  default 0                 not null comment '文章状态(0草稿,1待审核,2已发布)',
-    isDelete   tinyint  default 1                 not null comment '0逻辑删除'
+    status     tinyint  default 0                 not null comment '文章状态(0草稿,1待审核,2已发布,3驳回)',
+    isDelete   tinyint  default 1                 not null comment '0逻辑删除',
+    isPrivate  tinyint  default 1                 not null comment '是否私密，0私密，1公开'
 )
     comment '文章表';
 
+create index idx_passage_author
+    on passage (passageId, authorId);
 
-
-use blog;
-create table user_collects
+create table passage_tag
 (
-    id bigint not null auto_increment comment '主键id' primary key ,
-    userId       bigint not null  comment '用户id',
-    passageId     bigint           not null comment '文章id',
-    collectTime datetime default CURRENT_TIMESTAMP null comment '收藏时间'
-)comment '用户-收藏表';
+    id         bigint auto_increment comment '主键'
+        primary key,
+    passageId  bigint                              not null comment '文章ID',
+    tagId      bigint                              not null comment '标签ID',
+    createTime timestamp default CURRENT_TIMESTAMP not null comment '创建时间'
+)
+    comment '文章标签表';
 
-create table user_thumbs
+create index tagId_index
+    on passage_tag (tagId);
+
+create table tags
 (
-    id bigint not null auto_increment comment '主键id' primary key ,
-    userId       bigint not null comment '用户id',
-    passageId     bigint           not null comment '文章id',
-    thumbTime datetime default CURRENT_TIMESTAMP null comment '点赞时间'
-)comment '用户-点赞表';
-
-
-create table user_follow
-(
-    id bigint not null auto_increment comment '主键id' primary key ,
-    userId     bigint  not null  comment '关注的用户id'  ,
-    toUserId   bigint                  not           null comment '被关注的用户id',
-    followTime datetime default CURRENT_TIMESTAMP null comment '关注时间'
-) comment '用户关注表';
-
+    tagId      bigint auto_increment comment '标签id'
+        primary key,
+    tagName    varchar(50)                        not null comment '标签名',
+    categoryId bigint                             not null comment '所属类别id',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '修改时间'
+)
+    comment '标签表';
 
 create table user
 (
@@ -114,7 +107,8 @@ create table user
     password    varchar(255)                                                      not null comment '密码',
     mail        varchar(255)                                                      not null comment '邮箱',
     phone       varchar(100)                                                      null comment '电话,预留字段',
-    role        tinyint       default 0                                           not null comment '角色(0普通用户,1管理员)',
+    role        varchar(256)  default 'user'                                      not null comment '角色(0普通用户,1管理员)',
+    ipAddress   varchar(255)  default 'M78星云'                                   null comment 'ip地址',
     accessKey   varchar(100)                                                      null comment '预留字段',
     secretKey   varchar(100)                                                      null comment '预留字段',
     level       tinyint       default 0                                           not null comment '预留字段,用户等级',
@@ -125,12 +119,33 @@ create table user
 )
     comment '用户表';
 
+create table user_collects
+(
+    id          bigint auto_increment comment '主键id'
+        primary key,
+    userId      bigint                             not null comment '用户id',
+    passageId   bigint                             not null comment '文章id',
+    collectTime datetime default CURRENT_TIMESTAMP null comment '收藏时间'
+)
+    comment '用户-收藏表';
 
+create table user_follow
+(
+    id         bigint auto_increment comment '主键id'
+        primary key,
+    userId     bigint                             not null comment '关注的用户id',
+    toUserId   bigint                             not null comment '被关注的用户id',
+    followTime datetime default CURRENT_TIMESTAMP null comment '关注时间'
+)
+    comment '用户关注表';
 
-
-use blog;
-
-select * from passage ;
-select * from blog.passage where updateTime>=5 and isDelete=1 and status=2;
-
+create table user_thumbs
+(
+    id        bigint auto_increment comment '主键id'
+        primary key,
+    userId    bigint                             not null comment '用户id',
+    passageId bigint                             not null comment '文章id',
+    thumbTime datetime default CURRENT_TIMESTAMP null comment '点赞时间'
+)
+    comment '用户-点赞表';
 

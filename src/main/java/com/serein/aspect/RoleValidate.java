@@ -33,8 +33,6 @@ public class RoleValidate {
      * 如果mustRole为空说明访问该方法不需要权限，直接放行，如果为空，则检查用户的权限
      * 2.获取当前登录用户的权限与mustRole比对
      */
-//
-
     //访问该方法所需权限
     String mustRole = authCheck.mustRole();
     UserRoleEnum mustUserRoleEnum = UserRoleEnum.getEnumByRole(mustRole);
@@ -49,7 +47,6 @@ public class RoleValidate {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
 
-    //todo 被封号的直接拒绝
     //获取登录用户的role
     String loginUserRole = loginUserVO.getRole();
     UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByRole(loginUserRole);

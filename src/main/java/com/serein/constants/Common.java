@@ -37,10 +37,12 @@ public interface Common {
   String TIME_PUBLISH_KEY="Blog:timePublish:";
   String LOGIN_TOKEN_KEY = "Blog:login:token:";
 
-  String PASSAGE_HOME_KEY = "Blog:passage:home:";
   String PASSAGE_THUMB_KEY = "Blog:passage:thumb:";
 
   String PASSAGE_COLLECT_KEY = "Blog:passage:collect:";
+
+  String TOP_COLLECT_PASSAGE = "Blog:passage:topCollect:";
+
 
   //用户的关注信息存在redis中，登录用户的Id为key，被关注的用户Id为value。我关注了谁
   String USER_FOLLOW_KEY = "Blog:user:follow:";

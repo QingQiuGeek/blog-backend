@@ -11,6 +11,7 @@ import com.serein.exception.BusinessException;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserMapper;
+import com.serein.util.IPUtil;
 import com.serein.util.UserHolder;
 import com.serein.model.dto.commentDTO.CommentDTO;
 import com.serein.model.dto.commentDTO.DeleteCommentDTO;
@@ -69,10 +70,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     commentMapper.insertComment(comment);
     if (comment.getCommentId() == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.COMMENT_ERROR);
-    }
-    Boolean b = passageMapper.addCommentNum(comment.getPassageId());
-    if (!b) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
     }
     log.info("insert comment：" + comment);
     log.info("update passage_Table viewNum+1");
@@ -159,7 +156,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
 
     commentVOS.forEach((commentVO) -> {
       Long commentUserId = commentVO.getCommentUserId();
-
       // 从 Map 中获取对应的 CommentUserInfoVO
       CommentUserInfoVO commentUserInfoVO = userInfoMap.get(commentUserId);
 
@@ -167,6 +163,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
       if (commentUserInfoVO != null) {
         BeanUtil.copyProperties(commentUserInfoVO, commentVO,
             CopyOptions.create().ignoreNullValue());
+        String ipRegion = IPUtil.getIpRegion(commentUserInfoVO.getIpAddress());
+        commentVO.setIpAddress(ipRegion);
       }
     });
   }
@@ -174,13 +172,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
   @Override
   public Boolean deleteComment(DeleteCommentDTO deleteCommentDTO) {
     Long commentId = deleteCommentDTO.getCommentId();
-    String passageId = deleteCommentDTO.getPassageId();
     int i = commentMapper.deleteById(commentId);
     if (i == 0) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
-    }
-    Boolean b = passageMapper.subCommentNum(Long.valueOf(passageId));
-    if (!b) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
     }
     return true;

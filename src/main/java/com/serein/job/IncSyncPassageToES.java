@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * @Time: 22:27
  * @Description: 增量同步文章到ES
  */
-@Component
+//@Component
 @Slf4j
 public class IncSyncPassageToES {
 
@@ -28,7 +28,7 @@ public class IncSyncPassageToES {
   private SyncDataToES syncDataToES;
 
   //单位分钟，同步多久前的文章
-  private  final int AGO_MINUTES = 3;
+  private  final int AGO_MINUTES = 4;
 
   //单位分钟，每三分钟同步一次三分钟之前的数据
   private  final int RATE_MINUTES = 3;

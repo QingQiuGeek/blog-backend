@@ -1,5 +1,6 @@
 package com.serein.util;
 
+import java.util.concurrent.Executors;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ public class MailUtil {
     this.mailSender = mailSender;
     this.fromEmail = fromEmail;
   }
+
 
   public String sendCode(String email) {
     int code = (int) ((Math.random() * 9 + 1) * 100000);

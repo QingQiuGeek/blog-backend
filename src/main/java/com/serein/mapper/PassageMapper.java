@@ -34,29 +34,12 @@ public interface PassageMapper extends BaseMapper<Passage> {
   PassageContentVO getPassageContentByPid(@Param("uid") Long uid, @Param("pid") Long pid);
 
 
-  @Select("select passageId,authorId,collectNum,viewNum,commentNum,thumbNum,accessTime,title,summary from blog.passage where passageId=#{passageId} and isPrivate=1")
+  @Select("select passageId,authorId,viewNum,accessTime,title,summary from blog.passage where passageId=#{passageId} and isPrivate=1")
   Passage getPassageInfo(Long passageId);
 
   @Select("select count(*) from blog.user_thumbs where userId=#{uid}")
   Integer getThumbNum(Long uid);
 
-  @Update("update blog.passage set commentNum=commentNum+1 where passageId=#{passageId}")
-  Boolean addCommentNum(Long passageId);
-
-  @Update("update blog.passage set commentNum=commentNum-1 where passageId=#{passageId}")
-  Boolean subCommentNum(Long passageId);
-
-  @Update("update blog.passage set collectNum=collectNum+1 where passageId=#{passageId}")
-  Boolean addCollectNum(Long passageId);
-
-  @Update("update blog.passage set collectNum=collectNum-1 where passageId=#{passageId}")
-  boolean subCollectNum(Long passageId);
-
-  @Update("update blog.passage set thumbNum=thumbNum+1 where passageId=#{passageId}")
-  boolean addThumbNum(Long passageId);
-
-  @Update("update blog.passage set thumbNum=thumbNum-1 where passageId=#{passageId}")
-  boolean subThumbNum(Long passageId);
 
   List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
 

@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +124,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             select(Passage::getPassageId, Passage::getTitle, Passage::getViewNum,
                 Passage::getAuthorId,
                 Passage::getThumbnail, Passage::getSummary,
-                Passage::getCommentNum, Passage::getCollectNum, Passage::getThumbNum,
                 Passage::getAccessTime));
     //当前页的数据
     List<Passage> passageList = pageDesc.getRecords();
@@ -162,6 +162,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             Map<Long, String> tagStrList = getTagMaps(tagIdList);
             passageInfoVO.setPTagsMap(tagStrList);
           }
+          int thumbsCount = userThumbsMapper.count(passage.getPassageId());
+          int collectCount = userCollectsMapper.count(passage.getPassageId());
+          int commentCount = commentMapper.count(passage.getPassageId());
+          passageInfoVO.setCollectNum(collectCount);
+          passageInfoVO.setThumbNum(thumbsCount);
+          passageInfoVO.setCommentNum(commentCount);
           log.info("passageInfoVO：" + passageInfoVO);
           return passageInfoVO;
         }
@@ -430,13 +436,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       //添加任务到延迟队列
       long delay = addParentPassageDTO.getPublishTime() - System.currentTimeMillis();
       addDelayQueue(newPassageId, delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
-//      PassageTimePublish passageTimePublish = new PassageTimePublish();
-//      passageTimePublish.setPassageId(newPassageId);
-//      passageTimePublish.setPublishTime(new Date(addPassageDTO.getPublishTime()));
-//      int insert = passageTimePublishMapper.insert(passageTimePublish);
-//      if (insert != 1) {
-//        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
-//      }
     }
     List<Long> tagIdList = addParentPassageDTO.getTagIdList();
     if (tagIdList == null) {
@@ -553,23 +552,21 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     String key = Common.PASSAGE_THUMB_KEY + passageId;
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
-      boolean b = passageMapper.addThumbNum(passageId);
       //插入用户点赞表
       UserThumbs userThumbs = UserThumbs.builder().userId(userId).passageId(passageId).build();
       int insert = userThumbsMapper.insert(userThumbs);
       //文章表和用户点赞表同时更新成功
-      if (b && insert == 1) {
+      if (insert == 1) {
         stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
     } else {
-      boolean b = passageMapper.subThumbNum(passageId);
       //删除用户点赞表
       LambdaQueryWrapper<UserThumbs> queryWrapper = new LambdaQueryWrapper<>();
       queryWrapper.eq(UserThumbs::getUserId, userId).eq(UserThumbs::getPassageId, passageId);
       int delete = userThumbsMapper.delete(queryWrapper);
-      if (b && delete == 1) {
+      if (delete == 1) {
         Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
         if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
@@ -598,33 +595,36 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
      * 同一个用户对一篇文章只能收藏一次，不能重复收藏，取消收藏亦然
      * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
      * */
+    //TODO 改成set集合
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
     Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
     if (score == null) {
-      Boolean b = passageMapper.addCollectNum(passageId);
       //先插入mysql用户收藏表
       UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
           .build();
       int insert = userCollectsMapper.insert(userCollects);
-      if (b && insert == 1) {
+      if (insert == 1) {
         //写入redis
-        Boolean add = stringRedisTemplate.opsForZSet()
+        boolean add = stringRedisTemplate.opsForZSet()
             .add(key, userId.toString(), System.currentTimeMillis());
-        if (Boolean.FALSE.equals(add)) {
+        // 增加文章的收藏量
+        stringRedisTemplate.opsForZSet()
+            .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), 1);
+        if (!add) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
     } else {
-      boolean b = passageMapper.subCollectNum(passageId);
       //删除用户收藏表
       LambdaQueryWrapper<UserCollects> queryWrapper = new LambdaQueryWrapper<>();
       queryWrapper.eq(UserCollects::getUserId, userId).eq(UserCollects::getPassageId, passageId);
       int delete = userCollectsMapper.delete(queryWrapper);
-//            userCollectsMapper.deleteById(userCollects);
-      if (b && delete == 1) {
+      if (delete == 1) {
         Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        stringRedisTemplate.opsForZSet()
+            .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), -1);
         if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
@@ -646,16 +646,28 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public List<PassageTitleVO> getTopPassages() {
     //根据viewNum降序获取前10
     IPUtil.isHotIp();
-    Page<Passage> page = new Page<>(1, 10);
-    LambdaQueryWrapper<Passage> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.orderByDesc(Passage::getViewNum).eq(Passage::getIsPrivate, 1);
-    Page<Passage> passagePage = passageMapper.selectPage(page, queryWrapper);
-    List<Passage> records = passagePage.getRecords();
+    Set<String> passageIdSet = stringRedisTemplate.opsForZSet()
+        .reverseRange(Common.TOP_COLLECT_PASSAGE, 0, 9);
+    List<Long> idlist = passageIdSet.stream().map(passageId -> Long.valueOf(passageId))
+        .collect(Collectors.toList());
+    if(idlist.isEmpty()){
+      return Collections.emptyList();
+    }
+    List<Passage> passageList = listByIds(idlist);
+    // 为了保证文章收藏量从高到低，创建一个 Map 来存储 passageId 与 Passage 对象的映射关系
+    Map<Long, Passage> passageMap = passageList.stream()
+        .collect(Collectors.toMap(Passage::getPassageId, passage -> passage));
+
     List<PassageTitleVO> passageTitleVOS = new ArrayList<>();
-    records.forEach(passage -> {
-      PassageTitleVO passageTitleVO = new PassageTitleVO();
-      BeanUtils.copyProperties(passage, passageTitleVO);
-      passageTitleVOS.add(passageTitleVO);
+
+    //按照 idlist 顺序将 Passage 对象转换为 PassageTitleVO
+    idlist.forEach(id -> {
+      Passage passage = passageMap.get(id);  // 根据 id 获取对应的 Passage
+      if (passage != null) {
+        PassageTitleVO passageTitleVO = new PassageTitleVO();
+        BeanUtils.copyProperties(passage, passageTitleVO);
+        passageTitleVOS.add(passageTitleVO);
+      }
     });
     return passageTitleVOS;
   }
@@ -759,8 +771,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             .like(StringUtils.isNotBlank(title), Passage::getTitle, title)
             .select(Passage::getPassageId, Passage::getStatus,
                 Passage::getTitle,
-                Passage::getAccessTime, Passage::getCommentNum,
-                Passage::getViewNum, Passage::getCollectNum, Passage::getThumbNum,
+                Passage::getAccessTime,
+                Passage::getViewNum,
                 Passage::getAuthorId)
     );
     List<Passage> records = pageDesc.getRecords();
@@ -794,6 +806,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         Map<Long, String> tagMaps = getTagMaps(tagIdlist);
         adminPassageVO.setPTagsMap(tagMaps);
       }
+      int thumbsCount = userThumbsMapper.count(passage.getPassageId());
+      int collectCount = userCollectsMapper.count(passage.getPassageId());
+      int commentCount = commentMapper.count(passage.getPassageId());
+      adminPassageVO.setCollectNum(collectCount);
+      adminPassageVO.setThumbNum(thumbsCount);
+      adminPassageVO.setCommentNum(commentCount);
       return adminPassageVO;
     }).collect(Collectors.toList());
   }
@@ -832,7 +850,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public boolean deleteByPassageId(Long passageId) {
     boolean b1 = removeById(passageId);
     commentMapper.deleteByPassageId(passageId);
+    userCollectsMapper.deleteByPassageId(passageId);
+    userThumbsMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
+    stringRedisTemplate.opsForZSet().remove(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId));
+
     if (b1 && b3) {
       return true;
     }

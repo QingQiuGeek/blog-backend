@@ -20,7 +20,6 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.UserRole;
 import com.serein.exception.BusinessException;
-import com.serein.exception.ExecutionRejectHandler;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
@@ -70,11 +69,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -136,24 +133,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Autowired
   TagsMapper tagsMapper;
 
-  @Bean
-  public ThreadPoolTaskExecutor taskExecutor() {
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(10);
-    //线程数量>core放入queue，queue满了，再来的任务会创建新线程，直到线程数量=max，之后的任务就会被拒绝
-    executor.setMaxPoolSize(20);
-//    缓存队列（阻塞队列）当核心线程数达到最大时，新任务会放在队列中排队等待执行
-    executor.setQueueCapacity(25);
-    executor.setThreadNamePrefix("async-sendCode");
-    //自定义拒绝策略
-    executor.setRejectedExecutionHandler(new ExecutionRejectHandler());
-    executor.initialize();
-
-    log.info("线程池初始化成功，核心线程数：" + executor.getCorePoolSize() +
-        ", 最大线程数：" + executor.getMaxPoolSize() +
-        ", 队列容量：" + executor.getQueueCapacity());
-    return executor;
-  }
+//  @Autowired
+//  @Qualifier("taskExecutor")
+//  private ThreadPoolTaskExecutor taskExecutor;
 
   /**
    * 关注或取关
@@ -448,7 +430,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     return avatarUrl;
   }
 
-
   @Override
   public Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
@@ -538,8 +519,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     Page<Passage> passagePage = passageMapper.selectPage(new Page<>(currentPage, pageSize),
         new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId)
             .select(Passage::getPassageId, Passage::getTitle, Passage::getContent,
-                Passage::getStatus, Passage::getCollectNum, Passage::getThumbNum,
-                Passage::getCommentNum, Passage::getIsPrivate,
+                Passage::getStatus,
+                Passage::getIsPrivate,
                 Passage::getViewNum, Passage::getAccessTime, Passage::getThumbnail,
                 Passage::getSummary, Passage::getAuthorId)
             .orderByDesc(Passage::getCreateTime));
@@ -613,9 +594,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     loginUserVO.setIpAddress(ipRegion);
     List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(queryUser.getInterestTag()),
         Long.class);
-    List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-    List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
-    loginUserVO.setInterestTag(tagNameList);
+    if (tagIdList != null) {
+      List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+      List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+      loginUserVO.setInterestTag(tagNameList);
+    }
     saveUserAndToken(queryUser, loginUserVO);
     log.info("loginUserVO：" + loginUserVO);
     log.info("登录线程：" + Thread.currentThread().getId());
@@ -630,7 +613,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   private void saveUserAndToken(User user, LoginUserVO loginUserVO) {
     //登录态保存到本地线程
     //UserHolder.saveUser(loginUserVO);
-    if (!StringUtils.isBlank(user.getInterestTag())) {
+    if (StringUtils.isNotBlank(user.getInterestTag())) {
       //把数据库中string类型的json转换成list<String>
       List<String> pTagList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
           String.class);
@@ -655,13 +638,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       }
     }
     String tokenKey = Common.LOGIN_TOKEN_KEY + token;
+    //TODO String 保存成字符串
     stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
     stringRedisTemplate.expire(tokenKey, Common.LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
+    UserHolder.saveUser(loginUserVO);
     //  String token = jwtHelper.createToken(loginUserVO.getUserId());
     //设置token有效期10min，用户进行操作时会刷新redis的token有效期
   }
 
-  @Async
+  @Async("taskExecutor")
   public void sendCodeForRegister(String email) {
     log.info("尝试发送邮箱验证码给用户：" + email + "进行注册操作");
     log.info("开始发送邮件..." + "获取的到邮件发送对象为:" + mailSender);
@@ -815,9 +800,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     String interestTag = user.getInterestTag();
     if (StringUtils.isNotBlank(interestTag)) {
       List<Long> tagIdlist = JSONUtil.toList(JSONUtil.parseArray(interestTag), Long.class);
-      List<Tags> tags = tagsMapper.selectBatchIds(tagIdlist);
-      List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
-      loginUserVO1.setInterestTag(tagNameList);
+      if (tagIdlist != null) {
+        List<Tags> tags = tagsMapper.selectBatchIds(tagIdlist);
+        List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
+        loginUserVO1.setInterestTag(tagNameList);
+      }
+
     }
     return loginUserVO1;
   }
