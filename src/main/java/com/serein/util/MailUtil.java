@@ -20,7 +20,6 @@ public class MailUtil {
     this.fromEmail = fromEmail;
   }
 
-
   public String sendCode(String email) {
     int code = (int) ((Math.random() * 9 + 1) * 100000);
     MimeMessage mimeMessage = mailSender.createMimeMessage();

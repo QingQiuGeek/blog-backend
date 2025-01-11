@@ -119,7 +119,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Resource
   private JavaMailSenderImpl mailSender;
 
-  @Resource
   private MailUtil mailUtil;
 
   @Resource
@@ -598,6 +597,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     loginUserVO.setToken(token);
     loginUserVO.setUserId(userId);
     loginUserVO.setRole(role);
+    loginUserVO.setAvatarUrl(userMapper.getUserAvatar(userId));
     Map<String, String> stringMap = new HashMap<>();
     stringMap.put("userId", userId.toString());
     stringMap.put("role", role);

@@ -36,6 +36,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Select("select role from blog.user where userId=#{userId}")
   String getUserRole(Long userId);
+
+  @Select("select avatarUrl from blog.user where userId=#{userId}")
+  String getUserAvatar(Long userId);
 }
 
 

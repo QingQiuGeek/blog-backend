@@ -11,7 +11,6 @@ import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
-import com.serein.constants.OperationPassageType;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
@@ -219,7 +218,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     passageInfoVO.setIsCollect(score2 != null);
   }
 
-
   @Override
   public Page<List<PassageInfoVO>> searchPassageFromES(SearchPassageRequest searchPassageRequest) {
     String searchText = searchPassageRequest.getSearchText();
@@ -285,7 +283,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         searchPassageRequest.getPageSize()).setTotal(resourceList.size())
         .setRecords(Collections.singletonList(passageInfoVOList));
   }
-
 
   @Override
   public Page<List<PassageInfoVO>> searchPassageByCategory(
@@ -397,6 +394,118 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return editPassageVO;
   }
 
+  @Transactional
+  @Override
+  public boolean timePublish(ParentPassageDTO parentPassageDTO) {
+    String passageId = parentPassageDTO.getPassageId();
+    if(StringUtils.isNotBlank(passageId)){
+      //id已经存在，那么更新数据库并添加到队列中,不包括status
+      updatePassage(parentPassageDTO);
+      log.info("currentTimeMillis :{}",System.currentTimeMillis());
+      log.info("parentPassageDTO.getPublishTime() :{}",parentPassageDTO.getPublishTime());
+      long delay = parentPassageDTO.getPublishTime() - System.currentTimeMillis();
+      log.info("delay: {}",delay);
+      addDelayQueue(Long.valueOf(passageId), delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
+      return true;
+    }else {
+      //id不存在，说明是新文章，先插入数据库再添加到队列
+      Long newPassageId = insertPassage(parentPassageDTO);
+      List<Long> tagIdList = parentPassageDTO.getTagIdList();
+      if (tagIdList == null) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
+      }
+      //保存文章标签
+      boolean b2 = passageTagMapper.insertPassageTags(tagIdList, newPassageId);
+      if (!b2) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+      }
+      long delay = parentPassageDTO.getPublishTime() - System.currentTimeMillis();
+      addDelayQueue(Long.valueOf(newPassageId), delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
+      return true;
+    }
+  }
+
+  @Transactional
+  public Long insertPassage(ParentPassageDTO parentPassageDTO) {
+    Passage passage = new Passage();
+    BeanUtils.copyProperties(parentPassageDTO,passage);
+    LoginUserVO user = UserHolder.getUser();
+    if(user==null){
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+    }
+    passage.setAuthorId(user.getUserId());
+    int i = passageMapper.insertPassage(passage);
+    if(i!=1){
+      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+    }
+    List<Long> tagIdList = parentPassageDTO.getTagIdList();
+    if (tagIdList == null) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+    }
+    //保存文章标签
+    boolean b2 = passageTagMapper.insertPassageTags(tagIdList, passage.getPassageId());
+    if (!b2) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+    }
+    return passage.getPassageId();
+  }
+
+  @Transactional
+  @Override
+  public Long savePassage(ParentPassageDTO parentPassageDTO) {
+    String passageId = parentPassageDTO.getPassageId();
+    if(StringUtils.isNotBlank(passageId)){
+      //id已经存在，那么仅更新数据库内容，不包括status
+      updatePassage(parentPassageDTO);
+      return Long.valueOf(passageId);
+    }else {
+      //id不存在，说明是新文章，先插入数据库 （status默认为0）
+      return insertPassage(parentPassageDTO);
+    }
+  }
+
+  @Transactional
+  @Override
+  public boolean nowPublish(ParentPassageDTO parentPassageDTO) {
+    String passageId = parentPassageDTO.getPassageId();
+    if(StringUtils.isNotBlank(passageId)){
+      List<Long> tagIdList = parentPassageDTO.getTagIdList();
+      if (tagIdList == null) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+      }
+      //更新passage_tag之前要删除老的数据
+      passageTagMapper.deleteTagByPassageId(Long.valueOf(passageId));
+      //保存文章标签
+      boolean b2 = passageTagMapper.insertPassageTags(tagIdList,Long.valueOf(passageId));
+      if (!b2) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+      }
+      //id已经存在，那么更新数据库，status=2
+      int i = passageMapper.publishPassage(Long.valueOf(passageId));
+      if(i!=1){
+        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.OPERATION_ERROR);
+      }
+      return true;
+    }else {
+      //id不存在，说明是新文章，先插入数据库， status=2
+      parentPassageDTO.setStatus(2);
+      Long newPassageId = insertPassage(parentPassageDTO);
+      if(newPassageId==null){
+        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.OPERATION_ERROR);
+      }
+      List<Long> tagIdList = parentPassageDTO.getTagIdList();
+      if (tagIdList == null) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+      }
+      //保存文章标签
+      boolean b2 = passageTagMapper.insertPassageTags(tagIdList, newPassageId);
+      if (!b2) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
+      }
+      return true;
+    }
+  }
+
   @Override
   public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
@@ -416,41 +525,15 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
-  @Transactional
-  @Override
-  public Long addPassage(ParentPassageDTO addParentPassageDTO) {
-    Passage passage = getPassage(addParentPassageDTO);
-    passageMapper.insertPassage(passage);
-    Long newPassageId = passage.getPassageId();
-    if (newPassageId == null) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
-    }
-    if (addParentPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
-      //添加任务到延迟队列
-      long delay = addParentPassageDTO.getPublishTime() - System.currentTimeMillis();
-      addDelayQueue(newPassageId, delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
-    }
-    List<Long> tagIdList = addParentPassageDTO.getTagIdList();
-    if (tagIdList == null) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
-    }
-    //保存文章标签
-    boolean b = passageTagMapper.insertPassageTags(tagIdList, newPassageId);
-    if (!b) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
-    }
-    return passage.getPassageId();
-  }
 
-  @Override
-  public Long updatePassage(ParentPassageDTO updateParentPassageDTO) {
-    Passage passage = getPassage(updateParentPassageDTO);
-    //更新文章时，审核通过时间在数据库中自动更新
+  @Transactional
+  public void updatePassage(ParentPassageDTO updateParentPassageDTO) {
+    Passage passage = new Passage();
+    BeanUtils.copyProperties(updateParentPassageDTO,passage);
+    passage.setPassageId(Long.valueOf(updateParentPassageDTO.getPassageId()));
     int b1 = passageMapper.updatePassage(passage);
-    if (updateParentPassageDTO.getType() == OperationPassageType.TIME_PUBLISH) {
-      long delay = updateParentPassageDTO.getPublishTime() - System.currentTimeMillis();
-      addDelayQueue(Long.valueOf(updateParentPassageDTO.getPassageId()), delay,
-          TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
+    if(b1!=1){
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     List<Long> tagIdList = updateParentPassageDTO.getTagIdList();
     if (tagIdList == null) {
@@ -460,10 +543,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     passageTagMapper.deleteTagByPassageId(passage.getPassageId());
     //保存文章标签
     boolean b2 = passageTagMapper.insertPassageTags(tagIdList, passage.getPassageId());
-    if (b1 != 1 && !b2) {
+    if (!b2) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
-    return passage.getPassageId();
   }
 
   /**
@@ -478,6 +560,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     try {
       RBlockingDeque<Object> blockingDeque = redissonClient.getBlockingDeque(queueKey);
       RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+      //移除之前就存在的
+      delayedQueue.remove(passageId);
       //向延迟队列中添加任务
       delayedQueue.offer(passageId, delay, timeUnit);
       log.info("添加延时队列成功 队列键：{}，队列值：{}，延迟时间：{}", queueKey, passageId,
@@ -498,34 +582,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public Long getDelayQueue(String queuekey) throws InterruptedException {
     RBlockingDeque<Long> blockingDeque = redissonClient.getBlockingDeque(queuekey);
     return blockingDeque.take();
-  }
-
-  public Passage getPassage(ParentPassageDTO parentPassageDTO) {
-    Passage passage = new Passage();
-    BeanUtil.copyProperties(parentPassageDTO, passage);
-    String passageId = parentPassageDTO.getPassageId();
-    if (StringUtils.isNotBlank(passageId)) {
-      passage.setPassageId(Long.valueOf(passageId));
-    }
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
-      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
-    }
-    passage.setAuthorId(loginUserVO.getUserId());
-    int type = parentPassageDTO.getType();
-    switch (type) {
-      case OperationPassageType.SAVE:
-        passage.setStatus(0);
-        break;
-      case OperationPassageType.PUBLISH:
-        passage.setStatus(2);
-        break;
-      case OperationPassageType.TIME_PUBLISH:
-        //定时发布就先作为草稿保存，等定时任务修改status
-        passage.setStatus(0);
-        break;
-    }
-    return passage;
   }
 
 

@@ -5,8 +5,8 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.SearchType;
 import com.serein.exception.BusinessException;
-import com.serein.model.request.QueryPageRequest;
 import com.serein.model.dto.passageDTO.ParentPassageDTO;
+import com.serein.model.request.QueryPageRequest;
 import com.serein.model.request.SearchPassageRequest;
 import com.serein.model.vo.passageVO.EditPassageVO;
 import com.serein.model.vo.passageVO.PassageContentVO;
@@ -19,7 +19,6 @@ import com.serein.util.ResultUtil;
 import java.util.List;
 import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PassageController {
 
   @Resource
-  private  PassageService passageService;
+  private PassageService passageService;
 
 
   /*
@@ -68,7 +67,7 @@ public class PassageController {
    * 收藏文章
    * */
   @PutMapping("/collect/{passageId}")
-  public BaseResponse<Boolean>collectPassage(@PathVariable String passageId) {
+  public BaseResponse<Boolean> collectPassage(@PathVariable String passageId) {
     Boolean aBoolean = passageService.collectPassage(Long.valueOf(passageId));
     return ResultUtil.success(aBoolean);
   }
@@ -158,6 +157,7 @@ public class PassageController {
 
   /**
    * 获取文章的编辑内容，比如编辑器页面刷新，重新获取文章内容
+   *
    * @param pid
    * @return
    */
@@ -168,24 +168,40 @@ public class PassageController {
   }
 
   /**
-   * 文章状态status 0草稿  1待审核  2已发布  3驳回
-   * <p>
-   * 文章操作type 0初次保存和修改  2立刻发布  4定时发布
+   * 文章状态status 0草稿  1待审核  2已发布  3驳回 立刻发布
+   *
+   * @param parentPassageDTO
+   * @return
+   */
+  @PostMapping("/nowPublish")
+  public BaseResponse<Boolean> nowPublish(@RequestBody ParentPassageDTO parentPassageDTO) {
+      boolean b = passageService.nowPublish(parentPassageDTO);
+      return ResultUtil.success(b);
+  }
+
+  /**
+   * 文章状态status 0草稿  1待审核  2已发布  3驳回 保存
    *
    * @param parentPassageDTO
    * @return
    */
   @PostMapping("/save")
-  public BaseResponse<String> addPassage(@RequestBody ParentPassageDTO parentPassageDTO) {
-    Long passageId = null;
-//    有passageId说明就是更新，那么就进行更新
-    if (StringUtils.isNotBlank(parentPassageDTO.getPassageId())) {
-        passageId = passageService.updatePassage(parentPassageDTO);
-        return ResultUtil.success(passageId.toString());
-    }
-    //没有passageId那么就是初次保存、立刻发布、定时发布，具体哪个根据type判断
-    passageId = passageService.addPassage(parentPassageDTO);
-    return ResultUtil.success(passageId.toString());
+  public BaseResponse<String> savePassage(@RequestBody ParentPassageDTO parentPassageDTO) {
+   Long passageId= passageService.savePassage(parentPassageDTO);
+   return ResultUtil.success(passageId.toString());
+
+  }
+
+  /**
+   * 文章状态status 0草稿  1待审核  2已发布  3驳回 定时发布
+   *
+   * @param parentPassageDTO
+   * @return
+   */
+  @PostMapping("/timePublish")
+  public BaseResponse<Boolean> timePublish(@RequestBody ParentPassageDTO parentPassageDTO) {
+    boolean b = passageService.timePublish(parentPassageDTO);
+    return ResultUtil.success(b);
   }
 
 
@@ -229,12 +245,13 @@ public class PassageController {
 
   /**
    * 返回文章私密状态 0私密 1公开
+   *
    * @param passageId
    * @return
    */
   @GetMapping("/setPrivate/{passageId}")
-  public BaseResponse<Boolean> setPassagePrivate(@PathVariable Long passageId){
-    boolean b=passageService.setPassagePrivate(passageId);
+  public BaseResponse<Boolean> setPassagePrivate(@PathVariable Long passageId) {
+    boolean b = passageService.setPassagePrivate(passageId);
     return ResultUtil.success(b);
   }
 

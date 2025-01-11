@@ -26,9 +26,6 @@ public interface PassageService extends IService<Passage> {
 
   List<PassageTitleVO> getOtherPassagesByUserId(Long userId);
 
-  Long addPassage(ParentPassageDTO addParentPassageDTO);
-
-  Long updatePassage(ParentPassageDTO updateParentPassageDTO);
 
   PassageInfoVO getPassageInfoByPassageId(Long passageId);
 
@@ -39,7 +36,6 @@ public interface PassageService extends IService<Passage> {
   List<PassageTitleVO> getTopPassages();
 
   PassageContentVO getPassageContentByPassageId(Long uid, Long pid);
-
 
   String uploadPassageCover(MultipartFile img);
 
@@ -63,4 +59,10 @@ public interface PassageService extends IService<Passage> {
   boolean setPassagePrivate(Long passageId);
 
   EditPassageVO getEditPassageByPassageId(Long passageId);
+
+  boolean timePublish(ParentPassageDTO parentPassageDTO);
+
+  Long savePassage(ParentPassageDTO parentPassageDTO);
+
+  boolean nowPublish(ParentPassageDTO parentPassageDTO);
 }

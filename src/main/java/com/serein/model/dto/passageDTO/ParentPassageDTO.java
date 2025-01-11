@@ -20,9 +20,6 @@ public class ParentPassageDTO implements Serializable {
 
   private String passageId;
 
-//  文章操作 0初次保存和修改  2立刻发布  4定时发布
-  private int type;
-
   //定时发布的时间
   private Long publishTime;
 
@@ -45,6 +42,11 @@ public class ParentPassageDTO implements Serializable {
    * 内容摘要
    */
   private String summary;
+
+  /**
+   * 状态
+   */
+  private int status;
 
   /**
    * 文章标签id

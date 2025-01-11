@@ -46,7 +46,7 @@ public interface PassageMapper extends BaseMapper<Passage> {
   @Select("select content,title,summary,passageId,authorId from blog.passage where status=2 and isDelete=1 and isPrivate=1")
   List<Passage> selectPassageESData();
 
-  void insertPassage(Passage passage);
+  int insertPassage(Passage passage);
 
   int updatePassage(Passage passage);
 

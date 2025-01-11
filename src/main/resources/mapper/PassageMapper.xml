@@ -29,8 +29,16 @@
         accessTime,status,isDelete
   </sql>
   <insert id="insertPassage" useGeneratedKeys="true" keyProperty="passageId">
-    insert into blog.passage (authorId, title, content, thumbnail, summary, status)
-    values (#{authorId}, #{title}, #{content}, #{thumbnail}, #{summary}, #{status})
+    insert into blog.passage (authorId, title, content, thumbnail, summary,
+    <trim suffixOverrides=",">
+      <if test="status != null">status</if>
+    </trim>
+    )
+    values (#{authorId}, #{title}, #{content}, #{thumbnail}, #{summary},
+    <trim suffixOverrides=",">
+      <if test="status != null">#{status}</if>
+    </trim>
+    )
   </insert>
   <update id="updateViewNum">
     update blog.passage
@@ -43,10 +51,6 @@
     content= #{content},
     thumbnail=#{thumbnail},
     summary=#{summary}
-    <if test="status != null">
-      ,status=#{status}
-    </if>
-
     where passageId = #{passageId}
   </update>
   <!--把未删除且审核通过的文章查询出来同步到 es  -->

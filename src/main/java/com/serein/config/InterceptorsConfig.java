@@ -2,6 +2,7 @@ package com.serein.config;
 
 import com.serein.interceptor.LoginInterceptor;
 import com.serein.interceptor.RefreshTokenInterceptor;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
