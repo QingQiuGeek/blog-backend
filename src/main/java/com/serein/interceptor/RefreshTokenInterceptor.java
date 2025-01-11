@@ -7,6 +7,7 @@ import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.util.JwtHelper;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
