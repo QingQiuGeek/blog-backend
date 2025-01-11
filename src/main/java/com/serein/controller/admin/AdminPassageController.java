@@ -9,6 +9,7 @@ import com.serein.service.PassageService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,8 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AdminPassageController {
 
-  @Autowired
-  PassageService passageService;
+  @Resource
+  private  PassageService passageService;
 
   /**
    * 拒绝/驳回文章

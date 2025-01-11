@@ -30,15 +30,15 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @SpringBootTest
 class BlogApplicationTests {
 
-  @Autowired
+  @Resource
   StringRedisTemplate stringRedisTemplate;
 
 
-  @Autowired
+  @Resource
   UserServiceImpl userService;
-  @Autowired
+  @Resource
   UserServiceImpl userServiceImpl;
-  @Autowired
+  @Resource
   PassageMapper passageMapper;
 
   AddParentPassageDTO addPassageDTO = new AddParentPassageDTO();
@@ -134,7 +134,7 @@ class BlogApplicationTests {
     }
   }
 
-  @Autowired
+  @Resource
   private JwtHelper jwtHelper;
 
   @Test

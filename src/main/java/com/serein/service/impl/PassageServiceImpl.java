@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -79,35 +80,35 @@ import org.springframework.web.multipart.MultipartFile;
 public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     implements PassageService {
 
-  @Autowired
+  @Resource
   private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
 
-  @Autowired
+  @Resource
   private StringRedisTemplate stringRedisTemplate;
 
-  @Autowired
+  @Resource
   private UserThumbsMapper userThumbsMapper;
 
-  @Autowired
+  @Resource
   private UserCollectsMapper userCollectsMapper;
 
-  @Autowired
+  @Resource
   private PassageMapper passageMapper;
 
-  @Autowired
+  @Resource
   private PassageTagMapper passageTagMapper;
 
-  @Autowired
+  @Resource
   private UserMapper userMapper;
 
-  @Autowired
+  @Resource
   private TagsMapper tagsMapper;
 
-  @Autowired
+  @Resource
   private CommentMapper commentMapper;
 
-  @Autowired
+  @Resource
   private RedissonClient redissonClient;
 
   @Override

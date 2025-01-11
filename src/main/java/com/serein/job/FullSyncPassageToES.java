@@ -31,7 +31,7 @@ public class FullSyncPassageToES implements CommandLineRunner {
   private SyncDataToES syncDataToES;
 
   @Resource
-  PassageMapper passageMapper;
+  private PassageMapper passageMapper;
 
   @Override
   public void run(String... args) {

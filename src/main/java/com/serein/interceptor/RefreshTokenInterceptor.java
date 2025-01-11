@@ -25,7 +25,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class RefreshTokenInterceptor implements HandlerInterceptor {
 
-  @Autowired
+  @Resource
   StringRedisTemplate stringRedisTemplate;
 
   @Override

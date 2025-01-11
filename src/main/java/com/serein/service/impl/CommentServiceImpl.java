@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,14 +46,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     implements CommentService {
 
-  @Autowired
-  CommentMapper commentMapper;
+  @Resource
+  private CommentMapper commentMapper;
 
-  @Autowired
-  UserMapper userMapper;
+  @Resource
+  private UserMapper userMapper;
 
-  @Autowired
-  PassageMapper passageMapper;
+  @Resource
+  private PassageMapper passageMapper;
 
   @Transactional
   @Override

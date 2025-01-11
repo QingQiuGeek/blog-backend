@@ -17,6 +17,7 @@ import com.serein.service.UserService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,10 +42,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/user")
 public class UserController {
 
-  @Autowired
+  @Resource
   private PassageService passageService;
 
-  @Autowired
+  @Resource
   private UserService userService;
 
 

@@ -17,6 +17,7 @@ import com.serein.util.BaseResponse;
 import com.serein.util.IPUtil;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,8 +42,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/passage")
 public class PassageController {
 
-  @Autowired
-  PassageService passageService;
+  @Resource
+  private  PassageService passageService;
 
 
   /*

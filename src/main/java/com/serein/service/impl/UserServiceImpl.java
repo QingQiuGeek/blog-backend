@@ -98,42 +98,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Value("${spring.mail.username}")
   private String fromEmail;
 
-  @Autowired
-  StringRedisTemplate stringRedisTemplate;
-
-  @Autowired
-  UserMapper userMapper;
-
-  @Autowired
-  UserCollectsMapper userCollectsMapper;
-
-  @Autowired
-  UserThumbsMapper userThumbsMapper;
-
-  @Autowired
-  PassageServiceImpl passageService;
-
-  @Autowired
-  UserFollowMapper userFollowMapper;
+  @Resource
+  private  StringRedisTemplate stringRedisTemplate;
 
   @Resource
-  protected JavaMailSenderImpl mailSender;
+  private  UserMapper userMapper;
 
-  protected MailUtil mailUtil;
+  @Resource
+  private UserCollectsMapper userCollectsMapper;
 
-  @Autowired
-  PassageMapper passageMapper;
+  @Resource
+  private UserThumbsMapper userThumbsMapper;
 
-  @Autowired
-  CommentServiceImpl commentServiceImpl;
+  @Resource
+  private PassageServiceImpl passageService;
 
-  @Autowired
-  CommentMapper commentMapper;
+  @Resource
+  private  UserFollowMapper userFollowMapper;
 
-  @Autowired
-  TagsMapper tagsMapper;
+  @Resource
+  private JavaMailSenderImpl mailSender;
 
-//  @Autowired
+  @Resource
+  private MailUtil mailUtil;
+
+  @Resource
+  private PassageMapper passageMapper;
+
+  @Resource
+  private CommentServiceImpl commentServiceImpl;
+
+  @Resource
+  private CommentMapper commentMapper;
+
+  @Resource
+  private TagsMapper tagsMapper;
+
+//  @Resource
 //  @Qualifier("taskExecutor")
 //  private ThreadPoolTaskExecutor taskExecutor;
 

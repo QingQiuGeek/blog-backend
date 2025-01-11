@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -33,16 +34,15 @@ import org.springframework.stereotype.Service;
 public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
     implements TagsService {
 
-  @Autowired
-  TagsMapper tagsMapper;
+  @Resource
+  private TagsMapper tagsMapper;
 
   @Override
   public List<TagVO> getRandomTags() {
     IPUtil.isHotIp();
     List<Tags> tagList = tagsMapper.getRandomTags();
     log.info("getRandomTags tagList：{}", tagList);
-    List<TagVO> tagVOList = getTagVOList(tagList);
-    return tagVOList;
+    return getTagVOList(tagList);
   }
 
   @Override

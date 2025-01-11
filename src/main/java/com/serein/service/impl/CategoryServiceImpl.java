@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -42,13 +43,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     implements CategoryService {
 
-  @Autowired
+  @Resource
   private CategoryMapper categoryMapper;
 
-  @Autowired
+  @Resource
   private TagsMapper tagsMapper;
 
-  @Autowired
+  @Resource
   private PassageService passageService;
 
   @Override

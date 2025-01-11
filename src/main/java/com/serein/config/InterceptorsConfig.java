@@ -19,10 +19,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 @Slf4j
 public class InterceptorsConfig extends WebMvcConfigurationSupport {
 
-  @Autowired
+  @Resource
   LoginInterceptor loginInterceptor;
 
-  @Autowired
+  @Resource
   RefreshTokenInterceptor refreshTokenInterceptor;
 
   @Override

@@ -9,6 +9,7 @@ import com.serein.service.CommentService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,8 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
 
-  @Autowired
-  CommentService commentService;
+  @Resource
+  private  CommentService commentService;
 
   /*
    * 评论文章

@@ -5,6 +5,7 @@ import com.serein.service.TagsService;
 import com.serein.util.BaseResponse;
 import com.serein.util.ResultUtil;
 import java.util.List;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/tag")
 public class TagController {
 
-  @Autowired
-  TagsService tagsService;
+  @Resource
+  private  TagsService tagsService;
 
 
   @GetMapping("/getRandomTags")
