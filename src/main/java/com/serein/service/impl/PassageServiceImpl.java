@@ -550,14 +550,17 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
      * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否点赞
      * */
     String key = Common.PASSAGE_THUMB_KEY + passageId;
-    Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-    if (score == null) {
+    Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
+    if (Boolean.FALSE.equals(isMember)) {
       //插入用户点赞表
       UserThumbs userThumbs = UserThumbs.builder().userId(userId).passageId(passageId).build();
       int insert = userThumbsMapper.insert(userThumbs);
       //文章表和用户点赞表同时更新成功
       if (insert == 1) {
-        stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+        Long add = stringRedisTemplate.opsForSet().add(key, userId.toString());
+        if (add == 0L) {
+          throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
+        }
       } else {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
       }
@@ -567,7 +570,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       queryWrapper.eq(UserThumbs::getUserId, userId).eq(UserThumbs::getPassageId, passageId);
       int delete = userThumbsMapper.delete(queryWrapper);
       if (delete == 1) {
-        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForSet().remove(key, userId.toString());
         if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
@@ -593,24 +596,22 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Long userId = loginUserVO.getUserId();
     /*
      * 同一个用户对一篇文章只能收藏一次，不能重复收藏，取消收藏亦然
-     * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
+     * 以passageId作为key，userId为value，存入redis 的set集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
      * */
-    //TODO 改成set集合
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
-    Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-    if (score == null) {
+    Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
+    if (Boolean.FALSE.equals(member)) {
       //先插入mysql用户收藏表
       UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
           .build();
       int insert = userCollectsMapper.insert(userCollects);
       if (insert == 1) {
         //写入redis
-        boolean add = stringRedisTemplate.opsForZSet()
-            .add(key, userId.toString(), System.currentTimeMillis());
+        Long add = stringRedisTemplate.opsForSet().add(key, userId.toString());
         // 增加文章的收藏量
         stringRedisTemplate.opsForZSet()
             .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), 1);
-        if (!add) {
+        if (add == 0L) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -635,9 +636,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return true;
   }
 
-
   /**
-   * todo top10
+   * top10
    *
    * @return
    * @Description:
@@ -650,7 +650,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         .reverseRange(Common.TOP_COLLECT_PASSAGE, 0, 9);
     List<Long> idlist = passageIdSet.stream().map(passageId -> Long.valueOf(passageId))
         .collect(Collectors.toList());
-    if(idlist.isEmpty()){
+    if (idlist.isEmpty()) {
       return Collections.emptyList();
     }
     List<Passage> passageList = listByIds(idlist);
@@ -840,7 +840,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   /**
    * 删除文章
-   * todo redis删除
    *
    * @param passageId
    * @return
@@ -854,8 +853,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     userThumbsMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
     stringRedisTemplate.opsForZSet().remove(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId));
-
-    if (b1 && b3) {
+    Long remove = stringRedisTemplate.opsForSet().remove(Common.PASSAGE_THUMB_KEY + passageId);
+    Long remove1 = stringRedisTemplate.opsForSet().remove(Common.PASSAGE_COLLECT_KEY + passageId);
+    if (b1 && b3 && remove1 == 1L && remove == 1L) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

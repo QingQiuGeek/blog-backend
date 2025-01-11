@@ -357,7 +357,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     UserInfoDataVO userInfoDataVO = new UserInfoDataVO();
     LoginUserVO loginUserVO = UserHolder.getUser();
     //未登录返回默认数据0
-    //TODO 修改成传uid查数据提高接口复用
     if (loginUserVO == null) {
       return userInfoDataVO;
     }
@@ -822,13 +821,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (StringUtils.isNotBlank(user.getInterestTag())) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
             Long.class);
-        //todo
-        if (tagIdList != null) {
           List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
           List<String> tagNameList = tags.stream().map(Tags::getTagName)
               .collect(Collectors.toList());
           adminUserVO.setInterestTag(tagNameList);
-        }
       }
       return adminUserVO;
     }).collect(Collectors.toList());

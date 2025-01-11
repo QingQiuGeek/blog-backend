@@ -20,11 +20,11 @@ import lombok.Data;
 public class PassageVO implements Serializable {
 
 
-  //todo 当前用户是否点赞
+  // 当前用户是否点赞
   @TableField(exist = false)
   private Boolean isThumb = false;
 
-  //todo 当前用户是否收藏
+  // 当前用户是否收藏
   @TableField(exist = false)
   private Boolean isCollect = false;
 

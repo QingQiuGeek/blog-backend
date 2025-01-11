@@ -17,7 +17,7 @@ import lombok.Data;
 @Data
 public class UserVO implements Serializable {
 
-  /*todo 是否关注
+  /* 是否关注
    *
    * */
   @TableField(exist = false)

@@ -145,9 +145,7 @@ public class UserController {
   }
 
   /**
-   * 根据uid获取用户的信息，一般用于查询用户主页或者文章作者信息
-   * TODO 该方法和 getUserInfoData重复
-   *
+   * 用于查询文章作者信息
    * @return
    */
   @GetMapping("/getUserInfo/{uid}")

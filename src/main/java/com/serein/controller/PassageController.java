@@ -86,7 +86,6 @@ public class PassageController {
 
   /**
    * 搜索文章
-   * todo hotkey
    *
    * @param
    * @return
@@ -120,7 +119,6 @@ public class PassageController {
 
   /**
    * 根据文章id搜索文章Content
-   * todo hotkey 限流
    *
    * @param pid
    * @return
@@ -217,7 +215,6 @@ public class PassageController {
 
   /**
    * 根据文章id删除文章,管理和用户公用
-   * todo 删除了文章还要删除评论，收藏、点赞等，删除数据库和redis
    *
    * @param passageId
    * @return
