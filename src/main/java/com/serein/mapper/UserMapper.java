@@ -19,6 +19,7 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
+
   List<CommentUserInfoVO> getCommentUserInfoByUserIdList(
       @Param("commentUserIdList") List<Long> commentUserIdList);
 
@@ -30,6 +31,11 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Select("select avatarUrl,userName from blog.user where userId=#{userId}")
   User getAuthorInfo(Long userId);
+
+
+
+  @Select("select role from blog.user where userId=#{userId}")
+  String getUserRole(Long userId);
 }
 
 

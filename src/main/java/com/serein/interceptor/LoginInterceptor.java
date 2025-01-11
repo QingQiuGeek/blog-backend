@@ -33,6 +33,14 @@ public class LoginInterceptor implements HandlerInterceptor {
     return true;
   }
 
+  /**
+   * 目标 Controller 的方法执行完并且返回结果之后,视图解析器渲染视图之前执行。
+   * @param request
+   * @param response
+   * @param handler
+   * @param ex
+   * @throws Exception
+   */
   @Override
   public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
       Object handler, Exception ex) throws Exception {

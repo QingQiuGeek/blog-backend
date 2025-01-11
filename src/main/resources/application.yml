@@ -119,7 +119,8 @@ oss:
 #jwt配置
 #jwt:
 #  token:
-#    tokenExpiration: 10 #有效时间,单位分钟
+#    tokenExpiration: 30 #有效时间,单位分钟
+#    tokenSignKey: 'tokenSignKey'
 
 #java -jar worker-0.0.4-SNAPSHOT.jar --etcd.server=127.0.0.1:2379
 hotkey:

@@ -547,6 +547,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public LoginUserVO login(LoginRequest loginRequest) {
+    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (requestAttributes == null) {
+      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
+    }
+
     //1.判断邮箱和密码是否为空,邮箱格式校验，密码长度校验
     String loginUserMail = loginRequest.getMail();
     String loginPassword = loginRequest.getPassword();
@@ -572,78 +577,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
       }
     }
-
-    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    if (requestAttributes == null) {
-      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
-    }
     HttpServletRequest request = requestAttributes.getRequest();
     String ipAddr = IPUtil.getIpAddr(request);
     log.info("用户登录，ip地址：{}", ipAddr);
     if (!queryUser.getIpAddress().equals(ipAddr)) {
-      log.info("入参{}", ipAddr);
       //如果用户id地址变化，那么更新数据库
-      log.info("userid{}", queryUser.getUserId());
-      Long userId = queryUser.getUserId();
-      userMapper.updateIpAddress(ipAddr, userId);
+      userMapper.updateIpAddress(ipAddr, queryUser.getUserId());
     }
-    String ipRegion = IPUtil.getIpRegion(ipAddr);
-    log.info("用户登录，ip归属地：{}", ipRegion);
-    LoginUserVO loginUserVO = new LoginUserVO();
-    BeanUtil.copyProperties(queryUser, loginUserVO);
-    loginUserVO.setIpAddress(ipRegion);
-    List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(queryUser.getInterestTag()),
-        Long.class);
-    if (tagIdList != null) {
-      List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-      List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
-      loginUserVO.setInterestTag(tagNameList);
-    }
-    saveUserAndToken(queryUser, loginUserVO);
+    LoginUserVO loginUserVO = loginSuccess(queryUser.getRole(),queryUser.getUserId());
     log.info("loginUserVO：" + loginUserVO);
-    log.info("登录线程：" + Thread.currentThread().getId());
     return loginUserVO;
   }
 
   /**
-   * 根据uid生成并记录token到redis
-   *
-   * @param loginUserVO
+   * @param role
    */
-  private void saveUserAndToken(User user, LoginUserVO loginUserVO) {
-    //登录态保存到本地线程
-    //UserHolder.saveUser(loginUserVO);
-    if (StringUtils.isNotBlank(user.getInterestTag())) {
-      //把数据库中string类型的json转换成list<String>
-      List<String> pTagList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
-          String.class);
-      loginUserVO.setInterestTag(pTagList);
-    }
-    String token = UUID.randomUUID(true).toString(false);
-    //以LOGIN_TOKEN_KEY+userid为key，loginUserVO为值序列化存到redis
-    log.info(loginUserVO.getUserId() + "用户的token: " + token);
+  private LoginUserVO loginSuccess(String role,Long userId) {
+    LoginUserVO loginUserVO = new LoginUserVO();
+    String token = UUID.randomUUID(true).toString();
     loginUserVO.setToken(token);
-
-    Map<String, Object> map = BeanUtil.beanToMap(loginUserVO, false, true);
+    loginUserVO.setUserId(userId);
+    loginUserVO.setRole(role);
     Map<String, String> stringMap = new HashMap<>();
-    // 遍历原始 map，将所有值转换为字符串
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      // 如果值是 Long 类型，转换为字符串
-      if (value instanceof Long) {
-        stringMap.put(key, value.toString());
-      } else {
-        stringMap.put(key, String.valueOf(value));  // 对于其他类型，直接转换为字符串
-      }
-    }
+    stringMap.put("userId", userId.toString());
+    stringMap.put("role", role);
     String tokenKey = Common.LOGIN_TOKEN_KEY + token;
-    //TODO String 保存成字符串
     stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
     stringRedisTemplate.expire(tokenKey, Common.LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
+    //以LOGIN_TOKEN_KEY+userid为key，userId+role序列化map存到redis
     UserHolder.saveUser(loginUserVO);
-    //  String token = jwtHelper.createToken(loginUserVO.getUserId());
-    //设置token有效期10min，用户进行操作时会刷新redis的token有效期
+    return loginUserVO;
   }
 
   @Async("taskExecutor")
@@ -676,7 +639,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public LoginUserVO register(RegisterRequest registerRequest) {
-
+    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (requestAttributes == null) {
+      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
+    }
     String mail = registerRequest.getMail();
     String password = registerRequest.getPassword();
     String rePassword = registerRequest.getRePassword();
@@ -707,10 +673,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     //4.密码盐值加密，写入数据库，注册成功
     String bcrypt = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
-    ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    if (requestAttributes == null) {
-      throw new BusinessException(ErrorCode.UNEXPECT_ERROR, ErrorInfo.SYS_ERROR);
-    }
     HttpServletRequest request = requestAttributes.getRequest();
     String ipAddr = IPUtil.getIpAddr(request);
     log.info("用户注册，ip地址：{}", ipAddr);
@@ -722,14 +684,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     if (insert <= 0) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
     }
-    //根据Userid从数据库查出用户信息并返回VO
-    user = this.getById(user.getUserId());
-    LoginUserVO loginUserVO = new LoginUserVO();
-    BeanUtil.copyProperties(user, loginUserVO);
-    loginUserVO.setIpAddress(ipRegion);
-    log.info("注册成功：" + loginUserVO);
-    saveUserAndToken(user, loginUserVO);
-    return loginUserVO;
+    return loginSuccess(userMapper.getUserRole(user.getUserId()),user.getUserId());
   }
 
   private void checkMailIsRegistered(String mail) {
@@ -867,9 +822,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (StringUtils.isNotBlank(user.getInterestTag())) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
             Long.class);
-        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-        List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
-        adminUserVO.setInterestTag(tagNameList);
+        //todo
+        if (tagIdList != null) {
+          List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+          List<String> tagNameList = tags.stream().map(Tags::getTagName)
+              .collect(Collectors.toList());
+          adminUserVO.setInterestTag(tagNameList);
+        }
       }
       return adminUserVO;
     }).collect(Collectors.toList());

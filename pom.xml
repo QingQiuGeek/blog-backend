@@ -31,6 +31,13 @@
       <artifactId>jjwt</artifactId>
       <version>0.9.1</version>
     </dependency>
+    <!-- sa-token 权限认证, 在线文档：https://sa-token.cc/ -->
+<!--    <dependency>-->
+<!--      <groupId>cn.dev33</groupId>-->
+<!--      <artifactId>sa-token-spring-boot-starter</artifactId>-->
+<!--      <version>1.9.0</version>-->
+<!--    </dependency>-->
+
 
     <dependency>
       <groupId>org.springframework</groupId>

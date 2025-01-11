@@ -34,7 +34,8 @@
         secretKey,level,createTime,
         updateTime,status,isDelete
     </sql>
-    <select id="getCommentUserInfoByUserIdList" resultType="com.serein.model.vo.commentVO.CommentUserInfoVO">
+
+  <select id="getCommentUserInfoByUserIdList" resultType="com.serein.model.vo.commentVO.CommentUserInfoVO">
         SELECT userName,avatarUrl,ipAddress,userId FROM blog.user WHERE user.userId IN
         <foreach collection="commentUserIdList" item="userId" open="(" close=")" separator=",">
             #{userId}

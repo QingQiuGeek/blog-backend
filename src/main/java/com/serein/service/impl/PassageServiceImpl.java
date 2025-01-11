@@ -522,7 +522,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     int type = parentPassageDTO.getType();
     switch (type) {
       case OperationPassageType.SAVE:
-//        passage.setStatus(0);
+        passage.setStatus(0);
         break;
       case OperationPassageType.PUBLISH:
         passage.setStatus(2);

@@ -20,25 +20,26 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "jwt.token")
 public class JwtHelper {
 
-  private long tokenExpiration;
+  private static long tokenExpiration;
   //有效时间,单位毫秒 1000毫秒 == 1秒
-  private String tokenSignKey;
+  private static String tokenSignKey;
   //签名秘钥
 
   //生成token字符串
-  public String createToken(Long userId) {
+  public static String createToken(Long userId,String role) {
     String token = Jwts.builder()
-        .setSubject("YYGH-USER")
+        .setSubject("USER")
         .setExpiration(new Date(System.currentTimeMillis() + tokenExpiration * 1000 * 60))
         .claim("userId", userId)
-        .signWith(SignatureAlgorithm.HS512, tokenSignKey)
+        .claim("role",role)
+        .signWith(SignatureAlgorithm.HS256, tokenSignKey)
         .compressWith(CompressionCodecs.GZIP)
         .compact();
     return token;
   }
 
   //从token字符串获取userid
-  public Long getUserId(String token) {
+  public static Long getUserId(String token) {
     if (StringUtils.isEmpty(token)) {
       return null;
     }
@@ -48,9 +49,18 @@ public class JwtHelper {
     return userId.longValue();
   }
 
+  public static String getUserRole(String token) {
+    if (StringUtils.isEmpty(token)) {
+      return null;
+    }
+    Jws<Claims> claimsJws = Jwts.parser().setSigningKey(tokenSignKey).parseClaimsJws(token);
+    Claims claims = claimsJws.getBody();
+    return  (String)claims.get("role");
+  }
 
-  //判断token是否有效
-  public boolean isExpiration(String token) {
+
+  //判断token是否过期
+  public static boolean isExpiration(String token) {
     try {
       boolean isExpire = Jwts.parser()
           .setSigningKey(tokenSignKey)
