@@ -58,9 +58,6 @@ import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -147,7 +144,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   //主页显示
   public List<PassageInfoVO> getPassageInfoVOList(List<Passage> passageList) {
-    List<PassageInfoVO> collect = passageList.stream().map(passage -> {
+
+    return passageList.stream().map(passage -> {
           PassageInfoVO passageInfoVO = new PassageInfoVO();
           BeanUtil.copyProperties(passage, passageInfoVO);
           isThumbCollect(passageInfoVO);
@@ -173,8 +171,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           return passageInfoVO;
         }
     ).collect(Collectors.toList());
-
-    return collect;
   }
 
   /**
@@ -230,9 +226,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     if (StringUtils.isBlank(searchText)) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
-    // 构造ES分页查询条件
-    Pageable pageable = PageRequest.of(searchPassageRequest.getCurrentPage(),
-        searchPassageRequest.getPageSize());
     //拼接查询条件
     NativeSearchQueryBuilder searchQuery = new NativeSearchQueryBuilder();
     if (StringUtils.isNotBlank(searchText)) {
@@ -286,12 +279,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       });
     }
     List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(resourceList);
-    Page<List<PassageInfoVO>> listPage = new Page<List<PassageInfoVO>>(
+
+    return new Page<List<PassageInfoVO>>(
         searchPassageRequest.getCurrentPage(),
         searchPassageRequest.getPageSize()).setTotal(resourceList.size())
         .setRecords(Collections.singletonList(passageInfoVOList));
-
-    return listPage;
   }
 
 
