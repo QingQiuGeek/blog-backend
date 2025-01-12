@@ -1,6 +1,8 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.annotation.AuthCheck;
+import com.serein.constants.UserRole;
 import com.serein.model.request.CommentRequest.AdminCommentPageRequest;
 import com.serein.model.vo.commentVO.CommentVO;
 import com.serein.service.CommentService;
@@ -32,6 +34,7 @@ public class AdminCommentController {
   /*
    * 获取文章评论
    * */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/getComments/")
   public BaseResponse<Page<List<CommentVO>>> getComments(@RequestBody
   AdminCommentPageRequest adminCommentPageRequest) {

@@ -1,6 +1,8 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.annotation.AuthCheck;
+import com.serein.constants.UserRole;
 import com.serein.model.dto.tagDTO.TagDTO;
 import com.serein.model.entity.Tags;
 import com.serein.model.request.TagRequest.AdminTagPageRequest;
@@ -36,6 +38,7 @@ public class AdminTagController {
    * @return
    * @description 获取管理页的标签列表
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/getTags")
   public BaseResponse<Page<List<Tags>>> getAdminTags(
       @RequestBody AdminTagPageRequest adminTagPageRequest) {
@@ -48,6 +51,7 @@ public class AdminTagController {
    * @return
    * @description 返回标签id
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/addTag")
   public BaseResponse<Long> addTag(@RequestBody TagDTO addTagDTO) {
     Long tagId = tagsService.addTag(addTagDTO);
@@ -59,6 +63,7 @@ public class AdminTagController {
    * @return
    * @description 更新标签
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/updateTag")
   public BaseResponse<Boolean> updateTag(@RequestBody TagDTO updateTagDTO) {
     boolean b = tagsService.updateTag(updateTagDTO);
@@ -71,6 +76,7 @@ public class AdminTagController {
    * @return
    * @description 根据id删除标签
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PutMapping("/delete/{tagId}")
   public BaseResponse<Boolean> deleteTag(@PathVariable Long tagId) {
     boolean b = tagsService.deleteTag(tagId);

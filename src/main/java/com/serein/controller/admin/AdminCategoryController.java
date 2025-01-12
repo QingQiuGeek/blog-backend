@@ -1,6 +1,8 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.serein.annotation.AuthCheck;
+import com.serein.constants.UserRole;
 import com.serein.model.dto.categoryDTO.CategoryDTO;
 import com.serein.model.entity.Category;
 import com.serein.model.request.CategoryRequest.AdminCategoryPageRequest;
@@ -38,6 +40,7 @@ public class AdminCategoryController {
    * @param adminCategoryPageRequest
    * @return
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/getCategories")
   public BaseResponse<Page<List<Category>>> getAdminCategories(
       @RequestBody AdminCategoryPageRequest adminCategoryPageRequest) {
@@ -50,6 +53,7 @@ public class AdminCategoryController {
    * @return
    * @description 返回类别id
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/addCategory")
   public BaseResponse<Long> addCategory(@RequestBody CategoryDTO addCategoryDTO) {
     Long categoryId = categoryService.addCategory(addCategoryDTO);
@@ -61,6 +65,7 @@ public class AdminCategoryController {
    * @return
    * @description 更新类别
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/updateCategory")
   public BaseResponse<Boolean> updateCategory(@RequestBody CategoryDTO updateCategoryDTO) {
     boolean b = categoryService.updateCategory(updateCategoryDTO);
@@ -73,6 +78,7 @@ public class AdminCategoryController {
    * @return
    * @description 根据id删除类别
    */
+  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
   @PutMapping("/delete/{categoryId}")
   public BaseResponse<Boolean> deleteCategory(@PathVariable Long categoryId) {
     boolean b = categoryService.deleteCategory(categoryId);

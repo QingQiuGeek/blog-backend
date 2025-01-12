@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +70,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Async;
@@ -153,19 +157,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     Long loginUserId = loginUserVO.getUserId();
     String key = Common.USER_FOLLOW_KEY + loginUserId;
-    //使用 stringRedisTemplate.opsForZSet().score(key, loginUserId.toString()) 查询当前登录用户是否已经关注了目标用户。
     // 如果返回值为 null，表示用户未关注目标用户；如果返回一个非 null 的分数，表示已经关注。
-    Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-    if (score == null) {
+    Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
+    if (Boolean.FALSE.equals(member)) {
       //如果用户未关注目标用户，执行关注操作:
       UserFollow userFollow = UserFollow.builder().userId(loginUserId).toUserId(userId).build();
       //先更新数据库 user-follow表
       int insert = userFollowMapper.insert(userFollow);
       if (insert == 1) {
         //再更新redis
-        Boolean add = stringRedisTemplate.opsForZSet()
-            .add(key, userId.toString(), System.currentTimeMillis());
-        if (Boolean.FALSE.equals(add)) {
+        Long add = stringRedisTemplate.opsForSet()
+            .add(key, userId.toString());
+        if (add!=1L) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -178,7 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       //delete是被删除的行数，正常情况下是1，因为关注和被关注的关系只有一个存在数据库，不会重复关注
       int delete = userFollowMapper.delete(queryWrapper);
       if (delete == 1) {
-        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForSet().remove(key, userId.toString());
         if (remove != 1) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
@@ -193,7 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    * 我关注的用户列表
    *
    * @return
-   * @Description: 从redis查
+   * @Description:
    */
   @Override
   public Page<List<UserVO>> myFollow(QueryPageRequest queryPageRequest) {
@@ -208,11 +211,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     Long loginUserId = loginUserVO.getUserId();
     String key = USER_FOLLOW_KEY + loginUserId;
+    SetOperations<String, String> setOps = stringRedisTemplate.opsForSet();
+    // 游标值初始化
+    String cursor = "0";
+    Set<String> stringIdSet = new HashSet<>();
     //从redis查
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
-    Set<String> stringIdSet = stringRedisTemplate.opsForZSet()
-        .range(key, (long) (currentPage - 1) * pageSize, (long) currentPage * pageSize - 1);
+    int offset = currentPage * pageSize - 1;
+    int count = 0;
+    do {
+      // 执行 SSCAN 命令，获取集合元素
+      ScanOptions options = ScanOptions.scanOptions().count(pageSize).build();  // 设置每次扫描的最大数量
+      Cursor<String> scanCursor = setOps.scan(key, options);
+      while (scanCursor.hasNext()) {
+        String value = scanCursor.next();
+        // 计算偏移并跳过不在当前页的数据
+        if (count >= offset && count < (offset + pageSize)) {
+          stringIdSet.add(value);
+        }
+        count++;
+      }
+    } while (count < offset + pageSize); // 当游标为0时，扫描结束
+
     if (CollUtil.isEmpty(stringIdSet)) {
       Page<List<UserVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
@@ -241,8 +262,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     List<UserVO> userVOS = new ArrayList<>();
     String key = Common.USER_FOLLOW_KEY + loginUserId.toString();
     for (UserVO userVO : userVOList) {
-      Double score = stringRedisTemplate.opsForZSet().score(key, userVO.getUserId().toString());
-      userVO.setIsFollow(score != null);
+      Boolean follow=stringRedisTemplate.opsForSet().isMember(key, userVO.getUserId().toString());
+      userVO.setIsFollow(follow);
       userVOS.add(userVO);
     }
     return userVOS;
@@ -365,7 +386,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int collectNum = passageMapper.getCollectNumById(userId);
     int passageNum = passageMapper.getPassageNumById(userId);
     String key = USER_FOLLOW_KEY + userId;
-    Long followNum = stringRedisTemplate.opsForZSet().size(key);
+    Long followNum = stringRedisTemplate.opsForSet().size(key);
     if (followNum == null) {
       followNum = 0L;
     }

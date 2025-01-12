@@ -211,11 +211,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Long userId = loginUserVO.getUserId();
     String passageId = passageInfoVO.getPassageId().toString();
     String keyThumb = Common.PASSAGE_THUMB_KEY + passageId;
-    Double score1 = stringRedisTemplate.opsForZSet().score(keyThumb, userId.toString());
-    passageInfoVO.setIsThumb(score1 != null);
+    Boolean thumb=stringRedisTemplate.opsForSet().isMember(keyThumb, userId.toString());
+    passageInfoVO.setIsThumb(thumb);
     String keyCollect = Common.PASSAGE_COLLECT_KEY + passageId;
-    Double score2 = stringRedisTemplate.opsForZSet().score(keyCollect, userId.toString());
-    passageInfoVO.setIsCollect(score2 != null);
+    Boolean collect=stringRedisTemplate.opsForSet().isMember(keyCollect, userId.toString());
+    passageInfoVO.setIsCollect(collect);
   }
 
   @Override
@@ -643,10 +643,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       return false;
     }
     Long userId = loginUserVO.getUserId();
-    /*
-     * 同一个用户对一篇文章只能收藏一次，不能重复收藏，取消收藏亦然
-     * 以passageId作为key，userId为value，存入redis 的set集合，利用set集合元素唯一不重复的特性，存储用户是否收藏该文章
-     * */
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
     Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
     if (Boolean.FALSE.equals(member)) {
@@ -672,7 +668,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       queryWrapper.eq(UserCollects::getUserId, userId).eq(UserCollects::getPassageId, passageId);
       int delete = userCollectsMapper.delete(queryWrapper);
       if (delete == 1) {
-        Long remove = stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        Long remove = stringRedisTemplate.opsForSet().remove(key, userId.toString());
         stringRedisTemplate.opsForZSet()
             .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), -1);
         if (remove != 1) {

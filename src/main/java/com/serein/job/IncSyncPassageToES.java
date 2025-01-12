@@ -44,9 +44,7 @@ public class IncSyncPassageToES {
       log.info("No find new add passage in {} minutes", AGO_MINUTES);
       return;
     }
-
     List<PassageESDTO> passageESDTOList = syncDataToES.objToESDto(passageList);
-
     //每个批次处理的项目数
     final int pageSize = 50;
     int total = passageESDTOList.size();
