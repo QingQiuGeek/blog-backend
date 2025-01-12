@@ -57,6 +57,7 @@ import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -211,10 +212,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Long userId = loginUserVO.getUserId();
     String passageId = passageInfoVO.getPassageId().toString();
     String keyThumb = Common.PASSAGE_THUMB_KEY + passageId;
-    Boolean thumb=stringRedisTemplate.opsForSet().isMember(keyThumb, userId.toString());
+    Boolean thumb = stringRedisTemplate.opsForSet().isMember(keyThumb, userId.toString());
     passageInfoVO.setIsThumb(thumb);
     String keyCollect = Common.PASSAGE_COLLECT_KEY + passageId;
-    Boolean collect=stringRedisTemplate.opsForSet().isMember(keyCollect, userId.toString());
+    Boolean collect = stringRedisTemplate.opsForSet().isMember(keyCollect, userId.toString());
     passageInfoVO.setIsCollect(collect);
   }
 
@@ -398,16 +399,16 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public boolean timePublish(ParentPassageDTO parentPassageDTO) {
     String passageId = parentPassageDTO.getPassageId();
-    if(StringUtils.isNotBlank(passageId)){
+    if (StringUtils.isNotBlank(passageId)) {
       //id已经存在，那么更新数据库并添加到队列中,不包括status
       updatePassage(parentPassageDTO);
-      log.info("currentTimeMillis :{}",System.currentTimeMillis());
-      log.info("parentPassageDTO.getPublishTime() :{}",parentPassageDTO.getPublishTime());
+      log.info("currentTimeMillis :{}", System.currentTimeMillis());
+      log.info("parentPassageDTO.getPublishTime() :{}", parentPassageDTO.getPublishTime());
       long delay = parentPassageDTO.getPublishTime() - System.currentTimeMillis();
-      log.info("delay: {}",delay);
+      log.info("delay: {}", delay);
       addDelayQueue(Long.valueOf(passageId), delay, TimeUnit.MILLISECONDS, TIME_PUBLISH_KEY);
       return true;
-    }else {
+    } else {
       //id不存在，说明是新文章，先插入数据库再添加到队列
       Long newPassageId = insertPassage(parentPassageDTO);
       List<Long> tagIdList = parentPassageDTO.getTagIdList();
@@ -428,15 +429,15 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   public Long insertPassage(ParentPassageDTO parentPassageDTO) {
     Passage passage = new Passage();
-    BeanUtils.copyProperties(parentPassageDTO,passage);
+    BeanUtils.copyProperties(parentPassageDTO, passage);
     LoginUserVO user = UserHolder.getUser();
-    if(user==null){
-      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR,ErrorInfo.NOT_LOGIN_ERROR);
+    if (user == null) {
+      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     passage.setAuthorId(user.getUserId());
     int i = passageMapper.insertPassage(passage);
-    if(i!=1){
-      throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.TIME_PUBLISH_ERROR);
+    if (i != 1) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
     }
     List<Long> tagIdList = parentPassageDTO.getTagIdList();
     if (tagIdList == null) {
@@ -454,11 +455,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public Long savePassage(ParentPassageDTO parentPassageDTO) {
     String passageId = parentPassageDTO.getPassageId();
-    if(StringUtils.isNotBlank(passageId)){
+    if (StringUtils.isNotBlank(passageId)) {
       //id已经存在，那么仅更新数据库内容，不包括status
       updatePassage(parentPassageDTO);
       return Long.valueOf(passageId);
-    }else {
+    } else {
       //id不存在，说明是新文章，先插入数据库 （status默认为0）
       return insertPassage(parentPassageDTO);
     }
@@ -468,7 +469,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   public boolean nowPublish(ParentPassageDTO parentPassageDTO) {
     String passageId = parentPassageDTO.getPassageId();
-    if(StringUtils.isNotBlank(passageId)){
+    if (StringUtils.isNotBlank(passageId)) {
       List<Long> tagIdList = parentPassageDTO.getTagIdList();
       if (tagIdList == null) {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
@@ -476,22 +477,22 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       //更新passage_tag之前要删除老的数据
       passageTagMapper.deleteTagByPassageId(Long.valueOf(passageId));
       //保存文章标签
-      boolean b2 = passageTagMapper.insertPassageTags(tagIdList,Long.valueOf(passageId));
+      boolean b2 = passageTagMapper.insertPassageTags(tagIdList, Long.valueOf(passageId));
       if (!b2) {
         throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
       }
       //id已经存在，那么更新数据库，status=2
       int i = passageMapper.publishPassage(Long.valueOf(passageId));
-      if(i!=1){
-        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.OPERATION_ERROR);
+      if (i != 1) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.OPERATION_ERROR);
       }
       return true;
-    }else {
+    } else {
       //id不存在，说明是新文章，先插入数据库， status=2
       parentPassageDTO.setStatus(2);
       Long newPassageId = insertPassage(parentPassageDTO);
-      if(newPassageId==null){
-        throw new BusinessException(ErrorCode.OPERATION_ERROR,ErrorInfo.OPERATION_ERROR);
+      if (newPassageId == null) {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.OPERATION_ERROR);
       }
       List<Long> tagIdList = parentPassageDTO.getTagIdList();
       if (tagIdList == null) {
@@ -506,6 +507,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
+  @Cacheable
   @Override
   public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
@@ -529,10 +531,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   public void updatePassage(ParentPassageDTO updateParentPassageDTO) {
     Passage passage = new Passage();
-    BeanUtils.copyProperties(updateParentPassageDTO,passage);
+    BeanUtils.copyProperties(updateParentPassageDTO, passage);
     passage.setPassageId(Long.valueOf(updateParentPassageDTO.getPassageId()));
     int b1 = passageMapper.updatePassage(passage);
-    if(b1!=1){
+    if (b1 != 1) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.PUBLISH_ERROR);
     }
     List<Long> tagIdList = updateParentPassageDTO.getTagIdList();
@@ -898,9 +900,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     userThumbsMapper.deleteByPassageId(passageId);
     boolean b3 = passageTagMapper.deleteByPassageId(passageId);
     stringRedisTemplate.opsForZSet().remove(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId));
-    Long remove = stringRedisTemplate.opsForSet().remove(Common.PASSAGE_THUMB_KEY + passageId);
-    Long remove1 = stringRedisTemplate.opsForSet().remove(Common.PASSAGE_COLLECT_KEY + passageId);
-    if (b1 && b3 && remove1 == 1L && remove == 1L) {
+    stringRedisTemplate.delete(Common.PASSAGE_COLLECT_KEY + passageId);
+    stringRedisTemplate.delete(Common.PASSAGE_THUMB_KEY + passageId);
+    if (b1 && b3 ) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

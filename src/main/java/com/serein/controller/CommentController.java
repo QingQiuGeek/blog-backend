@@ -47,7 +47,6 @@ public class CommentController {
    * @description 通过游标获取评论
    */
   @PostMapping("/getCommentByCursor")
-//  BaseResponse<Map<Long,List<CommentVO>>>
   public BaseResponse<Page<List<CommentVO>>> getCommentByCursor(
       @RequestBody CursorCommentRequest cursorCommentRequest) {
     Page<List<CommentVO>> commentVOList = commentService.getCommentByCursor(cursorCommentRequest);
