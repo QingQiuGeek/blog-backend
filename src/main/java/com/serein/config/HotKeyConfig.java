@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Configuration;
  * @Description:
  */
 
-//@Configuration
-//@ConfigurationProperties(prefix = "hotkey")
+@Configuration
+@ConfigurationProperties(prefix = "hotkey")
 @Data
 public class HotKeyConfig {
 
@@ -39,7 +39,7 @@ public class HotKeyConfig {
   /**
    * 初始化 hotkey
    */
-//  @Bean
+  @Bean
   public void initHotkey() {
     ClientStarter.Builder builder = new ClientStarter.Builder();
     ClientStarter starter = builder.setAppName(appName)

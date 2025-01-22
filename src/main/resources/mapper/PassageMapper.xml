@@ -71,4 +71,8 @@
     order by passage.accessTime desc
     limit 10
   </select>
+  <select id="searchPassageFromMySQL" resultType="com.serein.model.entity.Passage">
+    select passageId,authorId,title,content,summary,thumbnail,viewNum,accessTime from blog.passage
+    where status=2 and isPrivate=1 and match(title,content,summary) against(#{searchText} IN NATURAL LANGUAGE MODE);
+  </select>
 </mapper>

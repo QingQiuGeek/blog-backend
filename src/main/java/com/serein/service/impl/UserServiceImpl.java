@@ -132,9 +132,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   private CommentServiceImpl commentServiceImpl;
 
   @Resource
-  private CommentMapper commentMapper;
-
-  @Resource
   private TagsMapper tagsMapper;
 
 //  @Resource

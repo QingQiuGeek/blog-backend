@@ -34,7 +34,7 @@ public class IncSyncPassageToES {
   private  final int RATE_MINUTES = 3;
 
   //开启定时任务
-  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
+//  @Scheduled(fixedRate = RATE_MINUTES * 60 * 1000)
   public void run() {
     // 查询近 5 分钟内的数据
     Date minutesAgoDate = new Date(new Date().getTime() - AGO_MINUTES * 60 * 1000L);

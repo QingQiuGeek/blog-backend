@@ -48,6 +48,9 @@ create table letter
 )
     comment '私信表';
 
+# 云服务器跑不动es，就用mysql分词，创建fulltext索引
+# select passageId,title,content,summary from passage where match(title,content,summary) against('摄影数据分析心理科技' IN NATURAL LANGUAGE MODE);
+# ALTER TABLE passage ADD FULLTEXT INDEX search_index(title,content,summary) WITH PARSER ngram;
 create table passage
 (
     passageId  bigint auto_increment comment '文章id'
@@ -63,7 +66,8 @@ create table passage
     accessTime datetime default (now())           null comment '审核通过时间',
     status     tinyint  default 0                 not null comment '文章状态(0草稿,1待审核,2已发布,3驳回)',
     isDelete   tinyint  default 1                 not null comment '0逻辑删除',
-    isPrivate  tinyint  default 1                 not null comment '是否私密，0私密，1公开'
+    isPrivate  tinyint  default 1                 not null comment '是否私密，0私密，1公开',
+    FULLTEXT (content,title,summary) with parser
 )
     comment '文章表';
 

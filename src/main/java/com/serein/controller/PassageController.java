@@ -110,7 +110,8 @@ public class PassageController {
         break;
       //根据文本搜索，查ES
       case SearchType.SEARCH:
-        listPage = passageService.searchPassageFromES(searchPassageRequest);
+        //云服务器带不动es，就换成mysql分词了
+        listPage = passageService.searchPassageFromMySQL(searchPassageRequest);
         break;
     }
     return ResultUtil.success(listPage);

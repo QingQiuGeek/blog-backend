@@ -21,18 +21,14 @@ spring:
             class: javax.net.ssl.SSLSocketFactory
             fallback: false
   datasource:
-    url: jdbc:mysql://localhost:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
+    url: jdbc:mysql://47.97.220.175:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
     username: root
     password: '#252012'
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 6
-      minimum-idle: 3
-      jdbc-url: jdbc:mysql://localhost:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
-      username: root
-      password: '#252012'
-      driver-class-name: com.mysql.cj.jdbc.Driver
+      maximum-pool-size: 3
+      minimum-idle: 1
   #    type: com.alibaba.druid.pool.DruidDataSource
 #    druid:
 #      min-idle: 3
@@ -48,7 +44,7 @@ spring:
 #        login-password: 123
 #        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
   redis:
-    host: 192.168.2.129
+    host: 47.97.220.175
     port: 6379
     username: default
     password: 'linux02'
@@ -57,9 +53,9 @@ spring:
     lettuce:
       pool:
 #        最大连接数，最大空闲数，最小空闲数
-        max-active: 10
-        max-idle: 5
-        min-idle: 3
+        max-active: 5
+        max-idle: 3
+        min-idle: 1
   servlet:
     multipart:
       max-file-size: 2MB
@@ -83,6 +79,7 @@ mybatis-plus:
 #      logic-delete-field: isDelete
       logic-delete-value: 0
       logic-not-delete-value: 1
+
 
 logging:
   level:
@@ -126,6 +123,6 @@ oss:
 hotkey:
   push-period: 60
   app-name: blog
-  etcd-server: http://localhost:2379
+  etcd-server: http://47.97.220.175:2379
 #  hoeKey默认存在本地缓存，这里我就存在redis
-  caffeine-size: 1000
+  caffeine-size: 256

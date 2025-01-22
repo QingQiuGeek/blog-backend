@@ -60,6 +60,8 @@ public interface PassageMapper extends BaseMapper<Passage> {
   @Select("select title,content,summary,thumbnail,passageId,status from blog.passage where passageId=#{passageId} and authorId=#{authorId}")
   Passage getEditPassageByPassageId(@Param("passageId") Long passageId,
       @Param("authorId") Long authorId);
+
+  List<Passage> searchPassageFromMySQL(String searchText);
 }
 
 

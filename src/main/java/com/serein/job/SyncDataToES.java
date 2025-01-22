@@ -5,7 +5,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.serein.esdao.PassageESDao;
+//import com.serein.esdao.PassageESDao;
 import com.serein.mapper.EsSyncFailRecordMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
@@ -32,14 +32,14 @@ import org.springframework.stereotype.Component;
  */
 
 @Slf4j
-@Component
+//@Component
 public class SyncDataToES {
 
   @Resource
   EsSyncFailRecordMapper esSyncFailRecordMapper;
 
   @Resource
-  private PassageESDao passageESDao;
+//  private PassageESDao passageESDao;
 
   public final int retryNum = 3;
 
@@ -67,7 +67,7 @@ public class SyncDataToES {
             passageESDTOS.forEach(passageESDTO -> {
               log.info("同步文章:{}", passageESDTO.getPassageId());
             });
-            passageESDao.saveAll(passageESDTOS);
+//            passageESDao.saveAll(passageESDTOS);
             log.info("该批次同步文章成功");
             return null;
           } catch (Exception e) {

@@ -52,6 +52,9 @@ public interface PassageService extends IService<Passage> {
 
   Page<List<PassageInfoVO>> searchPassageFromES(SearchPassageRequest searchPassageRequest);
 
+  Page<List<PassageInfoVO>> searchPassageFromMySQL(SearchPassageRequest searchPassageRequest);
+
+
   Page<List<PassageInfoVO>> searchPassageByCategory(SearchPassageRequest searchPassageRequest);
 
   Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest);

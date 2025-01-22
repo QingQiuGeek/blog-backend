@@ -23,11 +23,11 @@ public class AsyncConfig {
   @Bean
   public ThreadPoolTaskExecutor taskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(10);
+    executor.setCorePoolSize(1);
     //线程数量>core放入queue，queue满了，再来的任务会创建新线程，直到线程数量=max，之后的任务就会被拒绝
-    executor.setMaxPoolSize(20);
+    executor.setMaxPoolSize(3);
 //    缓存队列（阻塞队列）当核心线程数达到最大时，新任务会放在队列中排队等待执行
-    executor.setQueueCapacity(25);
+    executor.setQueueCapacity(3);
     executor.setThreadNamePrefix("async-sendCode");
     //自定义拒绝策略
     executor.setRejectedExecutionHandler(new ExecutionRejectHandler());

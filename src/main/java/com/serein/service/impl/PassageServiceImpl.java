@@ -286,6 +286,23 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Override
+  public Page<List<PassageInfoVO>> searchPassageFromMySQL(
+      SearchPassageRequest searchPassageRequest) {
+    String searchText = searchPassageRequest.getSearchText();
+    if (StringUtils.isBlank(searchText)) {
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
+    }
+    List<Passage> passageList=passageMapper.searchPassageFromMySQL(searchText);
+
+    List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passageList);
+
+    return new Page<List<PassageInfoVO>>(
+        searchPassageRequest.getCurrentPage(),
+        searchPassageRequest.getPageSize()).setTotal(passageList.size())
+        .setRecords(Collections.singletonList(passageInfoVOList));
+  }
+
+  @Override
   public Page<List<PassageInfoVO>> searchPassageByCategory(
       SearchPassageRequest searchPassageRequest) {
     Long categoryId = searchPassageRequest.getId();

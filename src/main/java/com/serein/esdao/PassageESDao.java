@@ -10,6 +10,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @Description: ES DAO层
  */
 
-public interface PassageESDao extends ElasticsearchRepository<PassageESDTO, Long> {
-
-}
+//public interface PassageESDao extends ElasticsearchRepository<PassageESDTO, Long> {
+//
+//}

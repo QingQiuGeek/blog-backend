@@ -4,10 +4,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.serein</groupId>
-  <artifactId>Blog</artifactId>
+  <artifactId>blog</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Blog</name>
-  <description>Blog</description>
+  <name>blog</name>
+  <description>blog</description>
   <properties>
     <java.version>11</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -140,7 +140,6 @@
       <optional>true</optional>
     </dependency>
 
-
     <!--引入邮件任务启动器-->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -152,7 +151,21 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+
   </dependencies>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -183,10 +196,6 @@
         <version>${spring-boot.version}</version>
         <configuration>
           <mainClass>com.serein.BlogApplication</mainClass>
-          <skip>true</skip>
-
-          <!-- devtools依赖此配置，否则devtools不生效。 -->
-          <fork>true</fork>
         </configuration>
         <executions>
           <execution>
