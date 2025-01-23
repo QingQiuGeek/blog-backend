@@ -11,13 +11,11 @@ public interface Common {
 
   String INDEX_NAME="passage_v2";
 
-
   String HOT_PASSAGE_KEY="hotPassage";
 
   String HOT_IP_KEY="hotIp";
 
   Long HOT_PASSAGE_DURATION=60L;
-
 
   String IMG_UPLOAD_DIR = "A:/IDEA/blog/src/main/resources/uploadImg/";
 
@@ -26,10 +24,6 @@ public interface Common {
 
   //限制可上传的图片大小单位
   String IMG_SIZE_UNIT = "M";
-  //用户登录态key，可以保存在session或者redis
-//     String USER_LOGIN_STATE="USER_LOGIN_STATE:";
-
-  Long PAGE_SIZE = 10L;
 
   //前端category页随机抽取的标签数量
   Integer TAGS_NUM = 50;
@@ -47,12 +41,9 @@ public interface Common {
   //用户的关注信息存在redis中，登录用户的Id为key，被关注的用户Id为value。我关注了谁
   String USER_FOLLOW_KEY = "Blog:user:follow:";
 
-  String USER_SIGNIN_KEY = "Blog:user:signin:";
+  String USER_REGISTER_CAPTCHA_KEY = "Blog:user:registerCaptcha:";
 
-
-  String USER_REGISTER_CODE_KEY = "Blog:user:registerCode:";
-
-  Long REGISTER_CODE_TTL = 1L;
+  Long REGISTER_CAPTCHA_TTL = 1L;
 
   //单位min
   Long LOGIN_TOKEN_TTL = 60L;

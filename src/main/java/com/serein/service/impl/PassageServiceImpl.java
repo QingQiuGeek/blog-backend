@@ -179,7 +179,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
    * @Description: 根据json格式的字符串id获取标签列表
    */
   public Map<Long, String> getTagMaps(List<Long> tagIdList) {
-    log.info("tagsIdlist：" + tagIdList);
+    log.info("tagsIdList：" + tagIdList);
     HashMap<Long, String> map = new HashMap<>();
     tagIdList.forEach(tagId -> {
       Tags tags = tagsMapper.selectById(tagId);

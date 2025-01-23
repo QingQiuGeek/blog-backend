@@ -67,7 +67,7 @@ create table passage
     status     tinyint  default 0                 not null comment '文章状态(0草稿,1待审核,2已发布,3驳回)',
     isDelete   tinyint  default 1                 not null comment '0逻辑删除',
     isPrivate  tinyint  default 1                 not null comment '是否私密，0私密，1公开',
-    FULLTEXT (content,title,summary) with parser
+    FULLTEXT (content,title,summary) with parser ngram
 )
     comment '文章表';
 
@@ -106,15 +106,11 @@ create table user
     userName    varchar(255)                                                      not null comment '用户名',
     sex         tinyint       default 2                                           not null comment '性别(0女,1男,2未知)',
     profiles    varchar(1024) default '这个人很神秘，什么也没有留下'               null comment '用户简介',
-    interestTag varchar(255)  default '["java", "大数据"]'                        null comment '预留字段，用户兴趣标签（json字段）',
-    userAccount varchar(255)                                                      null comment '账户,可用于登录',
+    interestTag varchar(255)                                                      null comment '用户兴趣标签',
     password    varchar(255)                                                      not null comment '密码',
     mail        varchar(255)                                                      not null comment '邮箱',
-    phone       varchar(100)                                                      null comment '电话,预留字段',
     role        varchar(256)  default 'user'                                      not null comment '角色(0普通用户,1管理员)',
     ipAddress   varchar(255)  default 'M78星云'                                   null comment 'ip地址',
-    accessKey   varchar(100)                                                      null comment '预留字段',
-    secretKey   varchar(100)                                                      null comment '预留字段',
     level       tinyint       default 0                                           not null comment '预留字段,用户等级',
     createTime  datetime      default CURRENT_TIMESTAMP                           not null comment '创建时间',
     updateTime  datetime      default CURRENT_TIMESTAMP                           not null on update CURRENT_TIMESTAMP comment '修改时间',
@@ -122,6 +118,8 @@ create table user
     isDelete    tinyint       default 1                                           not null comment '0逻辑删除'
 )
     comment '用户表';
+
+
 
 create table user_collects
 (

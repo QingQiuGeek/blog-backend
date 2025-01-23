@@ -50,11 +50,6 @@ public class User implements Serializable {
    */
   private String interestTag;
 
-  /**
-   * 账户,可用于登录
-   */
-  private String userAccount;
-
 
   /**
    * 用户名
@@ -72,11 +67,6 @@ public class User implements Serializable {
   private String mail;
 
   /**
-   * 电话,预留字段
-   */
-  private String phone;
-
-  /**
    * 角色(user普通用户,admin管理员)
    */
   private String role;
@@ -86,15 +76,6 @@ public class User implements Serializable {
    */
   private String ipAddress;
 
-  /**
-   * 预留字段
-   */
-  private String accessKey;
-
-  /**
-   * 预留字段
-   */
-  private String secretKey;
 
   /**
    * 预留字段,用户等级

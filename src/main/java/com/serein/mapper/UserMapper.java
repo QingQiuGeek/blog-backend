@@ -19,7 +19,6 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
-
   List<CommentUserInfoVO> getCommentUserInfoByUserIdList(
       @Param("commentUserIdList") List<Long> commentUserIdList);
 
@@ -39,6 +38,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Select("select avatarUrl from blog.user where userId=#{userId}")
   String getUserAvatar(Long userId);
+
+  @Update("update blog.user set mail=#{mail} where userId=#{userId}")
+  void updateEncrypt(@Param("mail") String mail,@Param("userId") Long userId);
 }
 
 

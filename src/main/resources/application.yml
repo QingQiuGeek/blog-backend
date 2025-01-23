@@ -21,14 +21,14 @@ spring:
             class: javax.net.ssl.SSLSocketFactory
             fallback: false
   datasource:
-    url: jdbc:mysql://47.97.220.175:3306/Blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
+    url: jdbc:mysql://47.97.220.175:3306/blog?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&useSSL=true
     username: root
     password: '#252012'
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 3
-      minimum-idle: 1
+      maximum-pool-size: 6
+      minimum-idle: 2
   #    type: com.alibaba.druid.pool.DruidDataSource
 #    druid:
 #      min-idle: 3
@@ -55,7 +55,7 @@ spring:
 #        最大连接数，最大空闲数，最小空闲数
         max-active: 5
         max-idle: 3
-        min-idle: 1
+        min-idle: 3
   servlet:
     multipart:
       max-file-size: 2MB
@@ -104,9 +104,8 @@ knife4j:
 
 #自定义变量
 custom:
-  salt: 'serein'
 #  添加用户的初始密码
-  originPassword: '123456'
+  originPassword: '12345678aa'
 
 oss:
   accessKey: ''

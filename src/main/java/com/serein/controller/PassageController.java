@@ -95,7 +95,7 @@ public class PassageController {
       @RequestBody SearchPassageRequest searchPassageRequest) {
     IPUtil.isHotIp();
     String searchType = searchPassageRequest.getSearchType();
-    if (searchType.isBlank()) {
+    if (StringUtils.isBlank(searchType)) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
     Page<List<PassageInfoVO>> listPage = new Page<>();

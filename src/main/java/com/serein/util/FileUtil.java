@@ -9,7 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -98,7 +100,12 @@ public class FileUtil {
     // 获取单位
     String unit = Common.IMG_SIZE_UNIT.toUpperCase();
     // 定义单位与换算系数的映射
-    Map<String, Double> unitMap = Map.of("B", 1.0, "K", 1024.0, "M", 1048576.0);
+    HashMap<String, Double> unitMap = new HashMap<>();
+    unitMap.put("B", 1.0);
+    unitMap.put("K", 1024.0);
+    unitMap.put( "M", 1048576.0);
+
+//    Map<String, Double> unitMap =  Map.of("B", 1.0, "K", 1024.0, "M", 1048576.0);
     // 获取换算系数
     Double conversionFactor = unitMap.get(unit);
     if (conversionFactor == null) {

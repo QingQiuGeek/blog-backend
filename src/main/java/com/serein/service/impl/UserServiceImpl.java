@@ -2,10 +2,10 @@ package com.serein.service.impl;
 
 import static com.serein.constants.Common.EMAIL_REGEX;
 import static com.serein.constants.Common.PASSWORD_REGEX;
-import static com.serein.constants.Common.REGISTER_CODE_TTL;
+import static com.serein.constants.Common.REGISTER_CAPTCHA_TTL;
 import static com.serein.constants.Common.USERNAME_REGEX;
 import static com.serein.constants.Common.USER_FOLLOW_KEY;
-import static com.serein.constants.Common.USER_REGISTER_CODE_KEY;
+import static com.serein.constants.Common.USER_REGISTER_CAPTCHA_KEY;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -20,7 +20,6 @@ import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.constants.UserRole;
 import com.serein.exception.BusinessException;
-import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
 import com.serein.mapper.UserCollectsMapper;
@@ -68,7 +67,6 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
@@ -92,9 +90,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-  //盐值.从yml文件获取
-  @Value("${custom.salt}")
-  String SALT;
+
 
   @Value("${custom.originPassword}")
   String originPassword;
@@ -103,10 +99,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   private String fromEmail;
 
   @Resource
-  private  StringRedisTemplate stringRedisTemplate;
+  private StringRedisTemplate stringRedisTemplate;
 
   @Resource
-  private  UserMapper userMapper;
+  private UserMapper userMapper;
 
   @Resource
   private UserCollectsMapper userCollectsMapper;
@@ -118,7 +114,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   private PassageServiceImpl passageService;
 
   @Resource
-  private  UserFollowMapper userFollowMapper;
+  private UserFollowMapper userFollowMapper;
 
   @Resource
   private JavaMailSenderImpl mailSender;
@@ -165,7 +161,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //再更新redis
         Long add = stringRedisTemplate.opsForSet()
             .add(key, userId.toString());
-        if (add!=1L) {
+        if (add != 1L) {
           throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REDIS_UPDATE_ERROR);
         }
       } else {
@@ -259,7 +255,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     List<UserVO> userVOS = new ArrayList<>();
     String key = Common.USER_FOLLOW_KEY + loginUserId.toString();
     for (UserVO userVO : userVOList) {
-      Boolean follow=stringRedisTemplate.opsForSet().isMember(key, userVO.getUserId().toString());
+      Boolean follow = stringRedisTemplate.opsForSet().isMember(key, userVO.getUserId().toString());
       userVO.setIsFollow(follow);
       userVOS.add(userVO);
     }
@@ -574,26 +570,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     String loginPassword = loginRequest.getPassword();
     if (StringUtils.isAnyBlank(loginUserMail, loginPassword) || checkMail(loginUserMail)
         || checkPassword(loginPassword)) {
-      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.LOGIN_INFO_ERROR);
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
 
     //2.根据邮箱从数据库查询用户
-    LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(User::getMail, loginUserMail);
-    User queryUser = userMapper.selectOne(queryWrapper);
+    User queryUser = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getMail, encrypt(loginUserMail)));
     if (queryUser == null) {
-      throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_DB_DATA);
+      throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_REGISTER);
     }
     if (queryUser.getStatus() == 0) {
       throw new BusinessException(ErrorCode.NO_AUTH_ERROR, ErrorInfo.BAN_ACCOUNT);
     }
-    //核对密码
+
+    //3.核对密码
     {
-      if (!DigestUtils.md5DigestAsHex((SALT + loginPassword).getBytes())
-          .equals(queryUser.getPassword())) {
-        throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PASSWORD_ERROR);
+      if (!encrypt(loginPassword).equals(queryUser.getPassword())) {
+        throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.MAIL_OR_PASSWORD_ERROR);
       }
     }
+
     HttpServletRequest request = requestAttributes.getRequest();
     String ipAddr = IPUtil.getIpAddr(request);
     log.info("用户登录，ip地址：{}", ipAddr);
@@ -601,15 +596,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       //如果用户id地址变化，那么更新数据库
       userMapper.updateIpAddress(ipAddr, queryUser.getUserId());
     }
-    LoginUserVO loginUserVO = loginSuccess(queryUser.getRole(),queryUser.getUserId());
+    LoginUserVO loginUserVO = loginSuccess(queryUser.getRole(), queryUser.getUserId());
     log.info("loginUserVO：" + loginUserVO);
     return loginUserVO;
   }
 
   /**
+   * 传入参数，使用参数本身作为盐值 进行加密
+   *
+   * @param str
+   * @return
+   */
+  public String encrypt(String str) {
+    return DigestUtils.md5DigestAsHex((str + str).getBytes());
+  }
+
+  /**
    * @param role
    */
-  private LoginUserVO loginSuccess(String role,Long userId) {
+  private LoginUserVO loginSuccess(String role, Long userId) {
     LoginUserVO loginUserVO = new LoginUserVO();
     String token = UUID.randomUUID(true).toString();
     loginUserVO.setToken(token);
@@ -635,7 +640,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     String code = mailUtil.sendCode(email);
     //验证码存入redis，有效期1min,用注册的邮箱区分验证码
     stringRedisTemplate.opsForValue()
-        .set(USER_REGISTER_CODE_KEY + email, code, REGISTER_CODE_TTL, TimeUnit.MINUTES);
+        .set(USER_REGISTER_CAPTCHA_KEY + encrypt(email), code, REGISTER_CAPTCHA_TTL, TimeUnit.MINUTES);
     log.info("发送邮箱验证码给用户：" + email + "成功 : " + code);
   }
 
@@ -669,46 +674,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     //检查注册参数是否为空
     if (StringUtils.isAnyBlank(mail, password, rePassword, userName, registerCode)) {
-      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.LOGIN_INFO_ERROR);
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
 
+    // 检查参数是否合法
     if (!password.equals(rePassword) || checkMail(mail) || checkUserName(userName) || checkPassword(
         password)) {
-      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.LOGIN_INFO_ERROR);
+      throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
 
     //检查邮箱是否被注册
     checkMailIsRegistered(mail);
+
     //从redis获取验证码
-    String rightCode = stringRedisTemplate.opsForValue().get(USER_REGISTER_CODE_KEY + mail);
+    String rightCode = stringRedisTemplate.opsForValue().get(USER_REGISTER_CAPTCHA_KEY + encrypt(mail));
+
     //检查验证码是否存在
     if (StringUtils.isBlank(rightCode)) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证码已过期或不存在");
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.CAPTCHA_ERROR);
     }
+
     //核验验证码是否正确
     if (!rightCode.equals(registerCode)) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证码错误");
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.CAPTCHA_ERROR);
     }
+
     //4.密码盐值加密，写入数据库，注册成功
-    String bcrypt = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
     HttpServletRequest request = requestAttributes.getRequest();
     String ipAddr = IPUtil.getIpAddr(request);
     log.info("用户注册，ip地址：{}", ipAddr);
     String ipRegion = IPUtil.getIpRegion(ipAddr);
     log.info("用户注册，ip归属地：{}", ipRegion);
-    User user = User.builder().userName(userName).password(bcrypt).mail(mail).ipAddress(ipAddr)
+    User user = User.builder().userName(userName).password(encrypt(password)).mail(encrypt(mail)).ipAddress(ipAddr)
         .build();
     int insert = userMapper.insert(user);
     if (insert <= 0) {
-      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.ADD_ERROR);
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.REGISTER_ERROR);
     }
-    return loginSuccess(userMapper.getUserRole(user.getUserId()),user.getUserId());
+    return loginSuccess(userMapper.getUserRole(user.getUserId()), user.getUserId());
   }
 
   private void checkMailIsRegistered(String mail) {
     //发送验证码时已检查该邮箱是否注册，这里再检查一次
     LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-    userLambdaUpdateWrapper.eq(User::getMail, mail);
+    userLambdaUpdateWrapper.eq(User::getMail, encrypt(mail));
     if (userMapper.exists(userLambdaUpdateWrapper)) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.MAIL_EXISTED_ERROR);
     }
@@ -749,7 +758,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       return true;
     }
     return false;
-
   }
 
 
@@ -840,10 +848,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (StringUtils.isNotBlank(user.getInterestTag())) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
             Long.class);
-          List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-          List<String> tagNameList = tags.stream().map(Tags::getTagName)
-              .collect(Collectors.toList());
-          adminUserVO.setInterestTag(tagNameList);
+        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<String> tagNameList = tags.stream().map(Tags::getTagName)
+            .collect(Collectors.toList());
+        adminUserVO.setInterestTag(tagNameList);
       }
       return adminUserVO;
     }).collect(Collectors.toList());
@@ -919,11 +927,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public Long addUser(AddUserDTO addUserDTO) {
-    //初始密码可以在yml中设置
-    String bcrypt = DigestUtils.md5DigestAsHex((SALT + originPassword).getBytes());
     User addUser = new User();
     BeanUtil.copyProperties(addUserDTO, addUser);
-    addUser.setPassword(bcrypt);
+    addUser.setPassword(encrypt(originPassword));
     boolean save = this.save(addUser);
     if (save) {
       return addUser.getUserId();

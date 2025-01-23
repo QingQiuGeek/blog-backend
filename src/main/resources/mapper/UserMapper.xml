@@ -11,14 +11,10 @@
             <result property="sex" column="sex" jdbcType="TINYINT"/>
             <result property="profiles" column="profiles" jdbcType="VARCHAR"/>
             <result property="interestTag" column="interestTag" jdbcType="VARCHAR"/>
-            <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
             <result property="mail" column="mail" jdbcType="VARCHAR"/>
-            <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="role" column="role" jdbcType="VARCHAR"/>
             <result property="ipAddress" column="ipAddress" jdbcType="VARCHAR"/>
-            <result property="accessKey" column="accessKey" jdbcType="VARCHAR"/>
-            <result property="secretKey" column="secretKey" jdbcType="VARCHAR"/>
             <result property="level" column="level" jdbcType="TINYINT"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
@@ -29,9 +25,8 @@
     <sql id="Base_Column_List">
         userId,avatarUrl,userName,
         sex,profiles,interestTag,
-        userAccount,password,mail,
-        phone,role,ipAddress,accessKey,
-        secretKey,level,createTime,
+        password,mail,role,
+        ipAddress,level,createTime,
         updateTime,status,isDelete
     </sql>
 
