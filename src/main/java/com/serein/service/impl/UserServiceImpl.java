@@ -378,16 +378,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     Long userId = loginUserVO.getUserId();
     int followerNum = userFollowMapper.getFollowerNum(userId);
-    int collectNum = passageMapper.getCollectNumById(userId);
+    int collectNum = passageMapper.getTotalCollectNumById(userId);
     int passageNum = passageMapper.getPassageNumById(userId);
     String key = USER_FOLLOW_KEY + userId;
     Long followNum = stringRedisTemplate.opsForSet().size(key);
-    if (followNum == null) {
-      followNum = 0L;
-    }
-    int thumbNum = passageMapper.getThumbNum(userId);
+    int thumbNum = passageMapper.getTotalThumbNum(userId);
     userInfoDataVO.setCollectNum(collectNum);
-    userInfoDataVO.setFollowNum(followNum.intValue());
+    userInfoDataVO.setFollowNum(followNum==null?0:followNum.intValue());
     userInfoDataVO.setPassageNum(passageNum);
     userInfoDataVO.setThumbNum(thumbNum);
     userInfoDataVO.setFollowerNum(followerNum);

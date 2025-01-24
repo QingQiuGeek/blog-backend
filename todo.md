@@ -83,7 +83,7 @@
 * 前端登陆后进入个人主页获取登录用户信息异常 √
 * 注册邮箱加密 √
 * 图片上传minio
-* 点赞hashMap
+* 点赞bitmap,passageId为key，userId作为偏移量。因为passageId是很长的long类型，如果作为偏移量存到bitmap会占用更多内存
 * 
 * 登陆成功进入个人主页报错 √
 

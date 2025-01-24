@@ -5,6 +5,7 @@ import com.serein.model.entity.Passage;
 import com.serein.model.vo.passageVO.PassageContentVO;
 import java.util.Date;
 import java.util.List;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -23,23 +24,22 @@ public interface PassageMapper extends BaseMapper<Passage> {
 
   //根据uid查询该用户收藏的文章数量
   @Select("select count(*) from blog.user_collects where userId=#{uid}")
-  Integer getCollectNumById(Long uid);
+  Integer getTotalCollectNumById(Long uid);
 
   @Select("select count(*) from blog.passage where authorId=#{uid}")
   Integer getPassageNumById(Long uid);
 
   void updateViewNum(Long passageId);
 
-  @Select("select content from blog.passage where passageId=#{pid} and authorId=#{uid} and isPrivate=1")
+  @Select("select content from blog.passage where passageId=#{pid} and authorId=#{uid} and isPrivate=1 and isDelete=1")
   PassageContentVO getPassageContentByPid(@Param("uid") Long uid, @Param("pid") Long pid);
 
 
-  @Select("select passageId,authorId,viewNum,accessTime,title,summary from blog.passage where passageId=#{passageId} and isPrivate=1")
+  @Select("select passageId,authorId,viewNum,accessTime,title,summary from blog.passage where passageId=#{passageId} and isPrivate=1 and isDelete=1")
   Passage getPassageInfo(Long passageId);
 
   @Select("select count(*) from blog.user_thumbs where userId=#{uid}")
-  Integer getThumbNum(Long uid);
-
+  Integer getTotalThumbNum(Long uid);
 
   List<Passage> selectOtherPassageByUserId(@Param("userId") Long userId);
 
@@ -62,6 +62,7 @@ public interface PassageMapper extends BaseMapper<Passage> {
       @Param("authorId") Long authorId);
 
   List<Passage> searchPassageFromMySQL(String searchText);
+
 }
 
 

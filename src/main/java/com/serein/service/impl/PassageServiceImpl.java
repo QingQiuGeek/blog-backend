@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -63,6 +64,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,7 +112,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   private RedissonClient redissonClient;
 
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"getHomePassageList",key ="#queryPageRequest.currentPage" )
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX
+      + "getHomePassageList", key = "#queryPageRequest.currentPage")
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
     //判断刷子用户
@@ -155,8 +158,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           User user = userMapper.getAuthorInfo(passage.getAuthorId());
           passageInfoVO.setAuthorName(user.getUserName());
           passageInfoVO.setAvatarUrl(user.getAvatarUrl());
-          List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(
-              passage.getPassageId());
+          Long passageId = passage.getPassageId();
+          List<PassageTag> passageTags = passageTagMapper.selectTagIdByPassageId(passageId);
           List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
               .collect(Collectors.toList());
           if (!tagIdList.isEmpty()) {
@@ -164,9 +167,17 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
             Map<Long, String> tagStrList = getTagMaps(tagIdList);
             passageInfoVO.setPTagsMap(tagStrList);
           }
-          int thumbsCount = userThumbsMapper.count(passage.getPassageId());
-          int collectCount = userCollectsMapper.count(passage.getPassageId());
-          int commentCount = commentMapper.count(passage.getPassageId());
+          int thumbsCount = Objects.requireNonNull(
+              stringRedisTemplate.execute((RedisCallback<Long>) connection -> {
+                return connection.bitCount((Common.PASSAGE_THUMB_KEY + passageId).getBytes());
+              })).intValue();
+          int collectCount = Objects.requireNonNull(
+              stringRedisTemplate.execute((RedisCallback<Long>) connection -> {
+                return connection.bitCount((Common.PASSAGE_COLLECT_KEY + passageId).getBytes());
+              })).intValue();
+//      int thumbsCount = userThumbsMapper.count(passage.getPassageId());
+//          int collectCount = userCollectsMapper.count(passage.getPassageId());
+          int commentCount = commentMapper.count(passageId);
           passageInfoVO.setCollectNum(collectCount);
           passageInfoVO.setThumbNum(thumbsCount);
           passageInfoVO.setCommentNum(commentCount);
@@ -216,11 +227,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     Long userId = loginUserVO.getUserId();
     String passageId = passageInfoVO.getPassageId().toString();
     String keyThumb = Common.PASSAGE_THUMB_KEY + passageId;
-    Boolean thumb = stringRedisTemplate.opsForSet().isMember(keyThumb, userId.toString());
-    passageInfoVO.setIsThumb(thumb);
+    passageInfoVO.setIsThumb(stringRedisTemplate.opsForValue().getBit(keyThumb, userId.intValue()));
     String keyCollect = Common.PASSAGE_COLLECT_KEY + passageId;
-    Boolean collect = stringRedisTemplate.opsForSet().isMember(keyCollect, userId.toString());
-    passageInfoVO.setIsCollect(collect);
+    passageInfoVO.setIsCollect(
+        stringRedisTemplate.opsForValue().getBit(keyCollect, userId.intValue()));
   }
 
   @Override
@@ -289,7 +299,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         .setRecords(Collections.singletonList(passageInfoVOList));
   }
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageFromMySQL",key = "#searchPassageRequest.searchText")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX
+      + "searchPassageFromMySQL", key = "#searchPassageRequest.searchText")
   @Override
   public Page<List<PassageInfoVO>> searchPassageFromMySQL(
       SearchPassageRequest searchPassageRequest) {
@@ -308,7 +319,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageByCategory",key = "#searchPassageRequest.id")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX
+      + "searchPassageByCategory", key = "#searchPassageRequest.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByCategory(
       SearchPassageRequest searchPassageRequest) {
@@ -355,7 +367,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageInfoVOPage;
   }
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageByTag",key = "#searchPassageRequest.id")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX
+      + "searchPassageByTag", key = "#searchPassageRequest.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest) {
     Long tagId = searchPassageRequest.getId();
@@ -612,9 +625,9 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
 
+  //使用set集合存储点赞信息
   @Transactional
-  @Override
-  public Boolean thumbPassage(Long passageId) {
+  public Boolean thumb(Long passageId) {
 
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
@@ -625,6 +638,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
      * 同一个用户对一篇文章只能点赞一次，不能重复点赞，取消点赞亦然
      * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否点赞
      * */
+
     String key = Common.PASSAGE_THUMB_KEY + passageId;
     Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
     if (Boolean.FALSE.equals(isMember)) {
@@ -657,14 +671,45 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return true;
   }
 
-  /**
-   * @param passageId
-   * @return
-   * @Description: 以passageId作为key，收藏该文章的userId为value存入redis
-   */
+  //使用bitmap存储点赞信息
   @Transactional
   @Override
-  public Boolean collectPassage(Long passageId) {
+  public Boolean thumbPassage(Long passageId) {
+    LoginUserVO loginUserVO = UserHolder.getUser();
+    if (loginUserVO == null) {
+      return false;
+    }
+    Long userId = loginUserVO.getUserId();
+    String key = Common.PASSAGE_THUMB_KEY + passageId;
+    Boolean isThumb = stringRedisTemplate.opsForValue().getBit(key, userId.intValue());
+    if (Boolean.FALSE.equals(isThumb)) {
+      //插入用户点赞表
+      UserThumbs userThumbs = UserThumbs.builder().userId(userId).passageId(passageId).build();
+      int insert = userThumbsMapper.insert(userThumbs);
+      //文章表和用户点赞表同时更新成功
+      if (insert == 1) {
+//        返回false：表示该位置之前的值是 0（即该位置之前被设置为 false）。
+        stringRedisTemplate.opsForValue().setBit(key, userId, true);
+      } else {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+      }
+    } else {
+      //删除用户点赞表
+      LambdaQueryWrapper<UserThumbs> queryWrapper = new LambdaQueryWrapper<>();
+      queryWrapper.eq(UserThumbs::getUserId, userId).eq(UserThumbs::getPassageId, passageId);
+      int delete = userThumbsMapper.delete(queryWrapper);
+      if (delete == 1) {
+        stringRedisTemplate.opsForValue().setBit(key, userId, false);
+      } else {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+      }
+    }
+    return true;
+  }
+
+
+  @Transactional
+  public Boolean collect(Long passageId) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
       return false;
@@ -708,6 +753,45 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return true;
   }
 
+  @Transactional
+  @Override
+  public Boolean collectPassage(Long passageId) {
+    LoginUserVO loginUserVO = UserHolder.getUser();
+    if (loginUserVO == null) {
+      return false;
+    }
+    Long userId = loginUserVO.getUserId();
+    String key = Common.PASSAGE_COLLECT_KEY + passageId;
+    Boolean isCollect = stringRedisTemplate.opsForValue().getBit(key, userId.intValue());
+    if (Boolean.FALSE.equals(isCollect)) {
+      //先插入mysql用户收藏表
+      UserCollects userCollects = UserCollects.builder().userId(userId).passageId(passageId)
+          .build();
+      int insert = userCollectsMapper.insert(userCollects);
+      if (insert == 1) {
+        stringRedisTemplate.opsForValue().setBit(key, userId, true);
+        // 增加文章的收藏量
+        stringRedisTemplate.opsForZSet()
+            .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), 1);
+      } else {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+      }
+    } else {
+      //删除用户收藏表
+      LambdaQueryWrapper<UserCollects> queryWrapper = new LambdaQueryWrapper<>();
+      queryWrapper.eq(UserCollects::getUserId, userId).eq(UserCollects::getPassageId, passageId);
+      int delete = userCollectsMapper.delete(queryWrapper);
+      if (delete == 1) {
+        stringRedisTemplate.opsForValue().setBit(key, userId, false);
+        stringRedisTemplate.opsForZSet()
+            .incrementScore(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId), -1);
+      } else {
+        throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
+      }
+    }
+    return true;
+  }
+
   /**
    * top10
    *
@@ -743,7 +827,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"passageContent",key = "#pid")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "passageContent", key = "#pid")
   @Override
   public PassageContentVO getPassageContentByPassageId(Long uid, Long pid) {
     if (pid == null) {
@@ -902,18 +986,18 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Override
   @Transactional
   public boolean deleteByPassageId(Long passageId) {
-    boolean b1 = removeById(passageId);
+    int i=passageMapper.deleteById(passageId);
+    if (i!=1) {
+      throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+    }
     commentMapper.deleteByPassageId(passageId);
     userCollectsMapper.deleteByPassageId(passageId);
     userThumbsMapper.deleteByPassageId(passageId);
-    boolean b3 = passageTagMapper.deleteByPassageId(passageId);
+    passageTagMapper.deleteByPassageId(passageId);
     stringRedisTemplate.opsForZSet().remove(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId));
     stringRedisTemplate.delete(Common.PASSAGE_COLLECT_KEY + passageId);
     stringRedisTemplate.delete(Common.PASSAGE_THUMB_KEY + passageId);
-    if (b1 && b3) {
-      return true;
-    }
-    throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);
+    return true;
   }
 
 
