@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author 懒大王Smile
  */
 @SpringBootApplication
+@EnableCaching
 @EnableTransactionManagement //开启注解方式的事务管理
 //开启定时任务增量同步
 @EnableScheduling

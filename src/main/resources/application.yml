@@ -27,11 +27,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 6
-      minimum-idle: 2
+      maximum-pool-size: 4
+      keepalive-time: 60000
   #    type: com.alibaba.druid.pool.DruidDataSource
 #    druid:
-#      min-idle: 3
 #      max-active: 6
 #      max-wait: 60000
 #      initial-size: 3
@@ -44,7 +43,7 @@ spring:
 #        login-password: 123
 #        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
   redis:
-    host: 47.97.220.175
+    host: 192.168.2.129
     port: 6379
     username: default
     password: 'linux02'
@@ -54,18 +53,16 @@ spring:
       pool:
 #        最大连接数，最大空闲数，最小空闲数
         max-active: 5
-        max-idle: 3
-        min-idle: 3
+        max-idle: 2
+        min-idle: 2
+  #    缓存10min，允许缓存null值防止缓存穿透
+  cache:
+    type: redis
+
   servlet:
     multipart:
       max-file-size: 2MB
       max-request-size: 10MB
-
-
-
-#  cache:
-#    使用redis缓存
-#    type: redis
 
 #  elasticsearch:
 #    uris: 'localhost:9200'
@@ -105,13 +102,14 @@ knife4j:
 #自定义变量
 custom:
 #  添加用户的初始密码
-  originPassword: '12345678aa'
+  originPassword: '123456user'
 
 oss:
   accessKey: ''
   secretKey: ''
   endPoint: ''
   bucket: ''
+
 #jwt配置
 #jwt:
 #  token:

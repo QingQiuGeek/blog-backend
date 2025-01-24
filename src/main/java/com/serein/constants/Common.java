@@ -17,7 +17,8 @@ public interface Common {
 
   Long HOT_PASSAGE_DURATION=60L;
 
-  String IMG_UPLOAD_DIR = "A:/IDEA/blog/src/main/resources/uploadImg/";
+
+  String IMG_UPLOAD_DIR = "/uploadImg/";
 
   //限制可上传的图片大小
   int IMG_SIZE_LIMIT = 1;
@@ -27,6 +28,8 @@ public interface Common {
 
   //前端category页随机抽取的标签数量
   Integer TAGS_NUM = 50;
+
+  String BLOG_CACHE_PREFIX="Blog:cache:";
 
   String TIME_PUBLISH_KEY="Blog:timePublish:";
   String LOGIN_TOKEN_KEY = "Blog:login:token:";

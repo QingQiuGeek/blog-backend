@@ -43,10 +43,6 @@ public class AdminUserVO {
    */
   private List<String> interestTag;
 
-  /**
-   * 账户,可用于登录
-   */
-  private String userAccount;
 
   /**
    * ip地址

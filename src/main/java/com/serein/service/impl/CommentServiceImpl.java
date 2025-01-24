@@ -1,5 +1,7 @@
 package com.serein.service.impl;
 
+import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -33,6 +35,7 @@ import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,6 +80,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     //拿到生成的commentId
     return comment.getCommentId();
   }
+
 
 
   @Override

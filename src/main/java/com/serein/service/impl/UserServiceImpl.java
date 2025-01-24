@@ -1,5 +1,6 @@
 package com.serein.service.impl;
 
+import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
 import static com.serein.constants.Common.EMAIL_REGEX;
 import static com.serein.constants.Common.PASSWORD_REGEX;
 import static com.serein.constants.Common.REGISTER_CAPTCHA_TTL;
@@ -68,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SetOperations;
@@ -296,7 +298,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     ArrayList<Long> idList = new ArrayList<>();
     //拿到我的粉丝的id列表
     records.forEach(myFollower -> idList.add(myFollower.getUserId()));
-    //根据我的粉丝的idlist查询出来粉丝的uservo
+    //根据我的粉丝的idList查询出来粉丝的userVO
     List<User> userList = this.listByIds(idList);
     List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
     //判断我是否关注了粉丝
@@ -309,8 +311,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   /**
    * @param uid
-   * @return 获取其他用户的信息，展示在其他用户的主页或者文章详情页
+   * @return 获取用户的信息，展示在文章详情页
    */
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"userInfo",key = "#uid")
   @Override
   public UserVO getUserInfo(Long uid) {
     User byId = this.getById(uid);
@@ -333,7 +336,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (loginUserVO == null) {
         return userVO;
       }
-
       Long loginUserId = loginUserVO.getUserId();
       List<UserVO> userVOS = new ArrayList<>();
       userVOS.add(userVO);
@@ -369,8 +371,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public UserInfoDataVO getUserInfoData() {
     UserInfoDataVO userInfoDataVO = new UserInfoDataVO();
-    LoginUserVO loginUserVO = UserHolder.getUser();
     //未登录返回默认数据0
+    LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
       return userInfoDataVO;
     }
@@ -394,8 +396,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public Page<List<CommentVO>> myMessage(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
     Page<List<CommentVO>> listPage = new Page<List<CommentVO>>();
+    LoginUserVO loginUserVO = UserHolder.getUser();
+
     if (loginUserVO == null) {
       //未登录直接返回空列表
       listPage.setTotal(0);
@@ -430,6 +433,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public String uploadAvatar(MultipartFile file) {
     LoginUserVO loginUserVO = UserHolder.getUser();
+
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
@@ -446,6 +450,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
+
     if (loginUserVO == null) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
@@ -479,9 +484,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     return listPage;
   }
 
+
   @Override
   public Page<List<PassageInfoVO>> myThumbPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
+
     if (loginUserVO == null) {
       //未登录返回空列表
       Page<List<PassageInfoVO>> listPage = new Page<>();
@@ -519,6 +526,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public Page<List<PassageInfoVO>> myPassage(QueryPageRequest queryPageRequest) {
     LoginUserVO loginUserVO = UserHolder.getUser();
+
     if (loginUserVO == null) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
@@ -763,9 +771,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public LoginUserVO getLoginUser() {
-
-    log.info("获取登录用户线程：" + Thread.currentThread().getId());
     LoginUserVO loginUserVO = UserHolder.getUser();
+    log.info("获取登录用户线程：" + Thread.currentThread().getId());
     log.info("获取登陆用户信息：" + loginUserVO);
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "获取当前登录用户失败");

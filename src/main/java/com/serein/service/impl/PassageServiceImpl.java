@@ -1,5 +1,6 @@
 package com.serein.service.impl;
 
+import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
 import static com.serein.constants.Common.TIME_PUBLISH_KEY;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -108,6 +109,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Resource
   private RedissonClient redissonClient;
 
+
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"getHomePassageList",key ="#queryPageRequest.currentPage" )
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
     //判断刷子用户
@@ -192,6 +195,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return map;
   }
 
+  //passageInfo中包含浏览量点赞等信息，变化频繁，不放入redis缓存了
   @Override
   public PassageInfoVO getPassageInfoByPassageId(Long passageId) {
     Passage passageInfo = passageMapper.getPassageInfo(passageId);
@@ -285,6 +289,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         .setRecords(Collections.singletonList(passageInfoVOList));
   }
 
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageFromMySQL",key = "#searchPassageRequest.searchText")
   @Override
   public Page<List<PassageInfoVO>> searchPassageFromMySQL(
       SearchPassageRequest searchPassageRequest) {
@@ -292,7 +297,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     if (StringUtils.isBlank(searchText)) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
-    List<Passage> passageList=passageMapper.searchPassageFromMySQL(searchText);
+    List<Passage> passageList = passageMapper.searchPassageFromMySQL(searchText);
 
     List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passageList);
 
@@ -302,6 +307,8 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         .setRecords(Collections.singletonList(passageInfoVOList));
   }
 
+
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageByCategory",key = "#searchPassageRequest.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByCategory(
       SearchPassageRequest searchPassageRequest) {
@@ -348,7 +355,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageInfoVOPage;
   }
 
-
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"searchPassageByTag",key = "#searchPassageRequest.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest) {
     Long tagId = searchPassageRequest.getId();
@@ -443,6 +450,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
+
   @Transactional
   public Long insertPassage(ParentPassageDTO parentPassageDTO) {
     Passage passage = new Passage();
@@ -481,6 +489,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       return insertPassage(parentPassageDTO);
     }
   }
+
 
   @Transactional
   @Override
@@ -524,7 +533,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
-  @Cacheable
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "otherPassages", key = "#userId")
   @Override
   public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
@@ -543,7 +552,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     });
     return passageTitleVOS;
   }
-
 
   @Transactional
   public void updatePassage(ParentPassageDTO updateParentPassageDTO) {
@@ -594,12 +602,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   /**
    * 从延迟队列中获取passageId
    *
-   * @param queuekey
+   * @param queueKey
    * @return
    * @throws InterruptedException
    */
-  public Long getDelayQueue(String queuekey) throws InterruptedException {
-    RBlockingDeque<Long> blockingDeque = redissonClient.getBlockingDeque(queuekey);
+  public Long getDelayQueue(String queueKey) throws InterruptedException {
+    RBlockingDeque<Long> blockingDeque = redissonClient.getBlockingDeque(queueKey);
     return blockingDeque.take();
   }
 
@@ -706,6 +714,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
    * @return
    * @Description:
    */
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "topPassages", key = "'topPassagesCache'")
   @Override
   public List<PassageTitleVO> getTopPassages() {
     //根据viewNum降序获取前10
@@ -721,9 +730,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     // 为了保证文章收藏量从高到低，创建一个 Map 来存储 passageId 与 Passage 对象的映射关系
     Map<Long, Passage> passageMap = passageList.stream()
         .collect(Collectors.toMap(Passage::getPassageId, passage -> passage));
-
     List<PassageTitleVO> passageTitleVOS = new ArrayList<>();
-
     //按照 idlist 顺序将 Passage 对象转换为 PassageTitleVO
     idlist.forEach(id -> {
       Passage passage = passageMap.get(id);  // 根据 id 获取对应的 Passage
@@ -736,6 +743,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"passageContent",key = "#pid")
   @Override
   public PassageContentVO getPassageContentByPassageId(Long uid, Long pid) {
     if (pid == null) {
@@ -780,24 +788,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 //    return passageContent;
   }
 
-
-  private static Map<String, String> getStringMap(PassageContentVO passageContent) {
-    Map<String, Object> map = BeanUtil.beanToMap(passageContent, false, true);
-    Map<String, String> stringMap = new HashMap<>();
-    // 遍历原始 map，将所有值转换为字符串
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      // 如果值是 Long 类型，转换为字符串
-      if (value instanceof Long) {
-        stringMap.put(key, value.toString());
-      } else {
-        stringMap.put(key, String.valueOf(value));
-        // 对于其他类型，直接转换为字符串
-      }
-    }
-    return stringMap;
-  }
 
   @Override
   public String uploadPassageCover(MultipartFile img) {
@@ -880,6 +870,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }).collect(Collectors.toList());
   }
 
+
   @Override
   public Boolean rejectPassage(Long passageId) {
     LambdaUpdateWrapper<Passage> passageQueryWrapper = new LambdaUpdateWrapper<>();
@@ -919,7 +910,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     stringRedisTemplate.opsForZSet().remove(Common.TOP_COLLECT_PASSAGE, String.valueOf(passageId));
     stringRedisTemplate.delete(Common.PASSAGE_COLLECT_KEY + passageId);
     stringRedisTemplate.delete(Common.PASSAGE_THUMB_KEY + passageId);
-    if (b1 && b3 ) {
+    if (b1 && b3) {
       return true;
     }
     throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.DELETE_ERROR);

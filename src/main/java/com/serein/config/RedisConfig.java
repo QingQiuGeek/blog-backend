@@ -22,7 +22,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Configuration
 public class RedisConfig {
 
-
   @Bean
   public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory) {
     RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
@@ -59,4 +58,6 @@ public class RedisConfig {
       throw e;
     }
   }
+
+
 }

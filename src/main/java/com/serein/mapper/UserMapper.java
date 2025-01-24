@@ -39,8 +39,8 @@ public interface UserMapper extends BaseMapper<User> {
   @Select("select avatarUrl from blog.user where userId=#{userId}")
   String getUserAvatar(Long userId);
 
-  @Update("update blog.user set mail=#{mail} where userId=#{userId}")
-  void updateEncrypt(@Param("mail") String mail,@Param("userId") Long userId);
+  @Update("update blog.user set password=#{password} where userId=#{userId}")
+  void updateEncrypt(@Param("password") String password,@Param("userId") Long userId);
 }
 
 

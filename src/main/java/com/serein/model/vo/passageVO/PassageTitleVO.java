@@ -13,7 +13,6 @@ import lombok.Data;
  */
 
 @Data
-//@Builder
 public class PassageTitleVO implements Serializable {
 
   /**
@@ -32,6 +31,6 @@ public class PassageTitleVO implements Serializable {
    */
   private String title;
 
-
   private static final long serialVersionUID = 1L;
+
 }

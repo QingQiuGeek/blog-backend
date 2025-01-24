@@ -67,10 +67,6 @@ public class UserVO implements Serializable {
    */
   private String ipAddress;
 
-  /**
-   * 电话,预留字段
-   */
-  private String phone;
 
   /**
    * 预留字段,用户等级

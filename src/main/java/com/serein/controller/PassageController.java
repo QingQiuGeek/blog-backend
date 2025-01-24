@@ -1,5 +1,7 @@
 package com.serein.controller;
 
+import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
@@ -19,6 +21,7 @@ import com.serein.util.ResultUtil;
 import java.util.List;
 import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
