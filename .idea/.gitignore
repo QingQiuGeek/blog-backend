@@ -10,4 +10,5 @@ target/
 /dataSources.local.xml
 # Zeppelin ignored files
 /ZeppelinRemoteNotebooks/
+application.yml
 
