@@ -41,6 +41,9 @@ public interface UserMapper extends BaseMapper<User> {
 
   @Update("update blog.user set password=#{password} where userId=#{userId}")
   void updateEncrypt(@Param("password") String password,@Param("userId") Long userId);
+
+  @Select("select count(*) from blog.user_follow where userId=#{loginUserId} ")
+  long getMyFollowCount(Long loginUserId);
 }
 
 

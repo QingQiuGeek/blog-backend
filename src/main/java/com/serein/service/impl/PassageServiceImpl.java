@@ -38,6 +38,7 @@ import com.serein.model.vo.passageVO.PassageInfoVO;
 import com.serein.model.vo.passageVO.PassageTitleVO;
 import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.service.PassageService;
+import com.serein.util.AliOssUtil;
 import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.UserHolder;
@@ -875,7 +876,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public String uploadPassageCover(MultipartFile img) {
-    String imgUrl = FileUtil.uploadImageLocal(img);
+    String imgUrl = AliOssUtil.uploadImageOSS(img);
     log.info("img url：" + imgUrl);
     return imgUrl;
   }
@@ -883,7 +884,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public String uploadPassageImg(MultipartFile img) {
-    return FileUtil.uploadImageLocal(img);
+    return AliOssUtil.uploadImageOSS(img);
   }
 
   @Override

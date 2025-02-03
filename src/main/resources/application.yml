@@ -43,7 +43,7 @@ spring:
 #        login-password: 123
 #        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
   redis:
-    host: 192.168.2.129
+    host: 47.97.220.175
     port: 6379
     username: default
     password: 'linux02'
@@ -62,7 +62,7 @@ spring:
   servlet:
     multipart:
       max-file-size: 2MB
-      max-request-size: 10MB
+      max-request-size: 6MB
 
 #  elasticsearch:
 #    uris: 'localhost:9200'
@@ -103,12 +103,6 @@ knife4j:
 custom:
 #  添加用户的初始密码
   originPassword: '123456user'
-
-oss:
-  accessKey: ''
-  secretKey: ''
-  endPoint: ''
-  bucket: ''
 
 #jwt配置
 #jwt:

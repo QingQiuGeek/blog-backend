@@ -9,11 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
@@ -65,8 +63,7 @@ public class FileUtil {
     }
   }
 
-
-  public static String createFileName(String fileName) {
+  public static String createLocalFileName(String fileName) {
     LoginUserVO loginUserVO = UserHolder.getUser();
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
@@ -84,6 +81,14 @@ public class FileUtil {
     String uuid = UUID.randomUUID().toString().replaceAll("-", "");
     String fileType = getFileType(fileName);
     String createFileName = filePath + uuid + fileType;
+    log.info("createFileName：" + createFileName);
+    return createFileName;
+  }
+
+  public static String createOSSFileName(String fileName) {
+    String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+    String fileType = getFileType(fileName);
+    String createFileName = uuid + fileType;
     log.info("createFileName：" + createFileName);
     return createFileName;
   }
@@ -127,7 +132,7 @@ public class FileUtil {
     //已经在yaml文件配置了 max-file-size: 2MB，不需要checkSize
 //    checkFileSize(image.getSize());
     try {
-      String fileName = createFileName(originalFilename);
+      String fileName = createLocalFileName(originalFilename);
       // 保存/上传文件
       // fileName即是路径 + 文件名
       image.transferTo(new File(fileName));

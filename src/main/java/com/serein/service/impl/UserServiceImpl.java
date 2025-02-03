@@ -48,6 +48,7 @@ import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.model.vo.userVO.UserInfoDataVO;
 import com.serein.model.vo.userVO.UserVO;
 import com.serein.service.UserService;
+import com.serein.util.AliOssUtil;
 import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.MailUtil;
@@ -204,50 +205,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       return objectPage;
       //未登录直接返回空列表
     }
-    Long loginUserId = loginUserVO.getUserId();
-    String key = USER_FOLLOW_KEY + loginUserId;
-    SetOperations<String, String> setOps = stringRedisTemplate.opsForSet();
-    // 游标值初始化
-    String cursor = "0";
-    Set<String> stringIdSet = new HashSet<>();
-    //从redis查
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
-    int offset = currentPage * pageSize - 1;
-    int count = 0;
-    do {
-      // 执行 SSCAN 命令，获取集合元素
-      ScanOptions options = ScanOptions.scanOptions().count(pageSize).build();  // 设置每次扫描的最大数量
-      Cursor<String> scanCursor = setOps.scan(key, options);
-      while (scanCursor.hasNext()) {
-        String value = scanCursor.next();
-        // 计算偏移并跳过不在当前页的数据
-        if (count >= offset && count < (offset + pageSize)) {
-          stringIdSet.add(value);
-        }
-        count++;
-      }
-    } while (count < offset + pageSize); // 当游标为0时，扫描结束
-
-    if (CollUtil.isEmpty(stringIdSet)) {
+    Long loginUserId = loginUserVO.getUserId();
+    Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<UserFollow>(currentPage,pageSize), new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getUserId, loginUserId));
+    List<UserFollow> records = userFollowPage.getRecords();
+    if (records.isEmpty()) {
       Page<List<UserVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
       objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
       return objectPage;
     }
-    ArrayList<Long> idList = new ArrayList<>();
-    //遍历stringIdSet把每一个string类型的userid转换成long
-    stringIdSet.forEach(idString -> idList.add(Long.valueOf(idString)));
+    List<Long> idList = records.stream().map(UserFollow::getToUserId).collect(Collectors.toList());
     List<User> userList = this.listByIds(idList);
-    //把user转化成uservo
+    //把user转化成userVo
     List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
     //我关注的，全部设置成已关注
     userVOListByUserList.forEach(userVO -> userVO.setIsFollow(true));
-    int size = stringIdSet.size();
     Page<List<UserVO>> listPage = new Page<>(currentPage, pageSize);
     listPage.setRecords(Collections.singletonList(userVOListByUserList));
-    listPage.setTotal((long) size);
+    listPage.setTotal(userFollowPage.getTotal());
     return listPage;
   }
 
@@ -434,7 +412,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     if (loginUserVO == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
-    String avatarUrl = FileUtil.uploadImageLocal(file);
+    String avatarUrl = AliOssUtil.uploadImageOSS(file);
     Long userId = loginUserVO.getUserId();
     boolean b = userMapper.updateAvatar(userId, avatarUrl);
     if (!b) {
