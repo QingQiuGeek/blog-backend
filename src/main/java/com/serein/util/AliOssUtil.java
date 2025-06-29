@@ -34,13 +34,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class AliOssUtil {
 
-  static String BUCKET_NAME="blog-backend";
+  static String BUCKET_NAME="";
 
-  static String END_POINT="oss-cn-beijing.aliyuncs.com";
+  static String END_POINT="";
 
-  static String ACCESS_KEY_ID="LTAI5tGmkqANjwB94z3Vk3m7";
+  static String ACCESS_KEY_ID="";
 
-  static String ACCESS_KEY_SECRET="bPmdPmLKoD7tXk6pICp0tvtUeirqR8";
+  static String ACCESS_KEY_SECRET="";
 
 
   //上传到oss
