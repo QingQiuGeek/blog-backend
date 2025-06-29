@@ -1,6 +1,9 @@
 package com.serein.controller;
 
 
+import cn.dev33.satoken.session.SaSession;
+import cn.dev33.satoken.stp.SaTokenInfo;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.model.request.QueryPageRequest;
 import com.serein.model.dto.userDTO.UpdateUserDTO;
@@ -14,12 +17,11 @@ import com.serein.model.vo.userVO.UserInfoDataVO;
 import com.serein.model.vo.userVO.UserVO;
 import com.serein.service.PassageService;
 import com.serein.service.UserService;
-import com.serein.util.BaseResponse;
-import com.serein.util.ResultUtil;
+import com.serein.util.BR;
+import com.serein.util.R;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,15 +37,12 @@ import org.springframework.web.multipart.MultipartFile;
  * @Author:懒大王Smile
  * @Date: 2024/9/12
  * @Time: 22:23
- * @Description:
+ * @Description: 用户Controller
  */
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
-
-  @Resource
-  private PassageService passageService;
 
   @Resource
   private UserService userService;
@@ -56,10 +55,8 @@ public class UserController {
    * @return
    */
   @PostMapping("/login")
-  public BaseResponse<LoginUserVO> login(@RequestBody LoginRequest loginRequest) {
-//        int a=1/0;
-    LoginUserVO loginUserVO = userService.login(loginRequest);
-    return ResultUtil.success(loginUserVO);
+  public BR<LoginUserVO> login(@RequestBody LoginRequest loginRequest) {
+    return R.ok(userService.login(loginRequest));
   }
 
   /**
@@ -68,9 +65,8 @@ public class UserController {
    * @param registerRequest
    */
   @PostMapping("/register")
-  public BaseResponse<LoginUserVO> register(@RequestBody RegisterRequest registerRequest) {
-    LoginUserVO loginUserVO = userService.register(registerRequest);
-    return ResultUtil.success(loginUserVO);
+  public BR<LoginUserVO> register(@RequestBody RegisterRequest registerRequest) {
+    return R.ok(userService.register(registerRequest));
   }
 
   /**
@@ -79,18 +75,16 @@ public class UserController {
    * @return
    */
   @PostMapping("/logout")
-  public BaseResponse<Boolean> logout(HttpServletRequest httpServletRequest) {
-    Boolean logout = userService.logout(httpServletRequest);
-    return ResultUtil.success(logout);
+  public BR<Boolean> logout(HttpServletRequest httpServletRequest) {
+    return R.ok(userService.logout(httpServletRequest));
   }
 
   /*
    * 获取个人主页展示的粉丝数量、文章收藏量、作品数量、关注数量、点赞数量
    * */
   @GetMapping("/userInfoData")
-  public BaseResponse<UserInfoDataVO> getUserInfoData() {
-    UserInfoDataVO userInfoData = userService.getUserInfoData();
-    return ResultUtil.success(userInfoData);
+  public BR<UserInfoDataVO> getUserInfoData() {
+    return R.ok(userService.getUserInfoData());
   }
 
   /**
@@ -100,9 +94,8 @@ public class UserController {
    * @return
    */
   @GetMapping("/find/{userName}")
-  public BaseResponse<List<UserVO>> getUserListByName(@PathVariable String userName) {
-    List<UserVO> userVOList = userService.getUserListByName(userName);
-    return ResultUtil.success(userVOList);
+  public BR<List<UserVO>> getUserListByName(@PathVariable("userName") String userName) {
+    return R.ok(userService.getUserListByName(userName));
   }
 
 
@@ -112,9 +105,8 @@ public class UserController {
    * @return
    */
   @GetMapping("/getLoginUser")
-  public BaseResponse<LoginUserVO> getLoginUser() {
-    LoginUserVO loginUserVO = userService.getLoginUser();
-    return ResultUtil.success(loginUserVO);
+  public BR<LoginUserVO> getLoginUser() {
+    return R.ok(userService.getLoginUser());
   }
 
   /**
@@ -124,15 +116,13 @@ public class UserController {
    * @return
    */
   @PostMapping("/updateUser")
-  public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
-    Boolean aBoolean = userService.updateUser(updateUserDTO);
-    return ResultUtil.success(aBoolean);
+  public BR<Boolean> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
+    return R.ok( userService.updateUser(updateUserDTO));
   }
 
   @PostMapping("/uploadAvatar")
-  public BaseResponse<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
-    String avatarUrl = userService.uploadAvatar(file);
-    return ResultUtil.success(avatarUrl);
+  public BR<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+    return R.ok(userService.uploadAvatar(file));
   }
 
 
@@ -140,9 +130,8 @@ public class UserController {
    * 关注用户
    * */
   @PutMapping("/follow/{userId}")
-  public BaseResponse<Boolean> follow(@PathVariable Long userId) {
-    Boolean follow = userService.follow(userId);
-    return ResultUtil.success(follow);
+  public BR<Boolean> follow(@PathVariable("userId") Long userId) {
+    return R.ok(userService.follow(userId));
   }
 
   /**
@@ -150,19 +139,17 @@ public class UserController {
    * @return
    */
   @GetMapping("/getUserInfo/{uid}")
-  public BaseResponse<UserVO> getUserInfo(@PathVariable Long uid) {
-    UserVO userInfo = userService.getUserInfo(uid);
-    return ResultUtil.success(userInfo);
+  public BR<UserVO> getUserInfo(@PathVariable("uid") Long uid) {
+    return R.ok( userService.getUserInfo(uid));
   }
 
   /*
    * 我的粉丝，list.size是粉丝数量
    * */
   @PostMapping("/myFollowers")
-  public BaseResponse<Page<List<UserVO>>> myFollowers(
+  public BR<Page<List<UserVO>>> myFollowers(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<UserVO>> userVOS = userService.myFollowers(queryPageRequest);
-    return ResultUtil.success(userVOS);
+    return R.ok(userService.myFollowers(queryPageRequest));
   }
 
   /*
@@ -180,56 +167,50 @@ public class UserController {
    * list.size是数量
    * */
   @PostMapping("/myFollow")
-  public BaseResponse<Page<List<UserVO>>> myFollow(@RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<UserVO>> userVOS = userService.myFollow(queryPageRequest);
-    return ResultUtil.success(userVOS);
+  public BR<Page<List<UserVO>>> myFollow(@RequestBody QueryPageRequest queryPageRequest) {
+    return R.ok( userService.myFollow(queryPageRequest));
   }
 
   @PostMapping("/sendRegisterCode")
-  public BaseResponse<Boolean> sendRegisterCode(
+  public BR<Boolean> sendRegisterCode(
       @RequestBody RegisterCodeRequest registerCodeRequest) {
-    userService.sendRegisterCode(registerCodeRequest);
-    return ResultUtil.success(true);
+    return R.ok(userService.sendRegisterCode(registerCodeRequest));
   }
 
   /*
    * 我的收藏博客列表
    * */
   @PostMapping("/myCollect")
-  public BaseResponse<Page<List<PassageInfoVO>>> myCollectPassage(
+  public BR<Page<List<PassageInfoVO>>> myCollectPassage(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<PassageInfoVO>> passageVOList = userService.myCollectPassage(queryPageRequest);
-    return ResultUtil.success(passageVOList);
+    return R.ok(userService.myCollectPassage(queryPageRequest));
   }
 
   /*
    * 我的点赞博客列表
    * */
   @PostMapping("/myThumb")
-  public BaseResponse<Page<List<PassageInfoVO>>> myThumbPassage(
+  public BR<Page<List<PassageInfoVO>>> myThumbPassage(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<PassageInfoVO>> passageVOList = userService.myThumbPassage(queryPageRequest);
-    return ResultUtil.success(passageVOList);
+    return R.ok(userService.myThumbPassage(queryPageRequest));
   }
 
   /*
    * 我的文章，list.size即为我的文章数量
    * */
   @PostMapping("/myPassages")
-  public BaseResponse<Page<List<PassageInfoVO>>> myPassages(
+  public BR<Page<List<PassageInfoVO>>> myPassages(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<PassageInfoVO>> passageVOList = userService.myPassage(queryPageRequest);
-    return ResultUtil.success(passageVOList);
+    return R.ok(userService.myPassage(queryPageRequest));
   }
 
   /*
    * 我的消息，用户对我的文章的评论即为我的消息
    * */
   @PostMapping("/myMessage")
-  public BaseResponse<Page<List<CommentVO>>> myMessage(
+  public BR<Page<List<CommentVO>>> myMessage(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<CommentVO>> commentVOList = userService.myMessage(queryPageRequest);
-    return ResultUtil.success(commentVOList);
+    return R.ok(userService.myMessage(queryPageRequest));
   }
 
 

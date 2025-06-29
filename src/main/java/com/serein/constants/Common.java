@@ -4,10 +4,12 @@ package com.serein.constants;
  * @Author:懒大王Smile
  * @Date: 2024/9/13
  * @Time: 13:26
- * @Description:
+ * @Description: 通用常量字符串
  */
 
 public interface Common {
+
+  String SA_TOKEN_USER_ROLE = "sa-token:role:";
 
   String INDEX_NAME="passage_v2";
 
@@ -16,7 +18,6 @@ public interface Common {
   String HOT_IP_KEY="hotIp";
 
   Long HOT_PASSAGE_DURATION=60L;
-
 
   String IMG_UPLOAD_DIR = "/uploadImg/";
 
@@ -32,6 +33,7 @@ public interface Common {
   String BLOG_CACHE_PREFIX="Blog:cache:";
 
   String TIME_PUBLISH_KEY="Blog:timePublish:";
+
   String LOGIN_TOKEN_KEY = "Blog:login:token:";
 
   String PASSAGE_THUMB_KEY = "Blog:passage:thumb:";
@@ -39,7 +41,6 @@ public interface Common {
   String PASSAGE_COLLECT_KEY = "Blog:passage:collect:";
 
   String TOP_COLLECT_PASSAGE = "Blog:passage:topCollect:";
-
 
   //用户的关注信息存在redis中，登录用户的Id为key，被关注的用户Id为value。我关注了谁
   String USER_FOLLOW_KEY = "Blog:user:follow:";

@@ -56,12 +56,6 @@ public class AdminUserVO {
 
 
   /**
-   * 邮箱
-   */
-  private String mail;
-
-
-  /**
    * 角色(user普通用户,admin管理员)
    */
   private String role;

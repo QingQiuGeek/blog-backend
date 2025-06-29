@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * @Author:懒大王Smile
  * @Date: 2024/12/30
  * @Time: 23:29
- * @Description:
+ * @Description: 自定义异步线程池配置
  */
 
 @Configuration
@@ -28,7 +28,7 @@ public class AsyncConfig {
     executor.setMaxPoolSize(3);
 //    缓存队列（阻塞队列）当核心线程数达到最大时，新任务会放在队列中排队等待执行
     executor.setQueueCapacity(3);
-    executor.setThreadNamePrefix("async-sendCode");
+    executor.setThreadNamePrefix("Async-thread");
     //自定义拒绝策略
     executor.setRejectedExecutionHandler(new ExecutionRejectHandler());
     executor.initialize();

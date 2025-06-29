@@ -30,7 +30,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
   void deleteByPassageId(Long passageId);
 
   @Select("select count(*) from blog.comment where passageId=#{passageId}")
-  int count(Long passageId);
+  int countCommentNum(Long passageId);
 }
 
 

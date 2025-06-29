@@ -1,17 +1,16 @@
 package com.serein.util;
 
-import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
@@ -22,7 +21,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * @Author:懒大王Smile
  * @Date: 2024/12/17
  * @Time: 12:53
- * @Description:
+ * @Description: IP工具类
  */
 
 public class IPUtil {

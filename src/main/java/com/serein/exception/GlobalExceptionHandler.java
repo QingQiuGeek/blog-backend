@@ -1,8 +1,9 @@
 package com.serein.exception;
 
 import com.serein.constants.ErrorCode;
-import com.serein.util.BaseResponse;
-import com.serein.util.ResultUtil;
+import com.serein.util.BR;
+import com.serein.util.R;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,21 +15,22 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @Description: 全局异常处理器
  */
 
+@Hidden
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
   //@ExceptionHandler用来处理controller级别的异常
   @ExceptionHandler(BusinessException.class)
-  public BaseResponse businessExceptionHandler(BusinessException e) {
+  public BR businessExceptionHandler(BusinessException e) {
     log.error("BusinessException", e);
-    return ResultUtil.error(e.getErrorCode(), e.getMessage());
+    return R.error(e.getErrorCode(), e.getMessage());
   }
 
   //出现未定义的异常，统一抛出自定义状态码1000
   @ExceptionHandler(RuntimeException.class)
-  public BaseResponse runtimeExceptionHandler(RuntimeException e) {
+  public BR runtimeExceptionHandler(RuntimeException e) {
     log.error("RuntimeException", e);
-    return ResultUtil.error(ErrorCode.UNEXPECT_ERROR, e.getMessage());
+    return R.error(ErrorCode.UNEXPECT_ERROR, e.getMessage());
   }
 }

@@ -1,5 +1,7 @@
 package com.serein.model.enums;
 
+import lombok.Data;
+import lombok.Getter;
 import org.apache.commons.lang3.ObjectUtils;
 
 /**
@@ -8,9 +10,8 @@ import org.apache.commons.lang3.ObjectUtils;
  * @Time: 14:16
  * @Description:
  */
-
+@Getter
 public enum UserRoleEnum {
-
 
   USER("普通用户", "user"),
   ADMIN("管理员", "admin"),
@@ -34,6 +35,7 @@ public enum UserRoleEnum {
     if (ObjectUtils.isEmpty(role)) {
       return null;
     }
+
     for (UserRoleEnum anEnum : UserRoleEnum.values()) {
       if (anEnum.role.equals(role)) {
         return anEnum;

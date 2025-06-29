@@ -16,8 +16,8 @@ import com.serein.model.vo.userVO.AdminUserVO;
 import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.model.vo.userVO.UserInfoDataVO;
 import com.serein.model.vo.userVO.UserVO;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
  * @createDate 2024-09-12 22:19:13
  */
 public interface UserService extends IService<User> {
-
 
   LoginUserVO login(LoginRequest loginRequest);
 
@@ -42,7 +41,7 @@ public interface UserService extends IService<User> {
 
   List<AdminUserVO> getByIdList(List<Long> idList);
 
-  Boolean disableUser(Long userId);
+  Boolean banUser(Long userId);
 
   Boolean updateUser(UpdateUserDTO updateUserDTO);
 
@@ -58,13 +57,11 @@ public interface UserService extends IService<User> {
 
   Page<List<UserVO>> myFollow(QueryPageRequest queryPageRequest);
 
-  void sendRegisterCode(RegisterCodeRequest registerCodeRequest);
+  Boolean sendRegisterCode(RegisterCodeRequest registerCodeRequest);
 
   Page<List<UserVO>> myFollowers(QueryPageRequest queryPageRequest);
 
   UserVO getUserInfo(Long uid);
-
-  Boolean setAdmin(Long userId);
 
   UserInfoDataVO getUserInfoData();
 

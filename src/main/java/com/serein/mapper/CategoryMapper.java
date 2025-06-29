@@ -21,7 +21,7 @@ public interface CategoryMapper extends BaseMapper<Category> {
   boolean updateCategory(Category category);
 
   @Select("select categoryId,categoryName from blog.category")
-  List<Category> getAllCategories();
+  List<Category> listCategories();
 }
 
 

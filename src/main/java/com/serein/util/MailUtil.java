@@ -1,13 +1,13 @@
 package com.serein.util;
-
-import java.util.concurrent.Executors;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
-
+/**
+ * 邮箱工具类
+ */
 @Slf4j
 public class MailUtil {
 

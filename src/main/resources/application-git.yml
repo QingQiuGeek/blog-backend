@@ -3,6 +3,13 @@ server:
   servlet:
     context-path: /api
 spring:
+  ai:
+    anthropic:
+      api-key:
+      chat:
+        options:
+          model: qwen-plus
+          max-tokens: 4096
   mail:
     username:
     password:
@@ -24,23 +31,19 @@ spring:
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    type: com.zaxxer.hikari.HikariDataSource
-    hikari:
-      maximum-pool-size: 4
-      keepalive-time: 60000
-  #    type: com.alibaba.druid.pool.DruidDataSource
-#    druid:
-#      max-active: 6
-#      max-wait: 60000
-#      initial-size: 3
-##      druid的web监控
-#      stat-view-servlet:
-#        enabled: true                   # 启用StatViewServlet
-#        url-pattern: /druid/* # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
-#        reset-enable: false              # 不允许清空统计数据,重新计算
-#        login-username: root # 配置监控页面访问密码
-#        login-password: 123
-#        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      max-active: 6
+      max-wait: 60000
+      initial-size: 3
+#      druid的web监控
+      stat-view-servlet:
+        enabled: true                   # 启用StatViewServlet
+        url-pattern: /druid/* # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
+        reset-enable: false              # 不允许清空统计数据,重新计算
+        login-username: root # 配置监控页面访问密码
+        login-password: 123
+        allow: 127.0.0.1 # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
   redis:
     host: localhost
     port: 6379

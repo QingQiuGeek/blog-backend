@@ -5,11 +5,10 @@ import cn.hutool.core.collection.CollUtil;
 import com.serein.mapper.PassageMapper;
 import com.serein.model.dto.passageDTO.PassageESDTO;
 import com.serein.model.entity.Passage;
+import jakarta.annotation.Resource;
 import java.util.List;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author:懒大王Smile

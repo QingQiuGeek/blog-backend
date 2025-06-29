@@ -6,7 +6,7 @@ import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.PassageMapper;
 import com.serein.service.impl.PassageServiceImpl;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Async;

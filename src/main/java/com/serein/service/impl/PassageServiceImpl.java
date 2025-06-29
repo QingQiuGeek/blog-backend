@@ -8,12 +8,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.CommentMapper;
+import com.serein.mapper.esMapper.PassageEsMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.PassageTagMapper;
 import com.serein.mapper.TagsMapper;
@@ -39,9 +39,9 @@ import com.serein.model.vo.passageVO.PassageTitleVO;
 import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.service.PassageService;
 import com.serein.util.AliOssUtil;
-import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
-import com.serein.util.UserHolder;
+import com.serein.util.UserContext;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -52,19 +52,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -78,12 +72,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Slf4j
 @Service
-public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
-    implements PassageService {
-
-  @Resource
-  private ElasticsearchRestTemplate elasticsearchRestTemplate;
-
+public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage> implements PassageService {
 
   @Resource
   private StringRedisTemplate stringRedisTemplate;
@@ -114,7 +103,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
 
   @Cacheable(cacheNames = BLOG_CACHE_PREFIX
-      + "getHomePassageList", key = "#queryPageRequest.currentPage")
+      + "getHomePassageList", key = "#p0.currentPage")
   @Override
   public Page<List<PassageInfoVO>> getHomePassageList(QueryPageRequest queryPageRequest) {
     //判断刷子用户
@@ -136,10 +125,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     if (passageList.isEmpty()) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取文章列表失败");
     }
-    log.info("passageList：" + passageList);
     List<PassageInfoVO> pageInfoVOList = getPassageInfoVOList(passageList);
-    log.info("passageInfoVOList：" + pageInfoVOList);
-
     // 创建一个 Page 对象返回，封装分页信息（总记录数、页码等）和当前页的数据
     Page<List<PassageInfoVO>> listPage = new Page<>(currentPage, pageSize);
     //包装成单一的list
@@ -164,7 +150,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           List<Long> tagIdList = passageTags.stream().map(PassageTag::getTagId)
               .collect(Collectors.toList());
           if (!tagIdList.isEmpty()) {
-            log.info("tagsId：" + tagIdList);
             Map<Long, String> tagStrList = getTagMaps(tagIdList);
             passageInfoVO.setPTagsMap(tagStrList);
           }
@@ -178,11 +163,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
               })).intValue();
 //      int thumbsCount = userThumbsMapper.count(passage.getPassageId());
 //          int collectCount = userCollectsMapper.count(passage.getPassageId());
-          int commentCount = commentMapper.count(passageId);
+          int commentCount = commentMapper.countCommentNum(passageId);
           passageInfoVO.setCollectNum(collectCount);
           passageInfoVO.setThumbNum(thumbsCount);
           passageInfoVO.setCommentNum(commentCount);
-          log.info("passageInfoVO：" + passageInfoVO);
           return passageInfoVO;
         }
     ).collect(Collectors.toList());
@@ -194,7 +178,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
    * @Description: 根据json格式的字符串id获取标签列表
    */
   public Map<Long, String> getTagMaps(List<Long> tagIdList) {
-    log.info("tagsIdList：" + tagIdList);
     HashMap<Long, String> map = new HashMap<>();
     tagIdList.forEach(tagId -> {
       Tags tags = tagsMapper.selectById(tagId);
@@ -203,7 +186,6 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
         map.put(tagId, tagName);
       }
     });
-    log.info("tagsMap：" + map);
     return map;
   }
 
@@ -221,11 +203,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   //判断当前用户是否点赞或收藏该文章
   private void isThumbCollect(PassageInfoVO passageInfoVO) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return;
     }
-    Long userId = loginUserVO.getUserId();
     String passageId = passageInfoVO.getPassageId().toString();
     String keyThumb = Common.PASSAGE_THUMB_KEY + passageId;
     passageInfoVO.setIsThumb(stringRedisTemplate.opsForValue().getBit(keyThumb, userId.intValue()));
@@ -236,43 +217,27 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public Page<List<PassageInfoVO>> searchPassageFromES(SearchPassageRequest searchPassageRequest) {
-    String searchText = searchPassageRequest.getSearchText();
+   /* String searchText = searchPassageRequest.getSearchText();
     if (StringUtils.isBlank(searchText)) {
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
-    //拼接查询条件
-    NativeSearchQueryBuilder searchQuery = new NativeSearchQueryBuilder();
-    if (StringUtils.isNotBlank(searchText)) {
-//      // 构建 bool 查询
-      searchQuery.withQuery(QueryBuilders.boolQuery()
-          .should(QueryBuilders.matchQuery("title", searchText))
-          .should(QueryBuilders.matchQuery("content", searchText))
-          .should(QueryBuilders.matchQuery("summary", searchText))
-          .should(QueryBuilders.matchQuery("tagStr", searchText))
-          .should(QueryBuilders.matchQuery("authorName", searchText))
-      );
-    }
-    log.info("ES查询语句:{}", searchQuery);
-    SearchHits<PassageESDTO> searchHits = null;
-
-    try {
-      searchHits = elasticsearchRestTemplate.search(searchQuery.build(),
-          PassageESDTO.class);
-    } catch (Exception e) {
-      log.error("ES查询出错{}", e);
-      throw new RuntimeException(e);
-    }
+    LambdaEsQueryWrapper<PassageESDTO> passageEsWrapper = new LambdaEsQueryWrapper<>();
+    passageEsWrapper.like(PassageESDTO::getContent,searchText)
+        .like(PassageESDTO::getTitle,searchText)
+        .like(PassageESDTO::getSummary,searchText)
+        .like(PassageESDTO::getTagStr,searchText)
+        .like(PassageESDTO::getAuthorName,searchText);
+    List<PassageESDTO> passageESList = passageEsMapper.selectList(passageEsWrapper);
 
     List<Passage> resourceList = new ArrayList<>();
-    List<SearchHit<PassageESDTO>> searchHitList = searchHits.getSearchHits();
-    if (searchHitList.isEmpty()) {
+    if (CollUtil.isNotEmpty(passageESList)) {
       Page<List<PassageInfoVO>> passageInfoVOPage = new Page<>();
       passageInfoVOPage.setRecords(Collections.singletonList(Collections.emptyList()));
       passageInfoVOPage.setTotal(0);
       return passageInfoVOPage;
     }
-    List<Long> passageIdList = searchHitList.stream()
-        .map(searchHit -> searchHit.getContent().getPassageId()).collect(Collectors.toList());
+    List<Long> passageIdList = passageESList.stream()
+        .map(PassageESDTO::getPassageId).collect(Collectors.toList());
     List<Passage> passageList = passageMapper.selectList(
         new LambdaQueryWrapper<Passage>().eq(Passage::getIsPrivate, 1)
             .in(Passage::getPassageId, passageIdList));
@@ -286,9 +251,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
           resourceList.add(idPassageMap.get(passageId).get(0));
         } else {
           // 从 es 清空 db 已删除的数据
-          String delete = elasticsearchRestTemplate.delete(String.valueOf(passageId),
-              PassageESDTO.class);
-          log.info("Delete outdated passage on ES:  {}", delete);
+          LambdaEsQueryWrapper<PassageESDTO> passageESEsWrapper = new LambdaEsQueryWrapper<>();
+          Integer deleteNum = passageEsMapper.delete(
+              passageESEsWrapper.eq(PassageESDTO::getPassageId, passageId.toString()));
+          log.info("Delete outdated passage on ES:  {}", deleteNum);
         }
       });
     }
@@ -297,11 +263,12 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return new Page<List<PassageInfoVO>>(
         searchPassageRequest.getCurrentPage(),
         searchPassageRequest.getPageSize()).setTotal(resourceList.size())
-        .setRecords(Collections.singletonList(passageInfoVOList));
+        .setRecords(Collections.singletonList(passageInfoVOList));*/
+    return null;
   }
 
   @Cacheable(cacheNames = BLOG_CACHE_PREFIX
-      + "searchPassageFromMySQL", key = "#searchPassageRequest.searchText")
+      + "searchPassageFromMySQL", key = "#p0.searchText")
   @Override
   public Page<List<PassageInfoVO>> searchPassageFromMySQL(
       SearchPassageRequest searchPassageRequest) {
@@ -310,9 +277,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       throw new BusinessException(ErrorCode.PARAMS_ERROR, ErrorInfo.PARAMS_ERROR);
     }
     List<Passage> passageList = passageMapper.searchPassageFromMySQL(searchText);
-
     List<PassageInfoVO> passageInfoVOList = getPassageInfoVOList(passageList);
-
     return new Page<List<PassageInfoVO>>(
         searchPassageRequest.getCurrentPage(),
         searchPassageRequest.getPageSize()).setTotal(passageList.size())
@@ -321,7 +286,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
 
   @Cacheable(cacheNames = BLOG_CACHE_PREFIX
-      + "searchPassageByCategory", key = "#searchPassageRequest.id")
+      + "searchPassageByCategory", key = "#p0.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByCategory(
       SearchPassageRequest searchPassageRequest) {
@@ -369,7 +334,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   }
 
   @Cacheable(cacheNames = BLOG_CACHE_PREFIX
-      + "searchPassageByTag", key = "#searchPassageRequest.id")
+      + "searchPassageByTag", key = "#p0.id")
   @Override
   public Page<List<PassageInfoVO>> searchPassageByTag(SearchPassageRequest searchPassageRequest) {
     Long tagId = searchPassageRequest.getId();
@@ -416,11 +381,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Override
   public EditPassageVO getEditPassageByPassageId(Long passageId) {
-    LoginUserVO user = UserHolder.getUser();
-    if (user == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
-    Passage passage = passageMapper.getEditPassageByPassageId(passageId, user.getUserId());
+    Passage passage = passageMapper.getEditPassageByPassageId(passageId, userId);
     if (passage == null) {
       throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, ErrorInfo.NO_DB_DATA);
     }
@@ -469,11 +434,11 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   public Long insertPassage(ParentPassageDTO parentPassageDTO) {
     Passage passage = new Passage();
     BeanUtils.copyProperties(parentPassageDTO, passage);
-    LoginUserVO user = UserHolder.getUser();
-    if (user == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
-    passage.setAuthorId(user.getUserId());
+    passage.setAuthorId(userId);
     int i = passageMapper.insertPassage(passage);
     if (i != 1) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.TIME_PUBLISH_ERROR);
@@ -547,7 +512,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     }
   }
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "otherPassages", key = "#userId")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "otherPassages", key = "#p0")
   @Override
   public List<PassageTitleVO> getOtherPassagesByUserId(Long userId) {
     if (userId == null) {
@@ -558,13 +523,13 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     if (list.isEmpty()) {
       return Collections.emptyList();
     }
-    ArrayList<PassageTitleVO> passageTitleVOS = new ArrayList<>();
+    ArrayList<PassageTitleVO> passageTitleVOList = new ArrayList<>();
     list.forEach(passage -> {
       PassageTitleVO passageTitleVO = new PassageTitleVO();
       BeanUtils.copyProperties(passage, passageTitleVO);
-      passageTitleVOS.add(passageTitleVO);
+      passageTitleVOList.add(passageTitleVO);
     });
-    return passageTitleVOS;
+    return passageTitleVOList;
   }
 
   @Transactional
@@ -630,11 +595,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   public Boolean thumb(Long passageId) {
 
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return false;
     }
-    Long userId = loginUserVO.getUserId();
     /*
      * 同一个用户对一篇文章只能点赞一次，不能重复点赞，取消点赞亦然
      * 以passageId作为key，userId为value，存入redis 的zSet集合，利用set集合元素唯一不重复的特性，存储用户是否点赞
@@ -676,11 +640,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   @Override
   public Boolean thumbPassage(Long passageId) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return false;
     }
-    Long userId = loginUserVO.getUserId();
     String key = Common.PASSAGE_THUMB_KEY + passageId;
     Boolean isThumb = stringRedisTemplate.opsForValue().getBit(key, userId.intValue());
     if (Boolean.FALSE.equals(isThumb)) {
@@ -711,11 +674,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
 
   @Transactional
   public Boolean collect(Long passageId) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return false;
     }
-    Long userId = loginUserVO.getUserId();
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
     Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
     if (Boolean.FALSE.equals(member)) {
@@ -757,11 +719,10 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
   @Transactional
   @Override
   public Boolean collectPassage(Long passageId) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return false;
     }
-    Long userId = loginUserVO.getUserId();
     String key = Common.PASSAGE_COLLECT_KEY + passageId;
     Boolean isCollect = stringRedisTemplate.opsForValue().getBit(key, userId.intValue());
     if (Boolean.FALSE.equals(isCollect)) {
@@ -828,7 +789,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     return passageTitleVOS;
   }
 
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "passageContent", key = "#pid")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX + "passageContent", key = "#p0")
   @Override
   public PassageContentVO getPassageContentByPassageId(Long uid, Long pid) {
     if (pid == null) {
@@ -838,15 +799,15 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
     IPUtil.isHotIp();
     //浏览量+1
     passageMapper.updateViewNum(pid);
-    PassageContentVO passageContent;
-    String hotKey = Common.HOT_PASSAGE_KEY + pid;
-    Object hotPassage = JdHotKeyStore.getValue(hotKey);
-    if (hotPassage == null) {
-      passageContent = passageMapper.getPassageContentByPid(uid, pid);
-      JdHotKeyStore.smartSet(hotKey, passageContent);
-      return passageContent;
-    }
-    return (PassageContentVO) hotPassage;
+//    PassageContentVO passageContent;
+//    String hotKey = Common.HOT_PASSAGE_KEY + pid;
+//    Object hotPassage = JdHotKeyStore.getValue(hotKey);
+//    if (hotPassage == null) {
+//      passageContent = passageMapper.getPassageContentByPid(uid, pid);
+//      JdHotKeyStore.smartSet(hotKey, passageContent);
+//      return passageContent;
+//    }
+    return passageMapper.getPassageContentByPid(uid, pid);
 
 //    return  passageContent;
     //使用缓存好的value即可
@@ -947,7 +908,7 @@ public class PassageServiceImpl extends ServiceImpl<PassageMapper, Passage>
       }
       int thumbsCount = userThumbsMapper.count(passage.getPassageId());
       int collectCount = userCollectsMapper.count(passage.getPassageId());
-      int commentCount = commentMapper.count(passage.getPassageId());
+      int commentCount = commentMapper.countCommentNum(passage.getPassageId());
       adminPassageVO.setCollectNum(collectCount);
       adminPassageVO.setThumbNum(thumbsCount);
       adminPassageVO.setCommentNum(commentCount);

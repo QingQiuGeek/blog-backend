@@ -1,17 +1,16 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.annotation.AuthCheck;
+import com.serein.annotation.RoleCheck;
 import com.serein.constants.UserRole;
 import com.serein.model.dto.tagDTO.TagDTO;
 import com.serein.model.entity.Tags;
 import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.service.TagsService;
-import com.serein.util.BaseResponse;
-import com.serein.util.ResultUtil;
+import com.serein.util.BR;
+import com.serein.util.R;
 import java.util.List;
-import javax.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author:懒大王Smile
  * @Date: 2024/12/8
  * @Time: 16:33
- * @Description:
+ * @Description: 管理员 标签
  */
 
 @RestController
@@ -38,12 +37,11 @@ public class AdminTagController {
    * @return
    * @description 获取管理页的标签列表
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/getTags")
-  public BaseResponse<Page<List<Tags>>> getAdminTags(
+  public BR<Page<List<Tags>>> getAdminTags(
       @RequestBody AdminTagPageRequest adminTagPageRequest) {
-    Page<List<Tags>> tagMap = tagsService.getAdminTags(adminTagPageRequest);
-    return ResultUtil.success(tagMap);
+    return R.ok(tagsService.getAdminTags(adminTagPageRequest));
   }
 
   /**
@@ -51,11 +49,10 @@ public class AdminTagController {
    * @return
    * @description 返回标签id
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/addTag")
-  public BaseResponse<Long> addTag(@RequestBody TagDTO addTagDTO) {
-    Long tagId = tagsService.addTag(addTagDTO);
-    return ResultUtil.success(tagId);
+  public BR<Long> addTag(@RequestBody TagDTO addTagDTO) {
+    return R.ok(tagsService.addTag(addTagDTO));
   }
 
   /**
@@ -63,11 +60,10 @@ public class AdminTagController {
    * @return
    * @description 更新标签
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/updateTag")
-  public BaseResponse<Boolean> updateTag(@RequestBody TagDTO updateTagDTO) {
-    boolean b = tagsService.updateTag(updateTagDTO);
-    return ResultUtil.success(b);
+  public BR<Boolean> updateTag(@RequestBody TagDTO updateTagDTO) {
+    return R.ok(tagsService.updateTag(updateTagDTO));
   }
 
 
@@ -76,11 +72,10 @@ public class AdminTagController {
    * @return
    * @description 根据id删除标签
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @PutMapping("/delete/{tagId}")
-  public BaseResponse<Boolean> deleteTag(@PathVariable Long tagId) {
-    boolean b = tagsService.deleteTag(tagId);
-    return ResultUtil.success(b);
+  public BR<Boolean> deleteTag(@PathVariable Long tagId) {
+    return R.ok(tagsService.deleteTag(tagId));
   }
 
 

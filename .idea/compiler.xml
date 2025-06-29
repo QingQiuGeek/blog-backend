@@ -9,6 +9,20 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Blog" />
       </profile>
+      <profile name="Annotation profile for blog" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../maven/apache-maven-3.9.10/Repo/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
+        </processorPath>
+        <module name="blog" />
+      </profile>
     </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="blog" options="-parameters" />
+    </option>
   </component>
 </project>

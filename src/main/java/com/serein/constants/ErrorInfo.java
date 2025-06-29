@@ -4,7 +4,7 @@ package com.serein.constants;
  * @Author:懒大王Smile
  * @Date: 2024/9/13
  * @Time: 11:30
- * @Description:
+ * @Description: 异常信息
  */
 
 public interface ErrorInfo {

@@ -7,7 +7,13 @@ import static com.serein.constants.Common.REGISTER_CAPTCHA_TTL;
 import static com.serein.constants.Common.USERNAME_REGEX;
 import static com.serein.constants.Common.USER_FOLLOW_KEY;
 import static com.serein.constants.Common.USER_REGISTER_CAPTCHA_KEY;
+import static com.serein.util.RegularUtil.checkMail;
+import static com.serein.util.RegularUtil.checkPassword;
+import static com.serein.util.RegularUtil.checkUserName;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.Hutool;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
@@ -19,7 +25,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.serein.constants.Common;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
-import com.serein.constants.UserRole;
 import com.serein.exception.BusinessException;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.TagsMapper;
@@ -49,31 +54,25 @@ import com.serein.model.vo.userVO.UserInfoDataVO;
 import com.serein.model.vo.userVO.UserVO;
 import com.serein.service.UserService;
 import com.serein.util.AliOssUtil;
-import com.serein.util.FileUtil;
 import com.serein.util.IPUtil;
 import com.serein.util.MailUtil;
-import com.serein.util.UserHolder;
+import com.serein.util.UserContext;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Async;
@@ -92,8 +91,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-
-
 
   @Value("${custom.originPassword}")
   String originPassword;
@@ -147,17 +144,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Transactional
   @Override
   public Boolean follow(Long userId) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
-      throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
-    }
-    Long loginUserId = loginUserVO.getUserId();
-    String key = Common.USER_FOLLOW_KEY + loginUserId;
+    String key = Common.USER_FOLLOW_KEY + userId;
     // 如果返回值为 null，表示用户未关注目标用户；如果返回一个非 null 的分数，表示已经关注。
     Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
     if (Boolean.FALSE.equals(member)) {
       //如果用户未关注目标用户，执行关注操作:
-      UserFollow userFollow = UserFollow.builder().userId(loginUserId).toUserId(userId).build();
+      UserFollow userFollow = UserFollow.builder().userId(userId).toUserId(userId).build();
       //先更新数据库 user-follow表
       int insert = userFollowMapper.insert(userFollow);
       if (insert == 1) {
@@ -173,7 +165,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     } else {
       //如果用户已经关注目标用户，执行取消关注操作
       LambdaQueryWrapper<UserFollow> queryWrapper = new LambdaQueryWrapper<>();
-      queryWrapper.eq(UserFollow::getUserId, loginUserId).eq(UserFollow::getToUserId, userId);
+      queryWrapper.eq(UserFollow::getUserId, userId).eq(UserFollow::getToUserId, userId);
       //delete是被删除的行数，正常情况下是1，因为关注和被关注的关系只有一个存在数据库，不会重复关注
       int delete = userFollowMapper.delete(queryWrapper);
       if (delete == 1) {
@@ -196,8 +188,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public Page<List<UserVO>> myFollow(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       Page<List<UserVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
       objectPage.setRecords(Collections.emptyList());
@@ -207,8 +199,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
-    Long loginUserId = loginUserVO.getUserId();
-    Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<UserFollow>(currentPage,pageSize), new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getUserId, loginUserId));
+    Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<UserFollow>(currentPage,pageSize), new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getUserId, userId));
     List<UserFollow> records = userFollowPage.getRecords();
     if (records.isEmpty()) {
       Page<List<UserVO>> objectPage = new Page<>();
@@ -231,9 +222,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
   //判断我是否关注了这些用户
-  private List<UserVO> isFollow(Long loginUserId, List<UserVO> userVOList) {
+  private List<UserVO> isFollow(Long userId, List<UserVO> userVOList) {
     List<UserVO> userVOS = new ArrayList<>();
-    String key = Common.USER_FOLLOW_KEY + loginUserId.toString();
+    String key = Common.USER_FOLLOW_KEY + userId.toString();
     for (UserVO userVO : userVOList) {
       Boolean follow = stringRedisTemplate.opsForSet().isMember(key, userVO.getUserId().toString());
       userVO.setIsFollow(follow);
@@ -250,19 +241,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   @Override
   public Page<List<UserVO>> myFollowers(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       Page<List<UserVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
       objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
       return objectPage;
     }
-    Long loginUserId = loginUserVO.getUserId();
+    
     int pageSize = queryPageRequest.getPageSize();
     int currentPage = queryPageRequest.getCurrentPage();
     Page<UserFollow> userFollowPage = userFollowMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getToUserId, loginUserId)
+        new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getToUserId, userId)
             .orderByDesc(UserFollow::getFollowTime));
     List<UserFollow> records = userFollowPage.getRecords();
     if (CollUtil.isEmpty(records)) {
@@ -280,7 +271,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     List<User> userList = this.listByIds(idList);
     List<UserVO> userVOListByUserList = getUserVOListByUserList(userList);
     //判断我是否关注了粉丝
-    List<UserVO> follow = isFollow(loginUserId, userVOListByUserList);
+    List<UserVO> follow = isFollow(userId, userVOListByUserList);
     Page<List<UserVO>> listPage = new Page<>(currentPage, pageSize);
     listPage.setRecords(Collections.singletonList(follow));
     listPage.setTotal(total);
@@ -291,7 +282,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    * @param uid
    * @return 获取用户的信息，展示在文章详情页
    */
-  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"userInfo",key = "#uid")
+  @Cacheable(cacheNames = BLOG_CACHE_PREFIX+"userInfo",key = "#p0")
   @Override
   public UserVO getUserInfo(Long uid) {
     User byId = this.getById(uid);
@@ -303,39 +294,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       String interestTag = byId.getInterestTag();
       if (StringUtils.isNotBlank(interestTag)) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(interestTag), Long.class);
-        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<Tags> tags = tagsMapper.selectByIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         userVO.setInterestTag(tagNameList);
       }
       //查询该用户粉丝数量
       int followerNum = userFollowMapper.getFollowerNum(uid);
       userVO.setFollowerNum(followerNum);
-      LoginUserVO loginUserVO = UserHolder.getUser();
-      if (loginUserVO == null) {
+      Long userId = UserContext.getUser();
+      if (userId == null) {
         return userVO;
       }
-      Long loginUserId = loginUserVO.getUserId();
+      
       List<UserVO> userVOS = new ArrayList<>();
       userVOS.add(userVO);
-      isFollow(loginUserId, userVOS);
+      isFollow(userId, userVOS);
       return userVO;
-    }
-    return null;
-  }
-
-  @Override
-  public Boolean setAdmin(Long userId) {
-    User byId = getById(userId);
-    String role = byId.getRole();
-    LambdaUpdateWrapper<User> userUpdateWrapper = new LambdaUpdateWrapper<>();
-    if (role.equals(UserRole.ADMIN_ROLE)) {
-      userUpdateWrapper.eq(User::getUserId, userId).set(User::getRole, UserRole.DEFAULT_ROLE);
-    } else {
-      userUpdateWrapper.eq(User::getUserId, userId).set(User::getRole, UserRole.ADMIN_ROLE);
-    }
-    boolean b = this.update(userUpdateWrapper);
-    if (b) {
-      return true;
     }
     return null;
   }
@@ -350,11 +324,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   public UserInfoDataVO getUserInfoData() {
     UserInfoDataVO userInfoDataVO = new UserInfoDataVO();
     //未登录返回默认数据0
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return userInfoDataVO;
     }
-    Long userId = loginUserVO.getUserId();
+    
     int followerNum = userFollowMapper.getFollowerNum(userId);
     int collectNum = passageMapper.getTotalCollectNumById(userId);
     int passageNum = passageMapper.getPassageNumById(userId);
@@ -372,15 +346,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public Page<List<CommentVO>> myMessage(QueryPageRequest queryPageRequest) {
     Page<List<CommentVO>> listPage = new Page<List<CommentVO>>();
-    LoginUserVO loginUserVO = UserHolder.getUser();
+    Long userId = UserContext.getUser();
 
-    if (loginUserVO == null) {
+    if (userId == null) {
       //未登录直接返回空列表
       listPage.setTotal(0);
       listPage.setRecords(Collections.emptyList());
       return listPage;
     }
-    Long userId = loginUserVO.getUserId();
+    
     int pageSize = queryPageRequest.getPageSize();
     int currentPage = queryPageRequest.getCurrentPage();
     Page<Comment> commentPage = new Page<>(currentPage, pageSize);
@@ -407,13 +381,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public String uploadAvatar(MultipartFile file) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
+    Long userId = UserContext.getUser();
 
-    if (loginUserVO == null) {
+    if (userId == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     String avatarUrl = AliOssUtil.uploadImageOSS(file);
-    Long userId = loginUserVO.getUserId();
+    
     boolean b = userMapper.updateAvatar(userId, avatarUrl);
     if (!b) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);
@@ -424,16 +398,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public Page<List<PassageInfoVO>> myCollectPassage(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
+    Long userId = UserContext.getUser();
 
-    if (loginUserVO == null) {
+    if (userId == null) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
       objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
       return objectPage;
     }
-    Long userId = loginUserVO.getUserId();
+    
     int pageSize = queryPageRequest.getPageSize();
     int currentPage = queryPageRequest.getCurrentPage();
     Page<UserCollects> userCollectsPage = userCollectsMapper.selectPage(
@@ -459,24 +433,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     return listPage;
   }
 
-
   @Override
   public Page<List<PassageInfoVO>> myThumbPassage(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
+    Long userId = UserContext.getUser();
 
-    if (loginUserVO == null) {
+    if (userId == null) {
       //未登录返回空列表
       Page<List<PassageInfoVO>> listPage = new Page<>();
       listPage.setTotal(0);
       listPage.setRecords(Collections.emptyList());
       return listPage;
     }
-    Long loginUserId = loginUserVO.getUserId();
+    
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
 
     Page<UserThumbs> thumbsPage = userThumbsMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<UserThumbs>().eq(UserThumbs::getUserId, loginUserId)
+        new LambdaQueryWrapper<UserThumbs>().eq(UserThumbs::getUserId, userId)
             .orderByDesc(UserThumbs::getThumbTime));
 
     List<UserThumbs> records = thumbsPage.getRecords();
@@ -500,20 +473,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public Page<List<PassageInfoVO>> myPassage(QueryPageRequest queryPageRequest) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
+    Long userId = UserContext.getUser();
 
-    if (loginUserVO == null) {
+    if (userId == null) {
       Page<List<PassageInfoVO>> objectPage = new Page<>();
       objectPage.setTotal(0);
       objectPage.setRecords(Collections.emptyList());
       //未登录直接返回空列表
       return objectPage;
     }
-    Long loginUserId = loginUserVO.getUserId();
+    
     int currentPage = queryPageRequest.getCurrentPage();
     int pageSize = queryPageRequest.getPageSize();
     Page<Passage> passagePage = passageMapper.selectPage(new Page<>(currentPage, pageSize),
-        new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, loginUserId)
+        new LambdaQueryWrapper<Passage>().eq(Passage::getAuthorId, userId)
             .select(Passage::getPassageId, Passage::getTitle, Passage::getContent,
                 Passage::getStatus,
                 Passage::getIsPrivate,
@@ -579,9 +552,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       //如果用户id地址变化，那么更新数据库
       userMapper.updateIpAddress(ipAddr, queryUser.getUserId());
     }
-    LoginUserVO loginUserVO = loginSuccess(queryUser.getRole(), queryUser.getUserId());
-    log.info("loginUserVO：" + loginUserVO);
-    return loginUserVO;
+    return loginSuccess(queryUser.getRole(), queryUser.getUserId());
   }
 
   /**
@@ -599,24 +570,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
    */
   private LoginUserVO loginSuccess(String role, Long userId) {
     LoginUserVO loginUserVO = new LoginUserVO();
-    String token = UUID.randomUUID(true).toString();
-    loginUserVO.setToken(token);
+//    String token = UUID.randomUUID(true).toString();
+//    loginUserVO.setToken(token);
     loginUserVO.setUserId(userId);
     loginUserVO.setRole(role);
     loginUserVO.setAvatarUrl(userMapper.getUserAvatar(userId));
-    Map<String, String> stringMap = new HashMap<>();
-    stringMap.put("userId", userId.toString());
-    stringMap.put("role", role);
-    String tokenKey = Common.LOGIN_TOKEN_KEY + token;
-    stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
-    stringRedisTemplate.expire(tokenKey, Common.LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
+//    Map<String, String> stringMap = new HashMap<>();
+//    stringMap.put("userId", userId.toString());
+//    stringMap.put("role", role);
+//    String tokenKey = Common.LOGIN_TOKEN_KEY + token;
+//    stringRedisTemplate.opsForHash().putAll(tokenKey, stringMap);
+//    stringRedisTemplate.expire(tokenKey, Common.LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
     //以LOGIN_TOKEN_KEY+userid为key，userId+role序列化map存到redis
-    UserHolder.saveUser(loginUserVO);
+    UserContext.saveUser(userId);
+    StpUtil.login(userId);
     return loginUserVO;
   }
 
   @Async("taskExecutor")
-  public void sendCodeForRegister(String email) {
+  public Boolean sendCodeForRegister(String email) {
     log.info("尝试发送邮箱验证码给用户：" + email + "进行注册操作");
     log.info("开始发送邮件..." + "获取的到邮件发送对象为:" + mailSender);
     mailUtil = new MailUtil(mailSender, fromEmail);
@@ -625,18 +597,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     stringRedisTemplate.opsForValue()
         .set(USER_REGISTER_CAPTCHA_KEY + encrypt(email), code, REGISTER_CAPTCHA_TTL, TimeUnit.MINUTES);
     log.info("发送邮箱验证码给用户：" + email + "成功 : " + code);
+    return StringUtils.isNotBlank(code);
   }
 
   /**
    * @param registerCodeRequest
    */
   @Override
-  public void sendRegisterCode(RegisterCodeRequest registerCodeRequest) {
+  public Boolean sendRegisterCode(RegisterCodeRequest registerCodeRequest) {
     String mail = registerCodeRequest.getMail();
     //检查该邮箱是否已注册
     checkMailIsRegistered(mail);
     //发送验证码
-    sendCodeForRegister(mail);
+    return sendCodeForRegister(mail);
   }
 
   /**
@@ -706,71 +679,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
   }
 
-  //邮箱格式校验
-  private boolean checkMail(String mail) {
-    return !Pattern.compile(EMAIL_REGEX).matcher(mail).matches();
-  }
-
-  //用户名格式校验
-  private boolean checkUserName(String userName) {
-    return !Pattern.compile(USERNAME_REGEX).matcher(userName).matches();
-  }
-
-  //密码格式校验
-  private boolean checkPassword(String password) {
-    return !Pattern.compile(PASSWORD_REGEX).matcher(password).matches();
-  }
-
 
   /**
    * @return
    */
   @Override
   public Boolean logout(HttpServletRequest httpServletRequest) {
-
-    //获取请求头中的token，这是用户登录时生成的uuid
-    String token = httpServletRequest.getHeader("authorization");
-    if (StringUtils.isBlank(token)) {
-      throw new BusinessException(ErrorCode.PARAMS_ERROR, "authorization字段token为空");
+    try {
+      StpUtil.logout();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
-//        Long userId = UserHolder.getUser().getUserId();
-    String tokenKey = Common.LOGIN_TOKEN_KEY + token;
-    Boolean delete = stringRedisTemplate.delete(tokenKey);
-    if (Boolean.TRUE.equals(delete)) {
-      UserHolder.removeUser();
-      return true;
-    }
-    return false;
+//    //获取请求头中的token，这是用户登录时生成的uuid
+//    String token = httpServletRequest.getHeader(AUTHORIZATION);
+//    if (StringUtils.isBlank(token)) {
+//      throw new BusinessException(ErrorCode.PARAMS_ERROR, "无效的token");
+//    }
+//    String tokenKey = Common.LOGIN_TOKEN_KEY + token;
+//    return stringRedisTemplate.delete(tokenKey);
+    return true;
   }
 
 
   @Override
   public LoginUserVO getLoginUser() {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    log.info("获取登录用户线程：" + Thread.currentThread().getId());
-    log.info("获取登陆用户信息：" + loginUserVO);
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "获取当前登录用户失败");
     }
-    Long userId = loginUserVO.getUserId();
     //获取数据库最新的数据，防止用户更新完个人信息后拿到的还是老数据
     User user = userMapper.selectById(userId);
-    LoginUserVO loginUserVO1 = new LoginUserVO();
-    BeanUtils.copyProperties(user, loginUserVO1);
+    LoginUserVO loginUserVO = new LoginUserVO();
+    BeanUtils.copyProperties(user, loginUserVO);
     String ipAddress = user.getIpAddress();
     String ipRegion = IPUtil.getIpRegion(ipAddress);
-    loginUserVO1.setIpAddress(ipRegion);
+    loginUserVO.setIpAddress(ipRegion);
     String interestTag = user.getInterestTag();
     if (StringUtils.isNotBlank(interestTag)) {
       List<Long> tagIdlist = JSONUtil.toList(JSONUtil.parseArray(interestTag), Long.class);
-      if (tagIdlist != null) {
-        List<Tags> tags = tagsMapper.selectBatchIds(tagIdlist);
+      if (CollUtil.isNotEmpty(tagIdlist)) {
+        List<Tags> tags = tagsMapper.selectByIds(tagIdlist);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
-        loginUserVO1.setInterestTag(tagNameList);
+        loginUserVO.setInterestTag(tagNameList);
       }
-
     }
-    return loginUserVO1;
+    return loginUserVO;
   }
 
 
@@ -779,7 +732,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     int currentPage = adminUserQueryPageRequest.getCurrentPage();
     int pageSize = adminUserQueryPageRequest.getPageSize();
     String userName = adminUserQueryPageRequest.getUserName();
-    String mail = adminUserQueryPageRequest.getMail();
     Date endTime = adminUserQueryPageRequest.getEndTime();
     Date startTime = adminUserQueryPageRequest.getStartTime();
     Long userId = adminUserQueryPageRequest.getUserId();
@@ -789,7 +741,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             .gt(startTime != null, User::getCreateTime, startTime)
             .lt(endTime != null, User::getCreateTime, endTime)
             .eq(userId != null, User::getUserId, userId)
-            .eq(StringUtils.isNotBlank(mail), User::getMail, mail)
             .eq(StringUtils.isNotBlank(userName), User::getUserName, userName)
             .select(User::getUserId, User::getStatus, User::getUserName, User::getInterestTag,
                 User::getMail, User::getRole, User::getCreateTime));
@@ -804,9 +755,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       return listPage;
 //      throw new BusinessException(ErrorCode.PARAMS_ERROR, "获取用户列表失败");
     }
-    List<AdminUserVO> adminUserVOListByUserList = getAdminUserVOListByUserList(records);
+    List<AdminUserVO> adminUserListByUserList = getAdminUserVOListByUserList(records);
     //包装成单一的list
-    listPage.setRecords(Collections.singletonList(adminUserVOListByUserList));
+    listPage.setRecords(Collections.singletonList(adminUserListByUserList));
     //总数据数量
     listPage.setTotal(total);
     return listPage;
@@ -830,10 +781,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (StringUtils.isNotBlank(user.getInterestTag())) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
             Long.class);
-        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
-        List<String> tagNameList = tags.stream().map(Tags::getTagName)
-            .collect(Collectors.toList());
-        adminUserVO.setInterestTag(tagNameList);
+        List<Tags> tagList;
+        if(CollUtil.isNotEmpty(tagIdList)) {
+          tagList = tagsMapper.selectByIds(tagIdList);
+          List<String> tagNameList = tagList.stream().map(Tags::getTagName)
+              .collect(Collectors.toList());
+          adminUserVO.setInterestTag(tagNameList);
+        }
       }
       return adminUserVO;
     }).collect(Collectors.toList());
@@ -852,7 +806,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       if (StringUtils.isNotBlank(user.getInterestTag())) {
         List<Long> tagIdList = JSONUtil.toList(JSONUtil.parseArray(user.getInterestTag()),
             Long.class);
-        List<Tags> tags = tagsMapper.selectBatchIds(tagIdList);
+        List<Tags> tags = tagsMapper.selectByIds(tagIdList);
         List<String> tagNameList = tags.stream().map(Tags::getTagName).collect(Collectors.toList());
         userVO.setInterestTag(tagNameList);
       }
@@ -871,7 +825,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   }
 
   @Override
-  public Boolean disableUser(Long userId) {
+  public Boolean banUser(Long userId) {
     User byId = getById(userId);
     Integer status = byId.getStatus();
     LambdaUpdateWrapper<User> userUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -890,10 +844,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
   @Override
   public Boolean updateUser(UpdateUserDTO updateUserDTO) {
     User user = new User();
-    Long userId = UserHolder.getUser().getUserId();
+    Long userId = UserContext.getUser();
     user.setUserId(userId);
     BeanUtil.copyProperties(updateUserDTO, user);
 //    updateUserDTO.getInterestTag()
+    if("[null]".equals(user.getInterestTag())||"[ ]".equals(user.getInterestTag())){
+      user.setInterestTag("");
+    }
     boolean b = this.updateById(user);
     if (!b) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.UPDATE_ERROR);

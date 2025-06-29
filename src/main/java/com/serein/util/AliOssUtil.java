@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @Author:懒大王Smile
  * @Date: 2024/11/27
  * @Time: 17:52
- * @Description:
+ * @Description: oss工具类
  */
 
 @Slf4j

@@ -13,11 +13,11 @@ import com.serein.model.request.TagRequest.AdminTagPageRequest;
 import com.serein.model.vo.tagVO.TagVO;
 import com.serein.service.TagsService;
 import com.serein.util.IPUtil;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -121,13 +121,13 @@ public class TagsServiceImpl extends ServiceImpl<TagsMapper, Tags>
   }
 
   private List<TagVO> getTagVOList(List<Tags> tagList) {
-    ArrayList<TagVO> tagVOS = new ArrayList<>();
+    ArrayList<TagVO> tagVOList = new ArrayList<>();
     tagList.forEach(tag -> {
       TagVO tagVO = new TagVO();
       BeanUtils.copyProperties(tag, tagVO);
-      tagVOS.add(tagVO);
+      tagVOList.add(tagVO);
     });
-    return tagVOS;
+    return tagVOList;
   }
 }
 

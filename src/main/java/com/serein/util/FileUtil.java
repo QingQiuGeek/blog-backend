@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @Author:懒大王Smile
  * @Date: 2024/11/27
  * @Time: 20:51
- * @Description:
+ * @Description: 文件工具类
  */
 
 @Slf4j
@@ -64,14 +64,13 @@ public class FileUtil {
   }
 
   public static String createLocalFileName(String fileName) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, ErrorInfo.NOT_LOGIN_ERROR);
     }
     //根据日期生成路径   2024/11/15/
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd/");
     String datePath = sdf.format(new Date());
-    String userId = loginUserVO.getUserId().toString();
     String filePath = Common.IMG_UPLOAD_DIR + datePath + userId + "/";
     log.info("filePath：" + filePath);
     boolean b = checkOrCreateDirectory(filePath);

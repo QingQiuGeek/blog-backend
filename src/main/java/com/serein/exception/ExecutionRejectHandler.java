@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @Author:懒大王Smile
  * @Date: 2024/12/17
  * @Time: 15:22
- * @Description:
+ * @Description: 自定义线程池拒绝策略
  */
 
 public class ExecutionRejectHandler implements RejectedExecutionHandler {

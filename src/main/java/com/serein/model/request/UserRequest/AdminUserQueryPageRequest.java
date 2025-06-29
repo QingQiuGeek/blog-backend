@@ -17,7 +17,6 @@ public class AdminUserQueryPageRequest {
   private int currentPage = 1;
   private int pageSize = 10;
 
-  private String mail;
   private String userName;
   private Long userId;
   private Date endTime;

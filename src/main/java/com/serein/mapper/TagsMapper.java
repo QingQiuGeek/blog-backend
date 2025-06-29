@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.serein.model.entity.Tags;
 import java.util.List;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -12,6 +13,7 @@ import org.apache.ibatis.annotations.Select;
  * @createDate 2024-12-03 18:38:58
  * @Entity generator.domain.Tags
  */
+@Mapper
 public interface TagsMapper extends BaseMapper<Tags> {
 
 

@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * @Author:懒大王Smile
@@ -23,41 +25,17 @@ import org.springframework.data.redis.core.RedisTemplate;
 public class RedisConfig {
 
   @Bean
-  public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-    RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
-    redisTemplate.setConnectionFactory(redisConnectionFactory);
-    return redisTemplate;
+  public RedisTemplate<String, Object> redisTemplate(
+      RedisConnectionFactory redisConnectionFactory) {
+
+    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    template.setConnectionFactory(redisConnectionFactory);
+
+    // 使用 String 序列化器
+    template.setKeySerializer(new StringRedisSerializer());
+    template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+    return template;
   }
-
-  @Value("${spring.redis.host}")
-  private String host;
-
-  @Value("${spring.redis.port}")
-  private String port;
-
-  @Value("${spring.redis.username}")
-  private String username;
-
-  @Value("${spring.redis.password}")
-  private String password;
-
-  @Value("${spring.redis.database}")
-  private int database;
-
-
-  @Bean
-  public RedissonClient redissonConfig() {
-    Config config = new Config();
-    // 使用单机模式连接 Redis
-    config.useSingleServer().setAddress("redis://" + host + ":" + port).setUsername(username)
-        .setPassword(password).setDatabase(database);
-    try {
-      return Redisson.create(config);
-    } catch (RedisConnectionException e) {
-      log.error("Failed to connect to Redis at {}:{}", host, port, e);
-      throw e;
-    }
-  }
-
 
 }

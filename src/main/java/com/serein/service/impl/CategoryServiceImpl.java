@@ -19,17 +19,16 @@ import com.serein.model.vo.tagVO.TagVO;
 import com.serein.service.CategoryService;
 import com.serein.service.PassageService;
 import com.serein.util.IPUtil;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,16 +48,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
   @Resource
   private TagsMapper tagsMapper;
 
-  @Resource
-  private PassageService passageService;
-
   @Override
   public Page<List<CategoryVO>> getCategories(CategoryPageRequest categoryPageRequest) {
     IPUtil.isHotIp();
     int currentPage = categoryPageRequest.getCurrentPage();
     int pageSize = categoryPageRequest.getPageSize();
     Page<Category> categoryPage = new Page<>(currentPage, pageSize);
-    Page<Category> page = page(categoryPage,
+    Page<Category> page =  categoryMapper.selectPage(categoryPage,
         new LambdaQueryWrapper<Category>().orderByDesc(Category::getUpdateTime));
     List<Category> records = page.getRecords();
     long total = page.getTotal();
@@ -141,7 +137,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
   @Override
   public List<CategoryAndTags> getCategoriesAndTags() {
     //获取所有category
-    List<Category> categoryList = categoryMapper.getAllCategories();
+    List<Category> categoryList = categoryMapper.listCategories();
     //获取所有tagsList
     List<Tags> tagsList = tagsMapper.getAllTags();
     //根据tag所属的categoryId分组

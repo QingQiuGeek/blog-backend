@@ -1,7 +1,5 @@
 package com.serein.controller;
 
-import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
-
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.serein.constants.ErrorCode;
 import com.serein.constants.ErrorInfo;
@@ -15,13 +13,12 @@ import com.serein.model.vo.passageVO.PassageContentVO;
 import com.serein.model.vo.passageVO.PassageInfoVO;
 import com.serein.model.vo.passageVO.PassageTitleVO;
 import com.serein.service.PassageService;
-import com.serein.util.BaseResponse;
+import com.serein.util.BR;
 import com.serein.util.IPUtil;
-import com.serein.util.ResultUtil;
+import com.serein.util.R;
+import jakarta.annotation.Resource;
 import java.util.List;
-import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @Author: 懒大王Smile
  * @Date: 2024/9/12
  * @Time: 22:24
- * @Description:
+ * @Description: 文章Controller
  */
 
 @RestController
@@ -52,27 +49,24 @@ public class PassageController {
    * top7 爆款文章
    * */
   @GetMapping("/topPassages")
-  public BaseResponse<List<PassageTitleVO>> getTopPassages() {
-    List<PassageTitleVO> topPassages = passageService.getTopPassages();
-    return ResultUtil.success(topPassages);
+  public BR<List<PassageTitleVO>> getTopPassages() {
+    return R.ok(passageService.getTopPassages());
   }
 
   /*
    * 点赞文章
    * */
   @PutMapping("/thumb/{passageId}")
-  public BaseResponse<Boolean> thumbPassage(@PathVariable String passageId) {
-    Boolean aBoolean = passageService.thumbPassage(Long.valueOf(passageId));
-    return ResultUtil.success(aBoolean);
+  public BR<Boolean> thumbPassage(@PathVariable("passageId") String passageId) {
+    return R.ok(passageService.thumbPassage(Long.valueOf(passageId)));
   }
 
   /*
    * 收藏文章
    * */
   @PutMapping("/collect/{passageId}")
-  public BaseResponse<Boolean> collectPassage(@PathVariable String passageId) {
-    Boolean aBoolean = passageService.collectPassage(Long.valueOf(passageId));
-    return ResultUtil.success(aBoolean);
+  public BR<Boolean> collectPassage(@PathVariable("passageId") String passageId) {
+    return R.ok(passageService.collectPassage(Long.valueOf(passageId)));
   }
 
   /**
@@ -80,10 +74,9 @@ public class PassageController {
    * @return
    */
   @PostMapping("/homePassageList")
-  public BaseResponse<Page<List<PassageInfoVO>>> getHomePassageList(
+  public BR<Page<List<PassageInfoVO>>> getHomePassageList(
       @RequestBody QueryPageRequest queryPageRequest) {
-    Page<List<PassageInfoVO>> newPassageList = passageService.getHomePassageList(queryPageRequest);
-    return ResultUtil.success(newPassageList);
+    return R.ok( passageService.getHomePassageList(queryPageRequest));
   }
 
 
@@ -94,7 +87,7 @@ public class PassageController {
    * @return
    */
   @PostMapping("/search")
-  public BaseResponse<Page<List<PassageInfoVO>>> searchPassage(
+  public BR<Page<List<PassageInfoVO>>> searchPassage(
       @RequestBody SearchPassageRequest searchPassageRequest) {
     IPUtil.isHotIp();
     String searchType = searchPassageRequest.getSearchType();
@@ -117,7 +110,7 @@ public class PassageController {
         listPage = passageService.searchPassageFromMySQL(searchPassageRequest);
         break;
     }
-    return ResultUtil.success(listPage);
+    return R.ok(listPage);
   }
 
 
@@ -128,11 +121,10 @@ public class PassageController {
    * @return
    */
   @GetMapping("/content/{uid}/{pid}")
-  public BaseResponse<PassageContentVO> getPassageContentByPassageId(@PathVariable Long uid,
-      @PathVariable String pid) {
-    PassageContentVO passageContent = passageService.getPassageContentByPassageId(uid,
-        Long.valueOf(pid));
-    return ResultUtil.success(passageContent);
+  public BR<PassageContentVO> getPassageContentByPassageId(@PathVariable("uid") Long uid,
+      @PathVariable("pid") String pid) {
+    return R.ok(passageService.getPassageContentByPassageId(uid,
+        Long.valueOf(pid)));
   }
 
   /**
@@ -142,9 +134,8 @@ public class PassageController {
    * @return
    */
   @GetMapping("/otherPassages/{uid}")
-  public BaseResponse<List<PassageTitleVO>> getOtherPassagesByUserId(@PathVariable Long uid) {
-    List<PassageTitleVO> PassageTitleVOList = passageService.getOtherPassagesByUserId(uid);
-    return ResultUtil.success(PassageTitleVOList);
+  public BR<List<PassageTitleVO>> getOtherPassagesByUserId(@PathVariable("uid") Long uid) {
+    return R.ok( passageService.getOtherPassagesByUserId(uid));
   }
 
   /**
@@ -154,9 +145,8 @@ public class PassageController {
    * @return
    */
   @GetMapping("/passageInfo/{pid}")
-  public BaseResponse<PassageInfoVO> getPassageInfo(@PathVariable String pid) {
-    PassageInfoVO passageInfo = passageService.getPassageInfoByPassageId(Long.valueOf(pid));
-    return ResultUtil.success(passageInfo);
+  public BR<PassageInfoVO> getPassageInfo(@PathVariable("pid") String pid) {
+    return R.ok(passageService.getPassageInfoByPassageId(Long.valueOf(pid)));
   }
 
   /**
@@ -166,9 +156,8 @@ public class PassageController {
    * @return
    */
   @GetMapping("/editPassage/{pid}")
-  public BaseResponse<EditPassageVO> getEditPassage(@PathVariable String pid) {
-    EditPassageVO editPassageVO = passageService.getEditPassageByPassageId(Long.valueOf(pid));
-    return ResultUtil.success(editPassageVO);
+  public BR<EditPassageVO> getEditPassage(@PathVariable("pid") String pid) {
+    return R.ok(passageService.getEditPassageByPassageId(Long.valueOf(pid)));
   }
 
   /**
@@ -178,9 +167,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/nowPublish")
-  public BaseResponse<Boolean> nowPublish(@RequestBody ParentPassageDTO parentPassageDTO) {
-      boolean b = passageService.nowPublish(parentPassageDTO);
-      return ResultUtil.success(b);
+  public BR<Boolean> nowPublish(@RequestBody ParentPassageDTO parentPassageDTO) {
+      return R.ok(passageService.nowPublish(parentPassageDTO));
   }
 
   /**
@@ -190,9 +178,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/save")
-  public BaseResponse<String> savePassage(@RequestBody ParentPassageDTO parentPassageDTO) {
-   Long passageId= passageService.savePassage(parentPassageDTO);
-   return ResultUtil.success(passageId.toString());
+  public BR<String> savePassage(@RequestBody ParentPassageDTO parentPassageDTO) {
+   return R.ok(passageService.savePassage(parentPassageDTO).toString());
 
   }
 
@@ -203,9 +190,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/timePublish")
-  public BaseResponse<Boolean> timePublish(@RequestBody ParentPassageDTO parentPassageDTO) {
-    boolean b = passageService.timePublish(parentPassageDTO);
-    return ResultUtil.success(b);
+  public BR<Boolean> timePublish(@RequestBody ParentPassageDTO parentPassageDTO) {
+    return R.ok(passageService.timePublish(parentPassageDTO));
   }
 
 
@@ -216,9 +202,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/uploadPassageCover")
-  public BaseResponse<String> uploadPassageCover(@RequestParam("file") MultipartFile file) {
-    String coverUrl = passageService.uploadPassageCover(file);
-    return ResultUtil.success(coverUrl);
+  public BR<String> uploadPassageCover(@RequestParam("file") MultipartFile file) {
+    return R.ok(passageService.uploadPassageCover(file));
   }
 
   /**
@@ -228,9 +213,8 @@ public class PassageController {
    * @return
    */
   @PostMapping("/uploadPassageImg")
-  public BaseResponse<String> uploadPassageImg(@RequestParam("file") MultipartFile file) {
-    String imgUrl = passageService.uploadPassageImg(file);
-    return ResultUtil.success(imgUrl);
+  public BR<String> uploadPassageImg(@RequestParam("file") MultipartFile file) {
+    return R.ok(passageService.uploadPassageImg(file));
   }
 
 
@@ -241,9 +225,8 @@ public class PassageController {
    * @return
    */
   @DeleteMapping("/delete/{passageId}")
-  public BaseResponse<Boolean> deleteByPassageId(@PathVariable Long passageId) {
-    boolean b = passageService.deleteByPassageId(passageId);
-    return ResultUtil.success(b);
+  public BR<Boolean> deleteByPassageId(@PathVariable("passageId") Long passageId) {
+    return R.ok(passageService.deleteByPassageId(passageId));
   }
 
 
@@ -254,9 +237,8 @@ public class PassageController {
    * @return
    */
   @GetMapping("/setPrivate/{passageId}")
-  public BaseResponse<Boolean> setPassagePrivate(@PathVariable Long passageId) {
-    boolean b = passageService.setPassagePrivate(passageId);
-    return ResultUtil.success(b);
+  public BR<Boolean> setPassagePrivate(@PathVariable("passageId") Long passageId) {
+    return R.ok(passageService.setPassagePrivate(passageId));
   }
 
 }

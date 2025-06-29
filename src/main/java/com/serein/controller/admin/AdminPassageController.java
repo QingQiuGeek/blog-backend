@@ -1,16 +1,15 @@
 package com.serein.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.serein.annotation.AuthCheck;
+import com.serein.annotation.RoleCheck;
 import com.serein.constants.UserRole;
 import com.serein.model.request.PassageRequest.AdminPassageQueryPageRequest;
 import com.serein.model.vo.passageVO.AdminPassageVO;
 import com.serein.service.PassageService;
-import com.serein.util.BaseResponse;
-import com.serein.util.ResultUtil;
+import com.serein.util.BR;
+import com.serein.util.R;
 import java.util.List;
-import javax.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author:懒大王Smile
  * @Date: 2024/12/2
  * @Time: 18:27
- * @Description:
+ * @Description: 管理员 文章
  */
 
 @RequestMapping("/admin/passage")
@@ -38,11 +37,10 @@ public class AdminPassageController {
    * @param passageId
    * @return
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @GetMapping("/reject/{passageId}")
-  public BaseResponse<Boolean> rejectPassage(@PathVariable String passageId) {
-    Boolean aBoolean = passageService.rejectPassage(Long.valueOf(passageId));
-    return ResultUtil.success(aBoolean);
+  public BR<Boolean> rejectPassage(@PathVariable String passageId) {
+    return R.ok(passageService.rejectPassage(Long.valueOf(passageId)));
   }
 
   /**
@@ -51,24 +49,21 @@ public class AdminPassageController {
    * @param passageId
    * @return
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @GetMapping("/publish/{passageId}")
-  public BaseResponse<Boolean> publishPassage(@PathVariable String passageId) {
-    Boolean aBoolean = passageService.publishPassage(Long.valueOf(passageId));
-    return ResultUtil.success(aBoolean);
+  public BR<Boolean> publishPassage(@PathVariable String passageId) {
+    return R.ok(passageService.publishPassage(Long.valueOf(passageId)));
   }
 
   /**
    * @param adminPassageQueryPageRequest
    * @return
    */
-  @AuthCheck(mustRole = UserRole.ADMIN_ROLE)
+//  @RoleCheck(mustRole = UserRole.ADMIN_ROLE)
   @PostMapping("/getPassageList")
-  public BaseResponse<Page<List<AdminPassageVO>>> getPassageList(
+  public BR<Page<List<AdminPassageVO>>> getPassageList(
       @RequestBody AdminPassageQueryPageRequest adminPassageQueryPageRequest) {
-    Page<List<AdminPassageVO>> adminPassageVOList = passageService.getPassageList(
-        adminPassageQueryPageRequest);
-    return ResultUtil.success(adminPassageVOList);
+    return R.ok(passageService.getPassageList(adminPassageQueryPageRequest));
   }
 
 

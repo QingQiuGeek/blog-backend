@@ -1,7 +1,5 @@
 package com.serein.service.impl;
 
-import static com.serein.constants.Common.BLOG_CACHE_PREFIX;
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,7 +12,7 @@ import com.serein.mapper.CommentMapper;
 import com.serein.mapper.PassageMapper;
 import com.serein.mapper.UserMapper;
 import com.serein.util.IPUtil;
-import com.serein.util.UserHolder;
+import com.serein.util.UserContext;
 import com.serein.model.dto.commentDTO.CommentDTO;
 import com.serein.model.dto.commentDTO.DeleteCommentDTO;
 import com.serein.model.entity.Comment;
@@ -24,6 +22,7 @@ import com.serein.model.vo.commentVO.CommentUserInfoVO;
 import com.serein.model.vo.commentVO.CommentVO;
 import com.serein.model.vo.userVO.LoginUserVO;
 import com.serein.service.CommentService;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,11 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,17 +51,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
   @Resource
   private UserMapper userMapper;
 
-  @Resource
-  private PassageMapper passageMapper;
-
   @Transactional
   @Override
   public Long commentPassage(CommentDTO commentDTO) {
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       return null;
     }
-    Long userId = loginUserVO.getUserId();
     Comment comment = new Comment();
     BeanUtil.copyProperties(commentDTO, comment);
     comment.setPassageId(Long.valueOf(commentDTO.getPassageId()));
@@ -75,8 +67,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     if (comment.getCommentId() == null) {
       throw new BusinessException(ErrorCode.OPERATION_ERROR, ErrorInfo.COMMENT_ERROR);
     }
-    log.info("insert comment：" + comment);
-    log.info("update passage_Table viewNum+1");
     //拿到生成的commentId
     return comment.getCommentId();
   }
@@ -112,13 +102,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
     //设置评论的用户头像、ip地址、用户名
     getCommentUserInfo(commentVOList);
     //判断用户是否登录，登录就判断该用户是否可以自己的删除评论
-    LoginUserVO loginUserVO = UserHolder.getUser();
-    if (loginUserVO == null) {
+    Long userId = UserContext.getUser();
+    if (userId == null) {
       page.setTotal(total);
       page.setRecords(Collections.singletonList(commentVOList));
       return page;
     }
-    Long userId = loginUserVO.getUserId();
     //作者拥有对自己文章的所有评论的删除权
     if (Objects.equals(authorId, userId)) {
       commentVOList.forEach((commentVO -> {
@@ -129,7 +118,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
       return page;
     }
     //管理员拥有对所有文章的所有评论的删除权
-    if ("admin".equals(loginUserVO.getRole())) {
+    String userRole = userMapper.getUserRole(userId);
+    if ("admin".equals(userRole)) {
       commentVOList.forEach((commentVO -> {
         commentVO.setCanDelete(true);
       }));
